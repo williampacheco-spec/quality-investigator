@@ -8,354 +8,762 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=Oswald:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#0a0f0a;color:#e8f5e8;font-family:'Segoe UI',sans-serif;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(0,209,100,0.04) 40px,rgba(0,209,100,0.04) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(0,209,100,0.04) 40px,rgba(0,209,100,0.04) 41px);pointer-events:none;z-index:0;}
+body{background:#1a1208;color:#e8dfc0;font-family:'Courier Prime',monospace;min-height:100vh;overflow-x:hidden;}
 #root{position:relative;z-index:1;}
+
+/* Noise texture overlay */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.4;
+}
+
+/* Vignette */
+body::after{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+  pointer-events:none;z-index:0;
+}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.7}94%{opacity:1}96%{opacity:.8}97%{opacity:1}}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.fadein{animation:fadeIn .45s ease;}
-button{font-family:inherit;}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes typewriter{from{width:0}to{width:100%}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+.fadein{animation:fadeIn .5s ease;}
+.flicker{animation:flicker 8s infinite;}
+button{font-family:'Courier Prime',monospace;cursor:pointer;}
+input{font-family:'Courier Prime',monospace;}
+
 ::-webkit-scrollbar{width:6px;}
-::-webkit-scrollbar-track{background:#0f1a0f;}
-::-webkit-scrollbar-thumb{background:#1f3a1f;border-radius:3px;}
+::-webkit-scrollbar-track{background:#0d0a04;}
+::-webkit-scrollbar-thumb{background:#5c4a1e;border-radius:3px;}
+
+/* Paper texture cards */
+.paper{
+  background:linear-gradient(135deg,#2a1f0a 0%,#1e1608 50%,#251c09 100%);
+  border:1px solid #5c4a1e;
+  box-shadow:0 4px 20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,220,100,0.05);
+}
+
+.redstring{
+  border-left:3px solid #8b1a1a;
+  padding-left:1rem;
+}
+
+/* Scanline effect */
+.scanlines::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px);
+  pointer-events:none;z-index:10;
+}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useRef } = React;
-const NU = "#00d164";
+const { useState, useRef, useEffect, useCallback } = React;
 
+// ===================== CORES DETETIVE =====================
+const C = {
+  gold: '#c9a227',
+  goldLight: '#e8c84a',
+  red: '#8b1a1a',
+  redLight: '#c0392b',
+  paper: '#2a1f0a',
+  paperLight: '#3a2d14',
+  ink: '#e8dfc0',
+  inkMuted: '#9a8a6a',
+  inkDim: '#6a5a3a',
+  dark: '#0d0a04',
+  green: '#2d5a1b',
+  greenLight: '#4a8a2a',
+};
+
+// ===================== MÚSICA ARCADE =====================
+function useBGMusic() {
+  const ctxRef = useRef(null);
+  const nodesRef = useRef([]);
+  const playingRef = useRef(false);
+  const enabledRef = useRef(true);
+  const intervalRef = useRef(null);
+
+  const getCtx = () => {
+    if (!ctxRef.current) ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    return ctxRef.current;
+  };
+
+  // Sequência noir/arcade: Am pentatônica estilo noir
+  const melody = [
+    [220,0.3],[261,0.3],[294,0.15],[261,0.15],[220,0.3],[196,0.6],
+    [220,0.3],[261,0.3],[330,0.3],[294,0.3],[261,0.6],
+    [196,0.3],[220,0.3],[261,0.15],[294,0.15],[330,0.3],[440,0.6],
+    [330,0.3],[294,0.3],[261,0.3],[220,0.3],[196,0.6],[null,0.3],
+  ];
+
+  const bass = [
+    [110,0.6],[110,0.6],[130,0.6],[98,0.6],
+    [110,0.6],[110,0.6],[130,0.3],[146,0.3],
+    [110,0.6],[110,0.6],[130,0.6],[98,0.6],
+    [110,0.6],[110,0.6],[123,0.6],[110,0.6],
+  ];
+
+  const playNote = (freq, startTime, dur, type='sine', vol=0.12, ac) => {
+    if (!freq) return;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    const filter = ac.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1200;
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ac.destination);
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+    gain.gain.setValueAtTime(vol, startTime + dur - 0.05);
+    gain.gain.linearRampToValueAtTime(0, startTime + dur);
+    osc.start(startTime);
+    osc.stop(startTime + dur);
+    nodesRef.current.push(osc);
+  };
+
+  const playSequence = useCallback(() => {
+    if (!enabledRef.current) return;
+    const ac = getCtx();
+    if (ac.state === 'suspended') ac.resume();
+    let t = ac.currentTime + 0.1;
+
+    // Melodia
+    melody.forEach(([freq, dur]) => {
+      playNote(freq, t, dur * 0.9, 'triangle', 0.1, ac);
+      t += dur;
+    });
+
+    // Baixo (loop menor)
+    let bt = ac.currentTime + 0.1;
+    bass.forEach(([freq, dur]) => {
+      playNote(freq, bt, dur * 0.8, 'sawtooth', 0.07, ac);
+      bt += dur * 0.75;
+    });
+
+    // Percussão simples
+    let pt = ac.currentTime + 0.1;
+    for (let i = 0; i < 16; i++) {
+      const noiseNode = ac.createOscillator();
+      const ng = ac.createGain();
+      noiseNode.connect(ng); ng.connect(ac.destination);
+      noiseNode.type = 'square';
+      noiseNode.frequency.value = 80;
+      ng.gain.setValueAtTime(0.04, pt);
+      ng.gain.linearRampToValueAtTime(0, pt + 0.05);
+      noiseNode.start(pt); noiseNode.stop(pt + 0.05);
+      pt += 0.375;
+    }
+
+    const totalDur = melody.reduce((s,[,d])=>s+d,0);
+    intervalRef.current = setTimeout(playSequence, totalDur * 1000 - 200);
+  }, []);
+
+  const start = useCallback(() => {
+    if (playingRef.current || !enabledRef.current) return;
+    playingRef.current = true;
+    playSequence();
+  }, [playSequence]);
+
+  const stop = useCallback(() => {
+    playingRef.current = false;
+    clearTimeout(intervalRef.current);
+    nodesRef.current.forEach(n => { try { n.stop(); } catch(e){} });
+    nodesRef.current = [];
+  }, []);
+
+  const toggle = useCallback(() => {
+    enabledRef.current = !enabledRef.current;
+    if (!enabledRef.current) stop();
+    else { playingRef.current = false; start(); }
+    return enabledRef.current;
+  }, [start, stop]);
+
+  const sfx = {
+    correct: () => {
+      if (!enabledRef.current) return;
+      try {
+        const ac = getCtx();
+        if (ac.state==='suspended') ac.resume();
+        [523,659,784,1047].forEach((f,i) => {
+          const o=ac.createOscillator(),g=ac.createGain();
+          o.connect(g);g.connect(ac.destination);
+          o.type='triangle';o.frequency.value=f;
+          const t=ac.currentTime+i*0.1;
+          g.gain.setValueAtTime(0.2,t);g.gain.linearRampToValueAtTime(0,t+0.2);
+          o.start(t);o.stop(t+0.2);
+        });
+      } catch(e){}
+    },
+    wrong: () => {
+      if (!enabledRef.current) return;
+      try {
+        const ac = getCtx();
+        if (ac.state==='suspended') ac.resume();
+        [220,196].forEach((f,i) => {
+          const o=ac.createOscillator(),g=ac.createGain();
+          o.connect(g);g.connect(ac.destination);
+          o.type='sawtooth';o.frequency.value=f;
+          const t=ac.currentTime+i*0.15;
+          g.gain.setValueAtTime(0.15,t);g.gain.linearRampToValueAtTime(0,t+0.25);
+          o.start(t);o.stop(t+0.25);
+        });
+      } catch(e){}
+    },
+    click: () => {
+      if (!enabledRef.current) return;
+      try {
+        const ac = getCtx();
+        if (ac.state==='suspended') ac.resume();
+        const o=ac.createOscillator(),g=ac.createGain();
+        o.connect(g);g.connect(ac.destination);
+        o.type='sine';o.frequency.value=660;
+        g.gain.setValueAtTime(0.08,ac.currentTime);
+        g.gain.linearRampToValueAtTime(0,ac.currentTime+0.08);
+        o.start();o.stop(ac.currentTime+0.08);
+      } catch(e){}
+    },
+    victory: () => {
+      if (!enabledRef.current) return;
+      try {
+        const ac = getCtx();
+        if (ac.state==='suspended') ac.resume();
+        [523,587,659,698,784,880,988,1047].forEach((f,i) => {
+          const o=ac.createOscillator(),g=ac.createGain();
+          o.connect(g);g.connect(ac.destination);
+          o.type='triangle';o.frequency.value=f;
+          const t=ac.currentTime+i*0.1;
+          g.gain.setValueAtTime(0.18,t);g.gain.linearRampToValueAtTime(0,t+0.3);
+          o.start(t);o.stop(t+0.3);
+        });
+      } catch(e){}
+    },
+  };
+
+  return { start, stop, toggle, sfx, isOn: () => enabledRef.current };
+}
+
+// ===================== DADOS =====================
 const MISSIONS = [
   {
-    id:0, title:"SCORECARD: DECIFRANDO O CÓDIGO", icon:"📊",
-    desc:"Você recebeu um caso de monitoria. Entenda os critérios antes de tomar uma decisão.",
-    tags:[{label:"Scorecard",color:"#00aaff"}], xpReward:100,
-    story:"O analista Junior acaba de receber seu primeiro feedback NOK. Ele não entende por que errou — o cliente foi bloqueado, o caso foi fechado. O que mais poderia ter faltado?",
-    evidence:["Analista marcou decisão: BLOQUEIO DO CLIENTE","Feedback Quality: NOK — \"Decisão correta, mas checklist incompleto\"","Critério violado: ausência de registro do MO (Modus Operandi)","District: Mule Account · Scorecard v2.4"],
+    id:0, title:"SCORECARD: DECIFRANDO O CÓDIGO", icon:"📊", caseNum:"CASO #001",
+    desc:"Um apontamento NOK chegou na sua mesa. Investigue os critérios antes de tomar uma decisão.",
+    tags:[{label:"Scorecard",color:C.gold}], xpReward:100,
+    story:"O detetive Junior recebeu um envelope lacrado com seu nome. Dentro, um feedback NOK — o cliente foi bloqueado, o caso fechado. Mas algo está errado. O que faltou no processo?",
+    evidence:["DECISÃO DO ANALISTA: BLOQUEIO DO CLIENTE","FEEDBACK QUALITY: NOK — \"Decisão correta, checklist incompleto\"","CRITÉRIO VIOLADO: ausência de registro do MO (Modus Operandi)","DISTRICT: Mule Account · Scorecard v2.4"],
     questions:[
-      {q:"Por que o caso foi marcado como NOK mesmo com a decisão correta de bloqueio?",opts:["Porque bloqueio é sempre a decisão errada em Mule Account","Porque o processo exige registro do MO além da decisão final","Porque o analista deveria ter escalado para o IC4","Porque a ferramenta SPOT estava offline"],correct:1,fb:"Exato! O scorecard avalia não só a decisão final, mas a qualidade do processo investigativo. Documentar o Modus Operandi é parte fundamental — garante rastreabilidade e aprendizado para toda a operação.",fbWrong:"O scorecard do Pack Quality avalia o processo completo, não apenas o resultado final. Mesmo com a decisão certa, etapas faltando geram NOK."},
-      {q:"O que é o Modus Operandi (MO) e por que ele é importante no scorecard?",opts:["É o nome do sistema interno de monitorias do Nubank","É o padrão de comportamento fraudulento que explica como o crime foi cometido","É uma métrica de performance individual do analista","É o protocolo de escalação para casos complexos"],correct:1,fb:"Perfeito! O MO é o padrão comportamental da fraude (ex: conta mula recebendo e redistribuindo valores). Documentá-lo permite que o Pack Quality e o InvOps Intelligence entendam tendências e melhorem modelos de detecção.",fbWrong:"MO = Modus Operandi. É o padrão de comportamento fraudulento identificado no caso. Fundamental para o aprendizado coletivo da operação."},
-      {q:"O analista quer contestar o feedback. Qual é a condição necessária?",opts:["Ter mais de 1 ano na operação","O caso ter gerado prejuízo ao cliente","Ter evidência técnica que contradiz o critério apontado pelo Quality","O IC4 do distrito ter aprovado previamente"],correct:2,fb:"Isso mesmo! Contestações precisam ter embasamento técnico — evidência no caso que mostre que o critério foi, sim, atendido. Sem isso, a contestação tende a ser julgada improcedente.",fbWrong:"A contestação não tem requisito de senioridade ou aprovação prévia, mas precisa ter evidência técnica concreta. Sem isso, tende a ser improcedente."},
-      {q:"Qual distrito NÃO faz parte dos monitorados pelo Pack Quality InvOps Brasil?",opts:["Mule Account","Identity Fraud","Credit Card Chargeback","Victims Prevention"],correct:2,fb:"Correto! Os 5 distritos monitorados são: Mule Account, Identity Fraud, Victims Prevention, Gamers e Transactional. Credit Card Chargeback é um escopo diferente.",fbWrong:"Os distritos monitorados são: Mule Account, Identity Fraud, Victims Prevention, Gamers e Transactional."}
+      {q:"Por que o caso foi marcado como NOK mesmo com a decisão correta de bloqueio?",opts:["Bloqueio é sempre a decisão errada em Mule Account","O processo exige registro do MO além da decisão final","O analista deveria ter escalado para o IC4","A ferramenta SPOT estava offline"],correct:1,fb:"Exato! O scorecard avalia não só a decisão final, mas a qualidade do processo investigativo. Documentar o Modus Operandi é parte fundamental — garante rastreabilidade e aprendizado para toda a operação.",fbWrong:"O scorecard do Pack Quality avalia o processo completo. Mesmo com a decisão certa, etapas faltando geram NOK."},
+      {q:"O que é o Modus Operandi (MO) e por que ele é importante?",opts:["É o nome do sistema interno de monitorias","É o padrão de comportamento fraudulento que explica como o crime foi cometido","É uma métrica de performance individual","É o protocolo de escalação para casos complexos"],correct:1,fb:"Perfeito! O MO é o padrão comportamental da fraude (ex: conta mula recebendo e redistribuindo valores). Documentá-lo permite que o Pack Quality e o InvOps Intelligence entendam tendências.",fbWrong:"MO = Modus Operandi. É o padrão de comportamento fraudulento identificado no caso. Fundamental para o aprendizado coletivo."},
+      {q:"O analista quer contestar o feedback. Qual é a condição necessária?",opts:["Ter mais de 1 ano na operação","O caso ter gerado prejuízo ao cliente","Ter evidência técnica que contradiz o critério apontado","O IC4 ter aprovado previamente"],correct:2,fb:"Contestações precisam ter embasamento técnico — evidência no caso que mostre que o critério foi atendido. Sem isso, tende a ser julgada improcedente.",fbWrong:"A contestação precisa de evidência técnica concreta. Sem isso, tende a ser improcedente."},
+      {q:"Qual distrito NÃO é monitorado pelo Pack Quality InvOps Brasil?",opts:["Mule Account","Identity Fraud","Credit Card Chargeback","Victims Prevention"],correct:2,fb:"Os 5 distritos monitorados são: Mule Account, Identity Fraud, Victims Prevention, Gamers e Transactional. Credit Card Chargeback é escopo diferente.",fbWrong:"Os distritos monitorados são: Mule Account, Identity Fraud, Victims Prevention, Gamers e Transactional."}
     ]
   },
   {
-    id:1, title:"CONTESTAÇÃO: A ARTE DE DISCORDAR", icon:"⚖️",
-    desc:"Uma analista sênior acredita que seu feedback foi injusto. Você vai investigar o caso.",
-    tags:[{label:"Contestação",color:"#ffaa00"},{label:"Erros",color:"#ff4444"}], xpReward:100,
-    story:"A analista Rosemeire (IC3s, distrito Gamers) recebeu um apontamento que ela considera incorreto: o Quality diz que ela não verificou o dispositivo. Ela tem screenshot provando que verificou.",
-    evidence:["Apontamento Quality: \"Dispositivo não analisado antes da decisão\"","Evidência da Rosemeire: print do sistema mostrando análise de device fingerprint","Status: Aberta via Jira Portal Quality Requests","Prazo de resposta do Pack Quality: 5 dias úteis"],
+    id:1, title:"CONTESTAÇÃO: A ARTE DE DISCORDAR", icon:"⚖️", caseNum:"CASO #002",
+    desc:"Uma analista sênior acredita que seu apontamento foi injusto. Você vai investigar.",
+    tags:[{label:"Contestação",color:C.redLight},{label:"Erros",color:'#e67e22'}], xpReward:100,
+    story:"Rosemeire (IC3s, Gamers) trouxe um envelope com evidências. O Quality disse que ela não verificou o dispositivo — mas ela tem um screenshot provando o contrário. O caso está nas suas mãos.",
+    evidence:["APONTAMENTO QUALITY: \"Dispositivo não analisado antes da decisão\"","EVIDÊNCIA: print do sistema — análise de device fingerprint confirmada","STATUS: Contestação aberta via Jira Portal Quality Requests","PRAZO DE RESPOSTA: 5 dias úteis"],
     questions:[
-      {q:"Com o print comprovando a análise do dispositivo, qual é o resultado esperado da contestação?",opts:["Improcedente — Quality nunca reverte apontamentos","Procedente — a evidência é clara e o critério foi atendido","Indeterminada — precisa de aprovação do M2","Arquivada — prints não são aceitos como evidência"],correct:1,fb:"Correto! Quando a analista apresenta evidência técnica sólida que contradiz o apontamento, a contestação é julgada procedente. O Quality reconhece o erro e o ajuste é feito no histórico de qualidade.",fbWrong:"O Pack Quality reverte apontamentos quando a evidência é clara. Contestação procedente = Quality reconheceu o erro. É uma via legítima e importante de correção."},
-      {q:"O que uma contestação PROCEDENTE significa para o Pack Quality?",opts:["Que o analista foi punido duplamente","Que o Quality errou e isso é registrado para melhoria interna","Que o caso volta para reavaliação pelo distrito","Que o scorecard do analista é zerado"],correct:1,fb:"Exato! Contestações procedentes são valiosas para o próprio Pack Quality — indicam que houve erro de avaliação e alimentam o processo de melhoria contínua. O time usa esses dados para refinar critérios e calibrações.",fbWrong:"Contestação procedente = o Quality errou. Isso não é problema — é dado. O Pack usa essas informações para calibrar melhor os critérios de avaliação."},
-      {q:"Segundo a pesquisa NPS do Quality Engagement, qual era o maior receio dos analistas sobre contestação?",opts:["O processo ser muito burocrático","Medo de sofrer represálias ao contestar","Não saber usar o Jira","O Quality não ter autonomia para reverter"],correct:1,fb:"Isso mesmo! 19% das respostas abertas citaram medo de contestar. Q13 (contestação) teve 22% de detratores — o pior NPS de toda a pesquisa. Criar segurança psicológica para contestar é uma prioridade do time.",fbWrong:"A pesquisa NPS revelou que 19% das respostas abertas citaram medo de represálias. Q13 foi a pergunta com mais detratores (22%). Segurança psicológica importa!"},
-      {q:"Qual ferramenta é usada para abrir uma solicitação de contestação?",opts:["Slack direto para o analista de Quality","Portal Quality Requests via Jira Service Management","Formulário no Google Forms por e-mail","Ticket no Databricks com a query do caso"],correct:1,fb:"Certo! O canal oficial é o Jira Quality Requests. Isso garante rastreabilidade, prazo de resposta e um histórico estruturado — imprescindível para as análises mensais do Pack.",fbWrong:"O canal correto é o Portal Quality Requests via Jira Service Management. Usar canais informais como Slack perde rastreabilidade e prazo de resposta."}
+      {q:"Com o print comprovando a análise do dispositivo, qual é o resultado esperado?",opts:["Improcedente — Quality nunca reverte apontamentos","Procedente — a evidência é clara e o critério foi atendido","Indeterminada — precisa de aprovação do M2","Arquivada — prints não são aceitos como evidência"],correct:1,fb:"Quando a analista apresenta evidência técnica sólida que contradiz o apontamento, a contestação é julgada procedente. O Quality reconhece o erro e o ajuste é feito no histórico.",fbWrong:"O Pack Quality reverte apontamentos quando a evidência é clara. Contestação procedente = Quality reconheceu o erro."},
+      {q:"Uma contestação PROCEDENTE significa que:",opts:["O analista foi punido duplamente","O Quality errou e isso alimenta o processo de melhoria interna","O caso volta para reavaliação pelo distrito","O scorecard do analista é zerado"],correct:1,fb:"Contestações procedentes são valiosas para o Pack Quality — indicam que houve erro de avaliação e alimentam a melhoria contínua. O time usa esses dados para refinar critérios.",fbWrong:"Contestação procedente = Quality errou. Isso é dado, não problema. O Pack usa isso para calibrar melhor."},
+      {q:"Segundo a pesquisa NPS Quality Engagement, qual era o maior receio dos analistas?",opts:["O processo ser muito burocrático","Medo de sofrer represálias ao contestar","Não saber usar o Jira","Quality não ter autonomia para reverter"],correct:1,fb:"19% das respostas abertas citaram medo de contestar. Q13 (contestação) teve 22% de detratores — o pior NPS de toda a pesquisa. Segurança psicológica é prioridade.",fbWrong:"A pesquisa revelou que 19% citaram medo de represálias. Q13 foi a pergunta com mais detratores (22%)."},
+      {q:"Qual ferramenta é usada para abrir uma solicitação de contestação?",opts:["Slack direto para o analista de Quality","Portal Quality Requests via Jira Service Management","Formulário Google Forms por e-mail","Ticket no Databricks"],correct:1,fb:"O canal oficial é o Jira Quality Requests. Garante rastreabilidade, prazo de resposta e histórico estruturado — imprescindível para as análises mensais do Pack.",fbWrong:"O canal correto é o Portal Quality Requests via Jira. Canais informais perdem rastreabilidade e prazo."}
     ]
   },
   {
-    id:2, title:"NPS: A VOZ DA OPERAÇÃO", icon:"📣",
-    desc:"Analise os dados do Quality Engagement e interprete os sinais da operação.",
-    tags:[{label:"NPS · Pesquisa",color:"#00d164"}], xpReward:100,
-    story:"O Pack Quality acabou de receber os resultados da pesquisa Quality Engagement Fase 1 — 97 respondentes de 211 possíveis. Os dados revelam onde a operação confia e onde há espaço para crescer.",
-    evidence:["NPS Geral: +55 · Zona de Excelência","Promotores: 66% · Indiferentes: 23% · Detratores: 11%","Q1 (Papel do Pack): NPS +84 — maior score","Q13 (Contestação): 22% detratores — pior score","33% das abertas pedem mais presença ativa do Quality","76% das abertas pedem revisão de critérios do scorecard"],
+    id:2, title:"NPS: A VOZ DA OPERAÇÃO", icon:"📣", caseNum:"CASO #003",
+    desc:"Os dados da pesquisa chegaram. Interprete os sinais antes que a pista se perca.",
+    tags:[{label:"NPS · Pesquisa",color:C.greenLight}], xpReward:100,
+    story:"Um relatório confidencial chegou ao escritório: Quality Engagement Fase 1 — 97 respondentes de 211 possíveis. Os números revelam onde a operação confia e onde há lacunas. Decifre os dados.",
+    evidence:["NPS GERAL: +55 · ZONA DE EXCELÊNCIA","PROMOTORES: 66% · INDIFERENTES: 23% · DETRATORES: 11%","Q1 (Papel do Pack): NPS +84 — maior score da pesquisa","Q13 (Contestação): 22% detratores — pior score","33% das abertas: pedem mais presença ativa do Quality","76% das abertas: pedem revisão de critérios do scorecard"],
     questions:[
-      {q:"Um NPS de +55 coloca o Pack Quality em qual zona de classificação?",opts:["Zona Crítica (abaixo de 0)","Zona de Aperfeiçoamento (0 a +49)","Zona de Excelência (+50 ou acima)","Zona de Qualidade (+30 a +49)"],correct:2,fb:"Perfeito! NPS acima de +50 é classificado como Zona de Excelência na metodologia adotada. Isso mostra que a maioria da operação tem uma visão positiva do Pack — uma base sólida para crescer.",fbWrong:"NPS +55 = Zona de Excelência (≥ +50). É um resultado muito positivo, mas ainda com oportunidades: 11% de detratores e 23% de indiferentes representam quase 35% da operação não promotora."},
-      {q:"Q1 com NPS +84 ('Entendo o papel do Pack') e Q2 com NPS +39 ('Pack como parceiro'). O que essa diferença indica?",opts:["Que os analistas estão satisfeitos com tudo","Que saber o papel é diferente de sentir parceria — a operação quer presença ativa","Que não há necessidade de melhorar a comunicação","Que o scorecard é bem compreendido por todos"],correct:1,fb:"Muito bem! Q1 alto = os analistas ENTENDEM o que o Pack faz. Mas Q2 mostra que sentir o Pack como parceiro é outra história. A operação quer presença, não só comunicados — exatamente o que 33% das abertas pediram.",fbWrong:"Conhecimento não é o mesmo que sentir o Pack como parceiro real. Q1 alto + Q2 mais baixo = operação entende o papel mas não sente a parceria no dia a dia."},
-      {q:"Como é calculado o NPS nesta pesquisa usando escala Likert?",opts:["Apenas 'Concordo Plenamente' conta como promotor","'Concordo Plenamente' e 'Concordo' = Promotores · 'Neutro' = Indiferente · 'Discordo' e 'Discordo Plenamente' = Detratores","NPS = média aritmética de todas as respostas","Promotor = nota acima de 8 · Detrator = abaixo de 6"],correct:1,fb:"Correto! O Pack adaptou a metodologia NPS para escala Likert: CP+C = Promotor, N = Indiferente, D+DP = Detrator. NPS = %Promotores − %Detratores. Uma inovação metodológica que torna a pesquisa mais rica.",fbWrong:"A metodologia adaptada: CP+C = Promotores · N = Indiferentes · D+DP = Detratores. NPS = %Promotores − %Detratores. Essa adaptação Likert→NPS é a inovação da pesquisa."},
-      {q:"76% das respostas abertas pedem revisão de critérios. Qual é a ação de maior impacto?",opts:["Abolir o scorecard imediatamente","Os analistas não entendem — precisam de mais treinamento básico","Revisão colaborativa dos critérios + comunicação transparente sobre a lógica deles","A pesquisa foi mal interpretada pelos respondentes"],correct:2,fb:"Exato! 76% é a maior unanimidade de toda a pesquisa. Isso não significa que os critérios estão errados — significa que a operação quer voz no processo. Revisão participativa + comunicação clara é o caminho.",fbWrong:"76% pedindo revisão não significa que o scorecard está errado. A operação quer participar da conversa. Ação: revisão colaborativa + comunicação transparente sobre a lógica dos critérios."}
+      {q:"NPS de +55 — em qual zona de classificação isso coloca o Pack Quality?",opts:["Zona Crítica (abaixo de 0)","Zona de Aperfeiçoamento (0 a +49)","Zona de Excelência (+50 ou acima)","Zona de Qualidade (+30 a +49)"],correct:2,fb:"NPS acima de +50 = Zona de Excelência. Mostra que a maioria da operação tem visão positiva do Pack — base sólida para crescer.",fbWrong:"NPS +55 = Zona de Excelência (≥+50). Positivo, mas 34% ainda não são promotores — há oportunidade real."},
+      {q:"Q1 com NPS +84 ('Entendo o papel') e Q2 com NPS +39 ('Pack como parceiro'). O que isso revela?",opts:["Os analistas estão satisfeitos com tudo","Saber o papel é diferente de sentir parceria — a operação quer presença ativa","Não há necessidade de melhorar a comunicação","O scorecard é bem compreendido por todos"],correct:1,fb:"Q1 alto = entendem o que o Pack faz. Q2 mais baixo = não sentem o Pack como parceiro real. A operação quer presença, não só comunicados.",fbWrong:"Conhecimento ≠ parceria. Q1 alto + Q2 baixo = operação entende o papel mas não sente parceria no dia a dia."},
+      {q:"Como o NPS é calculado nessa pesquisa com escala Likert?",opts:["Apenas 'Concordo Plenamente' conta como promotor","CP+C = Promotores · N = Indiferente · D+DP = Detratores. NPS = %Promotores − %Detratores","NPS = média aritmética de todas as respostas","Promotor = nota acima de 8 · Detrator = abaixo de 6"],correct:1,fb:"O Pack adaptou a metodologia NPS para Likert: CP+C = Promotor, N = Indiferente, D+DP = Detrator. Uma inovação que torna a pesquisa mais rica que a escala 0–10.",fbWrong:"CP+C = Promotores · N = Indiferentes · D+DP = Detratores. NPS = %Promotores − %Detratores."},
+      {q:"76% das abertas pedem revisão de critérios. Qual é a ação de maior impacto?",opts:["Abolir o scorecard imediatamente","Mais treinamento básico — os analistas não entendem","Revisão colaborativa dos critérios + comunicação transparente sobre a lógica","A pesquisa foi mal interpretada"],correct:2,fb:"76% é a maior unanimidade da pesquisa. A operação quer voz no processo. Revisão participativa + comunicação clara é o caminho.",fbWrong:"A operação quer participar da conversa sobre critérios — não quer o scorecard abolido. Revisão colaborativa é a resposta."}
     ]
   },
   {
-    id:3, title:"MONITORIA: HORA DE AVALIAR", icon:"🔍",
-    desc:"Você agora está do lado do Quality. Avalie um caso como monitoria real.",
-    tags:[{label:"Monitoria",color:"#00d164"},{label:"Erros Comuns",color:"#ff4444"}], xpReward:100,
-    story:"Você entrou no SPOT para realizar uma monitoria. Caso de Transactional: cliente teve transferências bloqueadas, analista decidiu manter o bloqueio. Analise os critérios.",
-    evidence:["Decisão do analista: MANTER BLOQUEIO","MO documentado: SIM — \"Padrão de fracionamento de transferências\"","Comportamento transacional verificado: SIM","Comunicação ao cliente: NÃO REGISTRADA no sistema","SLA: cumprido"],
+    id:3, title:"MONITORIA: HORA DE AVALIAR", icon:"🔍", caseNum:"CASO #004",
+    desc:"Agora você está do outro lado. Entre no SPOT e avalie o caso como Quality.",
+    tags:[{label:"Monitoria",color:C.greenLight},{label:"Erros Comuns",color:C.redLight}], xpReward:100,
+    story:"O escritório está em silêncio. Você acende o abajur, abre o notebook do SPOT e encontra um caso do distrito Transactional esperando avaliação. A lupa está na sua mão agora.",
+    evidence:["DECISÃO DO ANALISTA: MANTER BLOQUEIO","MO DOCUMENTADO: SIM — \"Padrão de fracionamento de transferências\"","COMPORTAMENTO TRANSACIONAL: verificado","COMUNICAÇÃO AO CLIENTE: NÃO REGISTRADA no sistema","SLA: cumprido dentro do prazo"],
     questions:[
-      {q:"Com base nas evidências, qual deve ser o feedback de Quality para este caso?",opts:["OK — todos os critérios foram atendidos","NOK — a comunicação ao cliente não foi registrada, critério obrigatório","NOK — a decisão de manter bloqueio estava incorreta","OK — o MO documentado compensa a ausência de comunicação"],correct:1,fb:"Correto! A ausência de registro da comunicação ao cliente gera NOK, independente de a decisão estar certa. O processo completo importa — não só a decisão final.",fbWrong:"A decisão pode estar certa, mas a falta de registro da comunicação ao cliente é um critério do scorecard. NOK é o feedback correto."},
-      {q:"O analista alega que comunicou verbalmente mas esqueceu de registrar. Como o Quality deve tratar isso?",opts:["Aceitar a alegação verbal e mudar para OK","Manter o NOK — o que não está registrado não foi feito para fins de monitoria","Arquivar o caso sem feedback","Escalar para o M2 decidir"],correct:1,fb:"Isso mesmo! 'Se não está registrado, não foi feito' é o princípio do processo. O analista pode aprender e registrar no próximo caso — ou contestar via Jira se tiver comprovação.",fbWrong:"Monitorias avaliam evidências nos sistemas. Alegações verbais não podem ser verificadas. O NOK se mantém — mas o analista tem direito de contestar com comprovação."},
-      {q:"Qual é o objetivo principal das calibrações (Roda de Conversa) entre Quality e os distritos?",opts:["Punir analistas com mais erros do mês","Alinhar interpretações dos critérios e reduzir divergências entre Quality e operação","Apresentar relatórios de performance individual","Substituir as monitorias mensais quando o volume é alto"],correct:1,fb:"Exato! Calibrações constroem alinhamento entre Quality e operação. Reduzem contestações desnecessárias e fortalecem a sensação de parceria — justamente o que 33% da pesquisa NPS pediu.",fbWrong:"Calibrações não são sobre punição. São sobre alinhamento: Quality e operação discutem casos, alinham interpretações e constroem entendimento comum dos critérios."},
-      {q:"O que é um 'Apontamento Externo' no contexto do Pack Quality?",opts:["Um erro identificado por auditor externo fora do Nubank","Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence — não pela monitoria regular","Uma contestação feita por analista de outro distrito","Uma monitoria realizada em analistas de outros países"],correct:1,fb:"Correto! Apontamentos Externos vêm de fontes como Reputational, Regulatory, FLC ou InvOps Intelligence. O Pack avalia, categoriza e converte em apontamentos em Atritos & Perdas — fortalecendo a visão de qualidade além das monitorias regulares.",fbWrong:"Apontamento Externo = erro identificado por fontes externas à monitoria regular (Reputational, Regulatory, InvOps Intell, FLC). O Quality avalia e converte em apontamentos formais."}
+      {q:"Com base nas evidências, qual deve ser o feedback de Quality?",opts:["OK — todos os critérios foram atendidos","NOK — comunicação ao cliente não foi registrada, critério obrigatório","NOK — a decisão de manter bloqueio estava incorreta","OK — o MO documentado compensa a ausência de comunicação"],correct:1,fb:"A ausência de registro da comunicação ao cliente gera NOK, independente de a decisão estar certa. O processo completo importa.",fbWrong:"Falta de registro da comunicação ao cliente é critério do scorecard. NOK é o feedback correto mesmo com decisão certa."},
+      {q:"O analista alega que comunicou verbalmente mas esqueceu de registrar. Como tratar?",opts:["Aceitar a alegação verbal e mudar para OK","Manter o NOK — o que não está registrado não foi feito para fins de monitoria","Arquivar o caso sem feedback","Escalar para o M2"],correct:1,fb:"'Se não está registrado, não foi feito' é o princípio do processo. O analista pode contestar via Jira se tiver comprovação.",fbWrong:"Monitorias avaliam evidências nos sistemas. Alegações verbais não são verificáveis. NOK se mantém."},
+      {q:"Qual é o objetivo principal das calibrações (Roda de Conversa)?",opts:["Punir analistas com mais erros","Alinhar interpretações dos critérios e reduzir divergências entre Quality e operação","Apresentar relatórios de performance individual","Substituir as monitorias quando o volume é alto"],correct:1,fb:"Calibrações constroem alinhamento entre Quality e operação. Reduzem contestações desnecessárias e fortalecem a parceria.",fbWrong:"Calibrações não são sobre punição — são sobre alinhamento e construção de entendimento comum."},
+      {q:"O que é um 'Apontamento Externo' no contexto do Pack Quality?",opts:["Erro identificado por auditor externo fora do Nubank","Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence — fora da monitoria regular","Contestação feita por analista de outro distrito","Monitoria realizada em analistas de outros países"],correct:1,fb:"Apontamentos Externos vêm de fontes como Reputational, Regulatory, FLC ou InvOps Intelligence. O Pack avalia, categoriza e converte em apontamentos em Atritos & Perdas.",fbWrong:"Apontamento Externo = erro identificado fora da monitoria regular (Reputational, Regulatory, InvOps Intell, FLC)."}
     ]
   },
   {
-    id:4, title:"MISSÃO FINAL: QUALIDADE É PARCERIA", icon:"🤝",
-    desc:"O desafio final. Integre tudo que você aprendeu sobre a filosofia do Pack Quality.",
-    tags:[{label:"Integração",color:"#ffd700"},{label:"Filosofia",color:"#00d164"}], xpReward:100,
-    story:"Analista IC3p do distrito Identity Fraud com 18% de erros no mês. Desses, 40% foram contestados — 25% julgados procedentes. O analista sente que o Quality 'não entende a realidade do distrito'.",
-    evidence:["18% de erros no mês — acima da meta do distrito","40% dos erros contestados · 25% julgados procedentes","Analista sente que Quality 'não entende a realidade'","NPS do analista para o Pack Quality: Detrator","Líder quer entender o que está gerando os erros"],
+    id:4, title:"MISSÃO FINAL: QUALIDADE É PARCERIA", icon:"🤝", caseNum:"CASO #005",
+    desc:"O caso mais complexo da carreira. Integre tudo que você aprendeu.",
+    tags:[{label:"Integração",color:C.gold},{label:"Filosofia",color:C.greenLight}], xpReward:100,
+    story:"O detetive sênior entrou no escritório com um dossiê volumoso. Um analista IC3p do Identity Fraud, 18% de erros, contestações, NPS baixo — e um líder buscando respostas. Este é o caso que vai definir sua carreira.",
+    evidence:["18% DE ERROS NO MÊS — acima da meta do distrito","40% DOS ERROS CONTESTADOS · 25% julgados procedentes","ANALISTA: sente que Quality 'não entende a realidade'","NPS DO ANALISTA PARA O PACK: Detrator","LÍDER DO DISTRITO: quer entender os padrões de erro"],
     questions:[
-      {q:"Se 25% das contestações foram procedentes, o que isso significa para o Pack Quality?",opts:["Que o analista está contestando demais e deve parar","1 em cada 4 contestações revelou um erro do próprio Quality — dado importante para calibração","Que o analista vai ser desclassificado no ranking","Que o Quality está funcionando perfeitamente"],correct:1,fb:"Perfeito! 25% de procedência = Quality errou 1 a cada 4 avaliações desse analista. Não é problema — é sinal. O Pack usa esses dados para calibrar critérios e melhorar. Contestação saudável fortalece o sistema.",fbWrong:"Contestações procedentes são dados valiosos. 25% de procedência = Quality errou em 1 de cada 4 avaliações. É insumo direto para calibração e melhoria dos critérios."},
-      {q:"O analista sente que o Quality 'não entende a realidade do distrito'. Qual é a melhor resposta do Pack?",opts:["Ignorar — Quality não precisa entender o distrito, só avaliar","Convidar o analista para uma Roda de Conversa e discutir os critérios no contexto do distrito","Reduzir o número de monitorias deste analista","Escalar para o M2 resolver o conflito"],correct:1,fb:"Excelente! A Roda de Conversa existe exatamente para isso. Trazer o analista para o diálogo, mostrar a lógica dos critérios no contexto do Identity Fraud, e ouvir o que ele vê na operação. Parceria se constrói com presença.",fbWrong:"Quality que não escuta a operação perde credibilidade. A Roda de Conversa é o canal certo: diálogo sobre critérios, contexto do distrito e alinhamento de interpretações."},
-      {q:"Qual ferramenta do Pack Quality permite analisar os padrões de erro por tema para o líder do distrito?",opts:["Notebook no Databricks com categorização por IA (GPT-4o)","O SPOT — apenas para monitorias individuais","O QuickSight com dados de SLA","O Google Forms da pesquisa NPS"],correct:0,fb:"Isso mesmo! O notebook de extração com IA (Células 4 e 5) categoriza erros por tema e por distrito. O líder e o Quality podem ver exatamente quais padrões dominam — e agir de forma cirúrgica.",fbWrong:"O notebook no Databricks é a ferramenta certa. A IA (GPT-4o via LiteLLM) lê os feedbacks e sugere os principais temas de erro por distrito — análise que antes era manual e demorada."},
-      {q:"Qual é a missão central do Pack Quality InvOps Brasil?",opts:["Punir analistas com erros e garantir que a meta de NOK seja atingida","Garantir a qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua","Substituir os líderes de distrito nas decisões de performance","Apenas realizar monitorias mensais e reportar resultados"],correct:1,fb:"MISSÃO CUMPRIDA! O Pack Quality existe para garantir excelência nas decisões de fraude — como parceiro, não como auditor punitivo. Monitorias, contestações, NPS, calibrações: tudo converge para uma operação mais inteligente e justa. 🚀",fbWrong:"O Pack Quality é muito mais que monitorias. É parceiro estratégico: identifica padrões de erro, calibra critérios, ouve a operação e contribui para decisões mais justas e eficientes."}
+      {q:"25% das contestações foram procedentes. O que isso significa para o Pack Quality?",opts:["Analista está contestando demais e deve parar","1 em cada 4 contestações revelou um erro do Quality — dado importante para calibração","Analista será desclassificado no ranking","Quality está funcionando perfeitamente"],correct:1,fb:"25% de procedência = Quality errou em 1 de cada 4 avaliações desse analista. É sinal para calibrar critérios. Contestação saudável fortalece o sistema.",fbWrong:"Contestações procedentes são dados valiosos. 25% = Quality errou em 1 de cada 4. Insumo direto para melhoria."},
+      {q:"Analista sente que Quality 'não entende a realidade'. Qual é a melhor resposta?",opts:["Ignorar — Quality não precisa entender o distrito","Convidar para Roda de Conversa e discutir critérios no contexto do distrito","Reduzir o número de monitorias deste analista","Escalar para o M2 resolver"],correct:1,fb:"A Roda de Conversa existe para isso. Trazer o analista para o diálogo, mostrar a lógica dos critérios no contexto do Identity Fraud, ouvir a operação. Parceria se constrói com presença.",fbWrong:"Quality que não escuta perde credibilidade. A Roda de Conversa é o canal certo para alinhar critérios e construir parceria."},
+      {q:"Qual ferramenta permite analisar padrões de erro por tema para o líder do distrito?",opts:["Notebook no Databricks com categorização por IA (GPT-4o)","O SPOT — apenas para monitorias individuais","QuickSight com dados de SLA","Google Forms da pesquisa NPS"],correct:0,fb:"O notebook com IA (Células 4 e 5) categoriza erros por tema e distrito. O líder e o Quality veem exatamente quais padrões dominam — e agem de forma cirúrgica.",fbWrong:"O notebook no Databricks com IA (GPT-4o via LiteLLM) é a ferramenta certa — análise que antes era manual e demorada."},
+      {q:"Qual é a missão central do Pack Quality InvOps Brasil?",opts:["Punir analistas com erros e atingir meta de NOK","Garantir qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua","Substituir os líderes de distrito nas decisões de performance","Apenas realizar monitorias mensais e reportar"],correct:1,fb:"CASO ENCERRADO! O Pack Quality é parceiro estratégico — não auditor punitivo. Monitorias, contestações, NPS, calibrações: tudo converge para uma operação mais inteligente e justa. 🎉",fbWrong:"O Pack Quality é muito mais que monitorias. É parceiro: identifica padrões, calibra critérios, ouve a operação e contribui para decisões mais justas."}
     ]
   }
 ];
 
-function useAudio() {
-  const ctxRef = useRef(null);
-  const onRef = useRef(true);
-  const getCtx = () => { if (!ctxRef.current) ctxRef.current = new (window.AudioContext || window.webkitAudioContext)(); return ctxRef.current; };
-  const tone = (freq, type, dur, vol=0.25) => {
-    if (!onRef.current) return;
-    try {
-      const ac = getCtx(), o = ac.createOscillator(), g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
-      o.type = type; o.frequency.value = freq;
-      g.gain.setValueAtTime(vol, ac.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
-      o.start(); o.stop(ac.currentTime + dur);
-    } catch(e) {}
-  };
-  return {
-    toggle: () => { onRef.current = !onRef.current; return onRef.current; },
-    isOn: () => onRef.current,
-    correct: () => { tone(523,'sine',.1); setTimeout(()=>tone(659,'sine',.1),100); setTimeout(()=>tone(784,'sine',.2),200); },
-    wrong: () => { tone(220,'sawtooth',.15,.18); setTimeout(()=>tone(196,'sawtooth',.2,.12),150); },
-    click: () => tone(800,'sine',.06,.08),
-    start: () => [440,494,523,587,659].forEach((f,i)=>setTimeout(()=>tone(f,'sine',.15),i*80)),
-    victory: () => [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,'sine',.25),i*120)),
-  };
-}
+// ===================== COMPONENTES =====================
 
-const S = {
-  btn: (variant='default') => ({
-    fontFamily:'inherit', fontSize:'.78rem', letterSpacing:'2px', padding:'11px 26px',
-    background:'transparent',
-    border:`1px solid ${variant==='gold'?'#ffd700':variant==='danger'?'#ff4444':NU}`,
-    color:variant==='gold'?'#ffd700':variant==='danger'?'#ff4444':NU,
-    borderRadius:'4px', cursor:'pointer', textTransform:'uppercase', transition:'all .2s',
-  }),
-  card: (extra={}) => ({background:'#1a2e1a', border:'1px solid rgba(0,209,100,.22)', borderRadius:12, padding:'1.25rem', ...extra}),
-  mono: {fontFamily:'monospace'},
-  muted: {color:'#7aad7a'},
+const DetBtn = ({ children, onClick, variant='default', style={}, disabled=false }) => {
+  const [hov, setHov] = useState(false);
+  const colors = {
+    default: { base: C.gold, hover: C.goldLight, bg: 'rgba(201,162,39,0.1)' },
+    danger:  { base: C.redLight, hover: '#e74c3c', bg: 'rgba(192,57,43,0.1)' },
+    ghost:   { base: C.inkMuted, hover: C.ink, bg: 'rgba(232,223,192,0.05)' },
+    green:   { base: C.greenLight, hover: '#5daa35', bg: 'rgba(74,138,42,0.1)' },
+  };
+  const col = colors[variant] || colors.default;
+  return (
+    <button onClick={disabled ? undefined : onClick} disabled={disabled}
+      onMouseEnter={() => !disabled && setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        fontFamily: "'Special Elite', serif",
+        fontSize: '.82rem', letterSpacing: '2px',
+        padding: '10px 24px',
+        background: hov && !disabled ? col.bg : 'transparent',
+        border: `1px solid ${hov && !disabled ? col.hover : col.base}`,
+        color: hov && !disabled ? col.hover : col.base,
+        borderRadius: '2px', cursor: disabled ? 'not-allowed' : 'pointer',
+        textTransform: 'uppercase', transition: 'all .2s',
+        opacity: disabled ? .5 : 1,
+        boxShadow: hov && !disabled ? `0 0 12px ${col.bg}` : 'none',
+        ...style
+      }}>
+      {children}
+    </button>
+  );
 };
 
-function Btn({children, onClick, variant='default', style={}}) {
-  const [hov, setHov] = useState(false);
-  const base = S.btn(variant);
-  const hovStyle = hov ? {background: variant==='gold'?'rgba(255,215,0,.1)':variant==='danger'?'rgba(255,68,68,.1)':'rgba(0,209,100,.1)', boxShadow:`0 0 14px ${variant==='gold'?'rgba(255,215,0,.25)':variant==='danger'?'rgba(255,68,68,.2)':'rgba(0,209,100,.22)'}`} : {};
-  return <button style={{...base,...hovStyle,...style}} onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>{children}</button>;
-}
+// TELA DE NOME
+const NameScreen = ({ onStart, sfx }) => {
+  const [name, setName] = useState('');
+  const [district, setDistrict] = useState('');
+  const [shake, setShake] = useState(false);
 
-function HUD({xp, lives, correct, total, mission, audioOn, onToggle}) {
-  return (
-    <div style={{position:'sticky',top:0,zIndex:100,background:'rgba(10,15,10,0.97)',borderBottom:'1px solid rgba(0,209,100,.18)',padding:'.6rem 1.2rem',display:'flex',alignItems:'center',gap:'1rem',flexWrap:'wrap'}}>
-      <div><div style={{...S.mono,...S.muted,fontSize:'.6rem',letterSpacing:1,marginBottom:2}}>XP</div><div style={{...S.mono,color:NU,fontWeight:700,fontSize:'1rem'}}>{xp}</div></div>
-      <div style={{flex:1,minWidth:60}}><div style={{height:5,background:'rgba(0,209,100,.12)',borderRadius:3,overflow:'hidden'}}><div style={{height:'100%',background:NU,borderRadius:3,width:`${Math.min(100,xp/500*100)}%`,transition:'width .5s'}}/></div></div>
-      <div style={{color:'rgba(0,209,100,.25)'}}>|</div>
-      <div><div style={{...S.mono,...S.muted,fontSize:'.6rem',letterSpacing:1,marginBottom:2}}>VIDAS</div><div style={{display:'flex',gap:3}}>{[0,1,2].map(i=><span key={i} style={{color:i<lives?'#ff4444':'#2a2a2a',fontSize:'1rem'}}>♥</span>)}</div></div>
-      <div style={{color:'rgba(0,209,100,.25)'}}>|</div>
-      <div><div style={{...S.mono,...S.muted,fontSize:'.6rem',letterSpacing:1,marginBottom:2}}>ACERTOS</div><div style={{...S.mono,color:NU,fontWeight:700,fontSize:'.9rem'}}>{correct}/{total}</div></div>
-      <div style={{...S.muted,fontSize:'.7rem',flex:1,textAlign:'right',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>{mission}</div>
-      <button onClick={onToggle} style={{background:'none',border:'none',cursor:'pointer',fontSize:'1.1rem',padding:'0 4px'}}>{audioOn?'🔊':'🔇'}</button>
-    </div>
-  );
-}
+  const districts = ['Mule Account', 'Identity Fraud', 'Victims Prevention', 'Gamers', 'Transactional'];
 
-function IntroScreen({onStart}) {
+  const handleStart = () => {
+    if (!name.trim() || !district) {
+      setShake(true);
+      setTimeout(() => setShake(false), 600);
+      return;
+    }
+    sfx.click();
+    onStart(name.trim(), district);
+  };
+
   return (
-    <div className="fadein" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'85vh',padding:'2rem',textAlign:'center',gap:'1.4rem'}}>
-      <div style={{...S.mono,fontSize:'.72rem',letterSpacing:4,color:NU,border:'1px solid rgba(0,209,100,.35)',padding:'5px 14px',borderRadius:2}}>INVOPS BRASIL · PACK QUALITY</div>
-      <div>
-        <div style={{...S.mono,fontSize:'clamp(2rem,7vw,3.8rem)',fontWeight:900,color:'#fff',lineHeight:1.05,textShadow:'0 0 40px rgba(0,209,100,.35)'}}>QUALITY<br/><span style={{color:NU}}>INVESTIGATOR</span></div>
-        <div style={{...S.mono,...S.muted,fontSize:'.8rem',letterSpacing:2,marginTop:'.5rem'}}>// missão: dominar a excelência operacional</div>
-      </div>
-      <div style={{...S.card(),maxWidth:540,width:'100%',textAlign:'left'}}>
-        <p style={{lineHeight:1.85,fontSize:'.92rem'}}>Você é um analista do time de <strong style={{color:NU}}>Investigações de Fraude</strong>. O Pack Quality identificou anomalias nos distritos — é hora de entrar em ação.</p>
-        <p style={{lineHeight:1.85,fontSize:'.92rem',marginTop:'.7rem'}}>Enfrente <strong style={{color:NU}}>5 casos reais</strong> sobre scorecards, contestações, feedbacks e NPS. Cada decisão certa sobe sua pontuação. Erros custam vidas.</p>
-        <div style={{background:'#162416',border:'1px solid rgba(0,209,100,.12)',borderRadius:8,padding:'1rem',marginTop:'1rem',...S.mono,fontSize:'.78rem',color:NU}}>
-          {[['ANALISTA','<VOCÊ>'],['DISTRITO','TODOS OS DISTRITOS'],['STATUS','OPERAÇÃO ATIVA'],['MISSÕES','5  ·  XP TOTAL: 500']].map(([k,v])=>(
-            <div key={k} style={{margin:'.3rem 0'}}><span style={S.muted}>{k}: </span>{v}</div>
-          ))}
+    <div className="fadein" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'85vh', padding:'2rem', textAlign:'center', gap:'1.5rem' }}>
+      {/* Header noir */}
+      <div style={{ position:'relative' }}>
+        <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.72rem', letterSpacing:'5px', color:C.gold, marginBottom:'.5rem', textTransform:'uppercase' }}>— DOSSIER DE IDENTIFICAÇÃO —</div>
+        <div style={{ fontFamily:"'Oswald',sans-serif", fontSize:'clamp(2rem,7vw,3.5rem)', fontWeight:700, color:C.ink, lineHeight:1.05, textShadow:`0 0 40px rgba(201,162,39,0.3)` }}>
+          QUALITY<br/><span style={{ color:C.gold }} className="flicker">INVESTIGATOR</span>
+        </div>
+        <div style={{ fontFamily:"'Courier Prime',monospace", fontSize:'.78rem', color:C.inkMuted, letterSpacing:'3px', marginTop:'.5rem' }}>
+          — PACK QUALITY · INVOPS BRASIL —
         </div>
       </div>
-      <Btn onClick={onStart}>◉ INICIAR MISSÃO</Btn>
-    </div>
-  );
-}
 
-function MapScreen({completed, onSelect, onFinal}) {
-  return (
-    <div className="fadein" style={{padding:'2rem',minHeight:'80vh'}}>
-      <div style={{maxWidth:960,margin:'0 auto'}}>
-        <div style={{...S.mono,fontSize:'.95rem',color:NU,letterSpacing:2,marginBottom:'2rem'}}>◎ CENTRAL DE MISSÕES</div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:'1.1rem'}}>
-          {MISSIONS.map((m,i)=>{
-            const locked = i>0 && !completed.has(i-1);
-            const done = completed.has(i);
-            return (
-              <div key={i} onClick={()=>!locked&&onSelect(i)}
-                style={{...S.card({opacity:locked?.5:1,cursor:locked?'not-allowed':'pointer',position:'relative',border:done?'1px solid rgba(0,209,100,.5)':'1px solid rgba(0,209,100,.22)',transition:'transform .2s'})}}>
-                {done && <div style={{position:'absolute',top:10,right:10,...S.mono,fontSize:'.58rem',color:NU,border:'1px solid rgba(0,209,100,.4)',padding:'2px 7px',borderRadius:2}}>✓ CONCLUÍDA</div>}
-                <div style={{...S.mono,...S.muted,fontSize:'.62rem',letterSpacing:2,marginBottom:'.4rem'}}>MISSÃO {String(i+1).padStart(2,'0')}</div>
-                {locked&&<div style={{fontSize:'1.4rem',margin:'.4rem 0'}}>🔒</div>}
-                <div style={{fontSize:'.95rem',fontWeight:700,color:'#fff',marginBottom:'.35rem'}}>{m.icon} {m.title}</div>
-                <div style={{fontSize:'.8rem',...S.muted,lineHeight:1.6,marginBottom:'.65rem'}}>{m.desc}</div>
-                <div style={{display:'flex',gap:'.4rem',flexWrap:'wrap',marginBottom:'.5rem'}}>
-                  {m.tags.map((t,j)=><span key={j} style={{fontSize:'.68rem',padding:'2px 9px',border:`1px solid ${t.color}55`,color:t.color,borderRadius:2,...S.mono}}>{t.label}</span>)}
-                </div>
-                <div style={{...S.mono,fontSize:'.68rem',color:'#ffd700'}}>+{m.xpReward} XP</div>
-              </div>
-            );
-          })}
+      {/* Formulário estilo arquivo policial */}
+      <div className="paper" style={{
+        maxWidth: 480, width:'100%', padding:'2rem',
+        borderRadius:2, position:'relative',
+        animation: shake ? 'shake .4s ease' : 'none'
+      }}>
+        <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}`}</style>
+
+        {/* Carimbo decorativo */}
+        <div style={{ position:'absolute', top:12, right:14, fontFamily:"'Special Elite',serif", fontSize:'.6rem', color:C.redLight, border:`1px solid ${C.redLight}`, padding:'3px 8px', borderRadius:2, letterSpacing:2, opacity:.7, transform:'rotate(3deg)' }}>CONFIDENCIAL</div>
+
+        <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.7rem', color:C.gold, letterSpacing:3, marginBottom:'1.5rem', borderBottom:`1px solid ${C.inkDim}`, paddingBottom:'.75rem' }}>
+          IDENTIFIQUE-SE ANTES DE PROSSEGUIR
         </div>
-        {completed.size===MISSIONS.length&&(
-          <div style={{textAlign:'center',marginTop:'2rem'}}>
-            <Btn variant="gold" onClick={onFinal}>🏆 VER RESULTADO FINAL</Btn>
+
+        <div style={{ marginBottom:'1.25rem', textAlign:'left' }}>
+          <label style={{ fontFamily:"'Special Elite',serif", fontSize:'.72rem', color:C.inkMuted, letterSpacing:2, display:'block', marginBottom:'.5rem' }}>▸ NOME DO ANALISTA</label>
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key==='Enter' && handleStart()}
+            placeholder="Digite seu nome..."
+            maxLength={30}
+            style={{
+              width:'100%', padding:'.75rem 1rem',
+              background:'rgba(0,0,0,0.4)',
+              border:`1px solid ${name ? C.gold : C.inkDim}`,
+              borderRadius:2, color:C.ink, fontSize:'.95rem',
+              outline:'none', transition:'border .2s',
+              fontFamily:"'Courier Prime',monospace",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom:'1.75rem', textAlign:'left' }}>
+          <label style={{ fontFamily:"'Special Elite',serif", fontSize:'.72rem', color:C.inkMuted, letterSpacing:2, display:'block', marginBottom:'.5rem' }}>▸ DISTRITO DE ATUAÇÃO</label>
+          <div style={{ display:'flex', flexDirection:'column', gap:'.4rem' }}>
+            {districts.map(d => (
+              <button key={d} onClick={() => { sfx.click(); setDistrict(d); }}
+                style={{
+                  padding:'.6rem 1rem', background: district===d ? 'rgba(201,162,39,0.15)' : 'rgba(0,0,0,0.3)',
+                  border:`1px solid ${district===d ? C.gold : C.inkDim}`,
+                  color: district===d ? C.gold : C.inkMuted,
+                  borderRadius:2, textAlign:'left', fontSize:'.88rem',
+                  transition:'all .15s', cursor:'pointer',
+                  fontFamily:"'Courier Prime',monospace",
+                }}>
+                {district===d ? '▶ ' : '  '}{d}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
+
+        <DetBtn onClick={handleStart} style={{ width:'100%', justifyContent:'center' }}>
+          ◉ ENTRAR NO CASO
+        </DetBtn>
+      </div>
+
+      <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.7rem', color:C.inkDim, letterSpacing:2 }}>
+        5 CASOS · 20 PERGUNTAS · 500 XP
       </div>
     </div>
   );
-}
+};
 
-function MissionScreen({mission, onBack, onFinish, onXP, onLoseLife, audio}) {
+// HUD NOIR
+const HUD = ({ xp, lives, correct, total, analyst, musicOn, onToggleMusic }) => (
+  <div style={{
+    position:'sticky', top:0, zIndex:100,
+    background:'rgba(13,10,4,0.97)',
+    borderBottom:`1px solid ${C.inkDim}`,
+    padding:'.55rem 1.2rem',
+    display:'flex', alignItems:'center', gap:'1rem', flexWrap:'wrap',
+    fontFamily:"'Courier Prime',monospace",
+  }}>
+    {/* Badge analista */}
+    <div style={{ display:'flex', alignItems:'center', gap:'.5rem' }}>
+      <div style={{ width:30, height:30, borderRadius:'50%', background:`rgba(201,162,39,0.15)`, border:`1px solid ${C.gold}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'.75rem', color:C.gold, fontFamily:"'Special Elite',serif" }}>
+        {analyst ? analyst[0].toUpperCase() : '?'}
+      </div>
+      <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.78rem', color:C.ink }}>{analyst || 'ANALISTA'}</div>
+    </div>
+
+    <div style={{ color:C.inkDim }}>|</div>
+
+    {/* XP */}
+    <div>
+      <div style={{ fontSize:'.58rem', color:C.inkMuted, letterSpacing:1, marginBottom:2 }}>XP</div>
+      <div style={{ color:C.gold, fontWeight:700, fontSize:'.95rem' }}>{xp}</div>
+    </div>
+    <div style={{ flex:1, minWidth:60 }}>
+      <div style={{ height:4, background:'rgba(201,162,39,0.12)', borderRadius:2, overflow:'hidden' }}>
+        <div style={{ height:'100%', background:C.gold, borderRadius:2, width:`${Math.min(100,xp/500*100)}%`, transition:'width .5s' }}/>
+      </div>
+    </div>
+
+    <div style={{ color:C.inkDim }}>|</div>
+
+    {/* Vidas */}
+    <div>
+      <div style={{ fontSize:'.58rem', color:C.inkMuted, letterSpacing:1, marginBottom:2 }}>VIDAS</div>
+      <div style={{ display:'flex', gap:3 }}>
+        {[0,1,2].map(i => <span key={i} style={{ color:i<lives?C.redLight:'#2a2218', fontSize:'.95rem' }}>♥</span>)}
+      </div>
+    </div>
+
+    <div style={{ color:C.inkDim }}>|</div>
+
+    {/* Acertos */}
+    <div>
+      <div style={{ fontSize:'.58rem', color:C.inkMuted, letterSpacing:1, marginBottom:2 }}>ACERTOS</div>
+      <div style={{ color:C.gold, fontWeight:700, fontSize:'.88rem' }}>{correct}/{total}</div>
+    </div>
+
+    {/* Música */}
+    <button onClick={onToggleMusic}
+      style={{ background:'none', border:`1px solid ${C.inkDim}`, borderRadius:2, cursor:'pointer', fontSize:'.85rem', padding:'3px 8px', color:C.inkMuted, transition:'all .2s', marginLeft:'auto' }}
+      title={musicOn ? 'Desligar música' : 'Ligar música'}>
+      {musicOn ? '🎵' : '🔇'}
+    </button>
+  </div>
+);
+
+// MAPA DE MISSÕES
+const MapScreen = ({ analyst, district, completed, onSelect, onFinal, sfx }) => (
+  <div className="fadein" style={{ padding:'2rem', minHeight:'80vh' }}>
+    <div style={{ maxWidth:900, margin:'0 auto' }}>
+      {/* Cabeçalho do escritório */}
+      <div style={{ marginBottom:'2rem', borderBottom:`1px solid ${C.inkDim}`, paddingBottom:'1rem' }}>
+        <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.7rem', color:C.inkMuted, letterSpacing:3, marginBottom:'.3rem' }}>ESCRITÓRIO DE INVESTIGAÇÕES — PACK QUALITY</div>
+        <div style={{ fontFamily:"'Oswald',sans-serif", fontSize:'1.3rem', color:C.gold }}>
+          MURAL DE CASOS
+        </div>
+        <div style={{ fontFamily:"'Courier Prime',monospace", fontSize:'.82rem', color:C.inkMuted, marginTop:'.3rem' }}>
+          Det. {analyst} · Distrito: {district}
+        </div>
+      </div>
+
+      {/* Grid de casos */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))', gap:'1.1rem' }}>
+        {MISSIONS.map((m, i) => {
+          const locked = i > 0 && !completed.has(i-1);
+          const done = completed.has(i);
+          return (
+            <div key={i} onClick={() => { if (!locked) { sfx.click(); onSelect(i); } }}
+              className="paper"
+              style={{
+                borderRadius:2, padding:'1.25rem', cursor: locked ? 'not-allowed' : 'pointer',
+                opacity: locked ? .45 : 1, position:'relative',
+                border: done ? `1px solid ${C.gold}` : `1px solid ${C.inkDim}`,
+                transition:'all .2s',
+              }}
+              onMouseEnter={e => !locked && (e.currentTarget.style.borderColor = C.gold)}
+              onMouseLeave={e => !locked && (e.currentTarget.style.borderColor = done ? C.gold : C.inkDim)}>
+
+              {/* Carimbo concluído */}
+              {done && (
+                <div style={{ position:'absolute', top:10, right:10, fontFamily:"'Special Elite',serif", fontSize:'.6rem', color:C.greenLight, border:`1px solid ${C.greenLight}`, padding:'2px 8px', borderRadius:1, transform:'rotate(-3deg)', letterSpacing:1 }}>RESOLVIDO</div>
+              )}
+              {locked && (
+                <div style={{ position:'absolute', top:10, right:10, fontFamily:"'Special Elite',serif", fontSize:'.6rem', color:C.redLight, border:`1px solid ${C.redLight}`, padding:'2px 8px', borderRadius:1, letterSpacing:1 }}>LACRADO</div>
+              )}
+
+              <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.65rem', color:C.inkMuted, letterSpacing:2, marginBottom:'.3rem' }}>{m.caseNum}</div>
+              <div style={{ fontSize:'1rem', fontWeight:700, color:C.ink, marginBottom:'.4rem', fontFamily:"'Oswald',sans-serif" }}>{m.icon} {m.title}</div>
+              <div style={{ fontSize:'.8rem', color:C.inkMuted, lineHeight:1.65, marginBottom:'.7rem', fontFamily:"'Courier Prime',monospace" }}>{m.desc}</div>
+              <div style={{ display:'flex', gap:'.4rem', flexWrap:'wrap', marginBottom:'.5rem' }}>
+                {m.tags.map((t,j) => <span key={j} style={{ fontSize:'.65rem', padding:'2px 8px', border:`1px solid ${t.color}55`, color:t.color, borderRadius:1, fontFamily:"'Special Elite',serif", letterSpacing:1 }}>{t.label}</span>)}
+              </div>
+              <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.68rem', color:C.gold }}>+{m.xpReward} XP</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {completed.size === MISSIONS.length && (
+        <div style={{ textAlign:'center', marginTop:'2rem' }}>
+          <DetBtn variant="green" onClick={() => { sfx.victory(); onFinal(); }}>🏆 ENCERRAR O CASO</DetBtn>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+// TELA DE MISSÃO
+const MissionScreen = ({ mission, analyst, onBack, onFinish, onXP, onLoseLife, sfx }) => {
   const [qIdx, setQIdx] = useState(0);
   const [answered, setAnswered] = useState(null);
   const [correct, setCorrect] = useState(0);
   const [total, setTotal] = useState(0);
+
   const q = mission.questions[qIdx];
   const isLast = qIdx >= mission.questions.length - 1;
 
   const answer = (i) => {
-    if (answered!==null) return;
-    const ok = i===q.correct;
-    setAnswered(i); setTotal(t=>t+1);
-    if (ok) { setCorrect(c=>c+1); onXP(25); audio.correct(); }
-    else { onLoseLife(); audio.wrong(); }
+    if (answered !== null) return;
+    const ok = i === q.correct;
+    setAnswered(i); setTotal(t => t+1);
+    if (ok) { setCorrect(c => c+1); onXP(25); sfx.correct(); }
+    else { onLoseLife(); sfx.wrong(); }
   };
 
   const next = () => {
-    audio.click();
-    const finalCorrect = correct + (answered===q.correct?1:0);
-    const finalTotal = total + 1;
-    if (isLast) onFinish(finalCorrect, finalTotal);
-    else { setQIdx(q=>q+1); setAnswered(null); }
+    sfx.click();
+    const finalC = correct + (answered===q.correct ? 1 : 0);
+    const finalT = total + 1;
+    if (isLast) onFinish(finalC, finalT);
+    else { setQIdx(q => q+1); setAnswered(null); }
   };
 
   return (
-    <div className="fadein" style={{maxWidth:740,margin:'0 auto',padding:'1.5rem'}}>
-      <button onClick={()=>{audio.click();onBack();}} style={{background:'none',border:'none',...S.muted,cursor:'pointer',...S.mono,fontSize:'.78rem',marginBottom:'1.5rem',padding:0}}>← VOLTAR AO MAPA</button>
-      <div style={{display:'flex',gap:'1rem',alignItems:'center',marginBottom:'1.6rem',paddingBottom:'1rem',borderBottom:'1px solid rgba(0,209,100,.12)'}}>
-        <div style={{width:50,height:50,borderRadius:8,background:'#1f3a1f',border:'1px solid rgba(0,209,100,.22)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.5rem',flexShrink:0}}>{mission.icon}</div>
+    <div className="fadein" style={{ maxWidth:720, margin:'0 auto', padding:'1.5rem' }}>
+      <button onClick={() => { sfx.click(); onBack(); }}
+        style={{ background:'none', border:'none', color:C.inkMuted, cursor:'pointer', fontFamily:"'Special Elite',serif", fontSize:'.78rem', marginBottom:'1.5rem', padding:0, letterSpacing:1 }}>
+        ← VOLTAR AO MURAL
+      </button>
+
+      {/* Header do caso */}
+      <div style={{ display:'flex', gap:'1rem', alignItems:'center', marginBottom:'1.5rem', paddingBottom:'1rem', borderBottom:`1px solid ${C.inkDim}` }}>
+        <div style={{ width:52, height:52, borderRadius:2, background:'rgba(201,162,39,0.08)', border:`1px solid ${C.gold}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.6rem', flexShrink:0 }}>{mission.icon}</div>
         <div>
-          <div style={{...S.mono,fontSize:'.95rem',color:'#fff',fontWeight:700}}>{mission.title}</div>
-          <div style={{fontSize:'.8rem',...S.muted,marginTop:'.2rem'}}>{mission.desc}</div>
+          <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.65rem', color:C.inkMuted, letterSpacing:2, marginBottom:'.2rem' }}>{mission.caseNum}</div>
+          <div style={{ fontFamily:"'Oswald',sans-serif", fontSize:'1rem', color:C.ink, fontWeight:600 }}>{mission.title}</div>
         </div>
       </div>
-      <div style={{...S.card({borderLeft:`3px solid ${NU}`,marginBottom:'1.1rem'})}}>
-        <div style={{...S.mono,...{color:NU},fontSize:'.65rem',letterSpacing:2,marginBottom:'.55rem'}}>// BRIEFING DO CASO</div>
-        <p style={{lineHeight:1.85,fontSize:'.9rem'}}>{mission.story}</p>
+
+      {/* Briefing */}
+      <div className="paper redstring" style={{ borderRadius:2, padding:'1.25rem', marginBottom:'1.1rem' }}>
+        <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.65rem', color:C.redLight, letterSpacing:2, marginBottom:'.55rem' }}>// RELATO DO CASO</div>
+        <p style={{ lineHeight:1.9, fontSize:'.9rem', fontFamily:"'Courier Prime',monospace", color:C.ink }}>{mission.story}</p>
       </div>
-      <div style={{background:'#162416',border:'1px solid rgba(255,170,0,.22)',borderRadius:8,padding:'1rem',marginBottom:'1.1rem'}}>
-        <div style={{...S.mono,color:'#ffaa00',fontSize:'.65rem',letterSpacing:2,marginBottom:'.55rem'}}>📋 EVIDÊNCIAS DO CASO</div>
-        {mission.evidence.map((e,i)=>(
-          <div key={i} style={{display:'flex',gap:'.55rem',alignItems:'flex-start',margin:'.35rem 0',fontSize:'.86rem'}}>
-            <div style={{width:5,height:5,borderRadius:'50%',background:'#ffaa00',marginTop:'.42rem',flexShrink:0}}/>
-            <div>{e}</div>
+
+      {/* Evidências */}
+      <div style={{ background:'rgba(0,0,0,0.35)', border:`1px solid rgba(201,162,39,0.25)`, borderRadius:2, padding:'1rem', marginBottom:'1.1rem' }}>
+        <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.65rem', color:C.gold, letterSpacing:2, marginBottom:'.55rem' }}>📎 EVIDÊNCIAS DO CASO</div>
+        {mission.evidence.map((e, i) => (
+          <div key={i} style={{ display:'flex', gap:'.55rem', alignItems:'flex-start', margin:'.4rem 0', fontSize:'.85rem', fontFamily:"'Courier Prime',monospace" }}>
+            <div style={{ width:5, height:5, borderRadius:'50%', background:C.gold, marginTop:'.42rem', flexShrink:0 }}/>
+            <div style={{ color:C.ink }}>{e}</div>
           </div>
         ))}
       </div>
-      <div style={{display:'flex',alignItems:'center',gap:'1rem',marginBottom:'1.1rem',...S.mono,fontSize:'.72rem',...S.muted}}>
+
+      {/* Progresso */}
+      <div style={{ display:'flex', alignItems:'center', gap:'1rem', marginBottom:'1rem', fontFamily:"'Special Elite',serif", fontSize:'.7rem', color:C.inkMuted, letterSpacing:1 }}>
         <span>PERGUNTA {qIdx+1}/{mission.questions.length}</span>
-        <div style={{display:'flex',gap:5}}>
-          {mission.questions.map((_,i)=>(
-            <div key={i} style={{width:9,height:9,borderRadius:'50%',background:i<qIdx?NU:i===qIdx?'rgba(0,209,100,.42)':'#1f3a1f',border:`1px solid ${i<=qIdx?NU:'rgba(0,209,100,.18)'}`,transition:'background .3s'}}/>
+        <div style={{ display:'flex', gap:5 }}>
+          {mission.questions.map((_,i) => (
+            <div key={i} style={{ width:9, height:9, borderRadius:'50%', background:i<qIdx?C.gold:i===qIdx?'rgba(201,162,39,.4)':'#2a1f0a', border:`1px solid ${i<=qIdx?C.gold:C.inkDim}`, transition:'background .3s' }}/>
           ))}
         </div>
       </div>
-      <div style={{fontSize:'.95rem',fontWeight:600,color:'#fff',marginBottom:'.9rem',lineHeight:1.75}}>{q.q}</div>
-      <div style={{display:'flex',flexDirection:'column',gap:'.6rem'}}>
-        {q.opts.map((o,i)=>{
-          let bg='#1a2e1a', border='rgba(0,209,100,.16)', col='#e8f5e8';
-          if (answered!==null) {
-            if (i===q.correct){bg='rgba(0,209,100,.1)';border=NU;col='#fff';}
-            else if(i===answered&&answered!==q.correct){bg='rgba(255,68,68,.07)';border='#ff4444';col='#fff';}
+
+      {/* Pergunta */}
+      <div style={{ fontFamily:"'Oswald',sans-serif", fontSize:'1rem', fontWeight:600, color:C.ink, marginBottom:'.9rem', lineHeight:1.7 }}>{q.q}</div>
+
+      <div style={{ display:'flex', flexDirection:'column', gap:'.55rem' }}>
+        {q.opts.map((o, i) => {
+          let bg='rgba(0,0,0,0.3)', border=C.inkDim, col=C.inkMuted;
+          if (answered !== null) {
+            if (i===q.correct) { bg='rgba(74,138,42,0.15)'; border=C.greenLight; col=C.ink; }
+            else if (i===answered && answered!==q.correct) { bg='rgba(139,26,26,0.15)'; border=C.redLight; col=C.ink; }
           }
           return (
-            <button key={i} onClick={()=>answer(i)} disabled={answered!==null}
-              style={{background:bg,border:`1px solid ${border}`,borderRadius:8,padding:'.8rem 1rem',textAlign:'left',cursor:answered!==null?'default':'pointer',width:'100%',fontFamily:'inherit',fontSize:'.86rem',color:col,display:'flex',alignItems:'flex-start',gap:'.6rem',transition:'all .15s'}}>
-              <span style={{...S.mono,color:NU,fontSize:'.7rem',minWidth:16,paddingTop:2,flexShrink:0}}>{'ABCD'[i]}</span>
+            <button key={i} onClick={() => answer(i)} disabled={answered!==null}
+              style={{ background:bg, border:`1px solid ${border}`, borderRadius:2, padding:'.8rem 1rem', textAlign:'left', cursor:answered!==null?'default':'pointer', width:'100%', fontFamily:"'Courier Prime',monospace", fontSize:'.87rem', color:col, display:'flex', alignItems:'flex-start', gap:'.6rem', transition:'all .15s' }}
+              onMouseEnter={e => answered===null && (e.currentTarget.style.borderColor=C.gold)}
+              onMouseLeave={e => answered===null && (e.currentTarget.style.borderColor=C.inkDim)}>
+              <span style={{ fontFamily:"'Special Elite',serif", color:C.gold, fontSize:'.7rem', minWidth:16, paddingTop:2, flexShrink:0 }}>{'ABCD'[i]}</span>
               <span>{o}</span>
             </button>
           );
         })}
       </div>
-      {answered!==null&&(
-        <div className="fadein" style={{background:answered===q.correct?'rgba(0,209,100,.07)':'rgba(255,68,68,.05)',border:`1px solid ${answered===q.correct?'rgba(0,209,100,.3)':'rgba(255,68,68,.22)'}`,borderRadius:8,padding:'1rem',marginTop:'.85rem'}}>
-          <div style={{...S.mono,fontSize:'.68rem',letterSpacing:1,color:answered===q.correct?NU:'#ff4444',marginBottom:'.45rem'}}>{answered===q.correct?'✓ CORRETO!':'✗ INCORRETO'}</div>
-          <div style={{fontSize:'.86rem',lineHeight:1.78}}>{answered===q.correct?q.fb:q.fbWrong}</div>
+
+      {answered !== null && (
+        <div className="fadein" style={{ background: answered===q.correct?'rgba(74,138,42,0.08)':'rgba(139,26,26,0.08)', border:`1px solid ${answered===q.correct?C.greenLight:C.redLight}`, borderRadius:2, padding:'1rem', marginTop:'.85rem' }}>
+          <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.68rem', letterSpacing:1, color:answered===q.correct?C.greenLight:C.redLight, marginBottom:'.45rem' }}>
+            {answered===q.correct ? '✓ PISTA CONFIRMADA!' : '✗ PISTA FALSA'}
+          </div>
+          <div style={{ fontSize:'.87rem', lineHeight:1.8, fontFamily:"'Courier Prime',monospace", color:C.ink }}>
+            {answered===q.correct ? q.fb : q.fbWrong}
+          </div>
         </div>
       )}
-      {answered!==null&&(
-        <div style={{textAlign:'right',marginTop:'1.1rem'}}>
-          <Btn onClick={next}>{isLast?'VER RESULTADO ◎':'PRÓXIMA PERGUNTA →'}</Btn>
+
+      {answered !== null && (
+        <div style={{ textAlign:'right', marginTop:'1.1rem' }}>
+          <DetBtn onClick={next} variant={isLast?'green':'default'}>
+            {isLast ? 'ENCERRAR INVESTIGAÇÃO ◎' : 'PRÓXIMA PISTA →'}
+          </DetBtn>
         </div>
       )}
     </div>
   );
-}
+};
 
-function ResultScreen({correct, total, onBack, onRetry, showFinal}) {
+// RESULTADO
+const ResultScreen = ({ analyst, correct, total, onBack, onRetry, showFinal, sfx }) => {
   const pct = Math.round(correct/total*100);
-  const passed = pct>=50;
+  const passed = pct >= 50;
   return (
-    <div className="fadein" style={{maxWidth:520,margin:'0 auto',padding:'2rem',textAlign:'center'}}>
-      <button onClick={onBack} style={{background:'none',border:'none',...S.muted,cursor:'pointer',...S.mono,fontSize:'.78rem',marginBottom:'1.5rem',display:'block',padding:0}}>← VOLTAR AO MAPA</button>
-      <div style={{fontSize:'3.2rem',marginBottom:'.7rem'}}>{pct===100?'🏅':pct>=75?'⭐':pct>=50?'✅':'❌'}</div>
-      <div style={{...S.mono,fontSize:'1.3rem',fontWeight:900,color:passed?'#fff':'#ff4444',marginBottom:'.45rem'}}>
-        {pct===100?'PERFEITO!':pct>=75?'EXCELENTE!':pct>=50?'APROVADO!':'TENTE NOVAMENTE'}
+    <div className="fadein" style={{ maxWidth:520, margin:'0 auto', padding:'2rem', textAlign:'center' }}>
+      <button onClick={() => { sfx.click(); onBack(); }}
+        style={{ background:'none', border:'none', color:C.inkMuted, cursor:'pointer', fontFamily:"'Special Elite',serif", fontSize:'.78rem', marginBottom:'1.5rem', display:'block', padding:0, letterSpacing:1 }}>
+        ← VOLTAR AO MURAL
+      </button>
+      <div style={{ fontSize:'3rem', marginBottom:'.7rem' }}>{pct===100?'🏅':pct>=75?'⭐':pct>=50?'✅':'❌'}</div>
+      <div style={{ fontFamily:"'Oswald',sans-serif", fontSize:'1.4rem', fontWeight:700, color:passed?C.gold:C.redLight, marginBottom:'.4rem' }}>
+        {pct===100?'CASO PERFEITO!':pct>=75?'CASO EXCELENTE!':pct>=50?'CASO RESOLVIDO!':'CASO EM ABERTO'}
       </div>
-      <div style={{...S.muted,fontSize:'.85rem',marginBottom:'1.4rem'}}>
-        {pct===100?'Você dominou todos os critérios desta missão!':pct>=75?'Ótimo desempenho! Você está no caminho certo.':pct>=50?'Passou! Reveja os erros para solidificar o conhecimento.':'Você precisa de pelo menos 50% de acertos para avançar.'}
+      <div style={{ fontFamily:"'Courier Prime',monospace", fontSize:'.85rem', color:C.inkMuted, marginBottom:'1.4rem' }}>
+        {pct===100?'Você dominou todos os critérios deste caso!':pct>=75?'Ótima investigação! Está no caminho certo.':pct>=50?'Passou! Reveja os erros para solidificar o conhecimento.':'Você precisa de pelo menos 50% de acertos para avançar.'}
       </div>
-      <div style={{...S.mono,fontSize:'1.9rem',color:'#ffd700',marginBottom:'1.1rem'}}>+{correct*25} XP</div>
-      <div style={{...S.card({display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem',marginBottom:'1.4rem'})}}>
-        {[[String(correct),'Acertos',NU],[String(total),'Perguntas','#e8f5e8'],[pct+'%','Aproveit.','#ffd700']].map(([v,l,c])=>(
-          <div key={l} style={{textAlign:'center'}}>
-            <div style={{...S.mono,fontSize:'1.3rem',fontWeight:700,color:c}}>{v}</div>
-            <div style={{fontSize:'.7rem',...S.muted,marginTop:'.2rem'}}>{l}</div>
+      <div style={{ fontFamily:"'Special Elite',serif", fontSize:'1.9rem', color:C.gold, marginBottom:'1.1rem' }}>+{correct*25} XP</div>
+      <div className="paper" style={{ borderRadius:2, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'1rem', padding:'1.25rem', marginBottom:'1.4rem' }}>
+        {[[String(correct),'Acertos',C.greenLight],[String(total),'Perguntas',C.ink],[pct+'%','Aproveit.',C.gold]].map(([v,l,c])=>(
+          <div key={l} style={{ textAlign:'center' }}>
+            <div style={{ fontFamily:"'Oswald',sans-serif", fontSize:'1.3rem', fontWeight:700, color:c }}>{v}</div>
+            <div style={{ fontSize:'.7rem', color:C.inkMuted, marginTop:'.2rem', fontFamily:"'Special Elite',serif", letterSpacing:1 }}>{l}</div>
           </div>
         ))}
       </div>
-      <div style={{display:'flex',gap:'.9rem',flexWrap:'wrap',justifyContent:'center'}}>
-        <Btn onClick={onBack}>PRÓXIMA MISSÃO</Btn>
-        <Btn variant="gold" onClick={onRetry}>↺ TENTAR NOVAMENTE</Btn>
+      <div style={{ display:'flex', gap:'.9rem', flexWrap:'wrap', justifyContent:'center' }}>
+        <DetBtn onClick={() => { sfx.click(); onBack(); }}>PRÓXIMO CASO</DetBtn>
+        <DetBtn variant="ghost" onClick={() => { sfx.click(); onRetry(); }}>↺ REINVESTIGAR</DetBtn>
       </div>
-      {showFinal&&<div style={{marginTop:'1.4rem'}}><Btn variant="gold" onClick={showFinal}>🏆 VER RESULTADO FINAL</Btn></div>}
+      {showFinal && <div style={{ marginTop:'1.4rem' }}><DetBtn variant="green" onClick={() => { sfx.victory(); showFinal(); }}>🏆 ENCERRAR O CASO</DetBtn></div>}
     </div>
   );
-}
+};
 
-function FinalScreen({xp, totalCorrect, totalAnswered, onReset}) {
+// TELA FINAL
+const FinalScreen = ({ analyst, district, xp, totalCorrect, totalAnswered, onReset, sfx }) => {
   const pct = Math.round(totalCorrect/totalAnswered*100);
-  const rank = pct>=90?'LENDA DA QUALIDADE':pct>=75?'ANALISTA SÊNIOR QUALITY':pct>=60?'INVESTIGADOR CERTIFICADO':'INVESTIGADOR EM FORMAÇÃO';
+  const rank = pct>=90?'DETETIVE LENDÁRIO':pct>=75?'INVESTIGADOR SÊNIOR':pct>=60?'ANALISTA CERTIFICADO':'INVESTIGADOR JÚNIOR';
+  const badge = pct>=90?'🥇':pct>=75?'🥈':pct>=60?'🥉':'📋';
   return (
-    <div className="fadein" style={{maxWidth:600,margin:'0 auto',padding:'2rem',textAlign:'center'}}>
-      <div style={{fontSize:'4rem',marginBottom:'.9rem',display:'inline-block',animation:'bounce 1s ease infinite'}}>🏆</div>
-      <div style={{...S.mono,fontSize:'1.9rem',fontWeight:900,color:'#ffd700',textShadow:'0 0 30px rgba(255,215,0,.35)',marginBottom:'.7rem'}}>MISSÃO CUMPRIDA!</div>
-      <p style={{...S.muted,fontSize:'.88rem'}}>Você completou todas as missões do Quality Investigator</p>
-      <div style={{display:'inline-block',...S.mono,fontSize:'.78rem',letterSpacing:2,padding:'11px 26px',border:'2px solid #ffd700',color:'#ffd700',borderRadius:4,margin:'1.4rem 0'}}>{rank}</div>
-      <div style={{...S.card({textAlign:'left',marginBottom:'1.4rem'})}}>
-        {[['XP Total',`${xp} XP`],['Acertos Totais',`${totalCorrect} / ${totalAnswered}`],['Aproveitamento Geral',`${pct}%`],['Missões Concluídas','5 / 5']].map(([l,v])=>(
-          <div key={l} style={{display:'flex',justifyContent:'space-between',padding:'.65rem 0',borderBottom:'1px solid rgba(0,209,100,.1)',fontSize:'.86rem'}}>
-            <span style={S.muted}>{l}</span>
-            <span style={{...S.mono,color:NU,fontWeight:700}}>{v}</span>
+    <div className="fadein" style={{ maxWidth:640, margin:'0 auto', padding:'2rem', textAlign:'center' }}>
+      <div style={{ fontSize:'4rem', marginBottom:'.9rem', display:'inline-block', animation:'bounce 1s ease infinite' }}>🏆</div>
+      <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.7rem', color:C.gold, letterSpacing:4, marginBottom:'.5rem' }}>— CASO ENCERRADO —</div>
+      <div style={{ fontFamily:"'Oswald',sans-serif", fontSize:'2rem', fontWeight:700, color:C.gold, textShadow:`0 0 30px rgba(201,162,39,.35)`, marginBottom:'.7rem' }}>
+        INVESTIGAÇÃO CONCLUÍDA
+      </div>
+      <div style={{ fontFamily:"'Courier Prime',monospace", fontSize:'.88rem', color:C.inkMuted }}>Det. {analyst} · Distrito {district}</div>
+
+      {/* Badge de rank */}
+      <div className="paper" style={{ display:'inline-block', borderRadius:2, padding:'1rem 2rem', margin:'1.5rem 0', border:`1px solid ${C.gold}` }}>
+        <div style={{ fontSize:'2rem', marginBottom:'.3rem' }}>{badge}</div>
+        <div style={{ fontFamily:"'Special Elite',serif", fontSize:'.82rem', letterSpacing:3, color:C.gold }}>{rank}</div>
+      </div>
+
+      <div className="paper" style={{ borderRadius:2, padding:'1.5rem', textAlign:'left', marginBottom:'1.5rem' }}>
+        {[['XP Total',`${xp} XP`],['Acertos Totais',`${totalCorrect} / ${totalAnswered}`],['Aproveitamento Geral',`${pct}%`],['Casos Resolvidos','5 / 5']].map(([l,v])=>(
+          <div key={l} style={{ display:'flex', justifyContent:'space-between', padding:'.65rem 0', borderBottom:`1px solid ${C.inkDim}`, fontSize:'.87rem' }}>
+            <span style={{ fontFamily:"'Courier Prime',monospace", color:C.inkMuted }}>{l}</span>
+            <span style={{ fontFamily:"'Special Elite',serif", color:C.gold, letterSpacing:1 }}>{v}</span>
           </div>
         ))}
       </div>
-      <p style={{...S.muted,fontSize:'.82rem',lineHeight:1.85,marginBottom:'1.4rem'}}>Agora você está preparado para atuar com excelência no Pack Quality. Lembre-se: qualidade não é punição — é parceria!</p>
-      <Btn variant="gold" onClick={onReset}>↺ JOGAR NOVAMENTE</Btn>
+
+      <div style={{ fontFamily:"'Courier Prime',monospace", fontSize:'.82rem', color:C.inkMuted, lineHeight:1.9, marginBottom:'1.5rem', fontStyle:'italic' }}>
+        "Qualidade não é punição — é parceria."<br/>
+        <span style={{ fontSize:'.75rem', color:C.inkDim }}>— Pack Quality, InvOps Brasil</span>
+      </div>
+
+      <DetBtn variant="green" onClick={() => { sfx.click(); onReset(); }}>↺ NOVO CASO</DetBtn>
     </div>
   );
-}
+};
 
+// ===================== APP PRINCIPAL =====================
 function App() {
-  const [screen, setScreen] = useState('intro');
+  const [screen, setScreen] = useState('name');
+  const [analyst, setAnalyst] = useState('');
+  const [district, setDistrict] = useState('');
   const [xp, setXp] = useState(0);
   const [lives, setLives] = useState(3);
   const [totalCorrect, setTotalCorrect] = useState(0);
@@ -363,13 +771,21 @@ function App() {
   const [completed, setCompleted] = useState(new Set());
   const [activeMission, setActiveMission] = useState(null);
   const [missionResult, setMissionResult] = useState(null);
-  const [audioOn, setAudioOn] = useState(true);
-  const audio = useAudio();
+  const [musicOn, setMusicOn] = useState(true);
+  const music = useBGMusic();
 
-  const startGame = () => { audio.click(); setScreen('map'); };
-  const goToMap = () => { audio.click(); setScreen('map'); };
+  const handleStart = (name, dist) => {
+    setAnalyst(name); setDistrict(dist);
+    setScreen('map');
+    setTimeout(() => music.start(), 300);
+  };
 
-  const startMission = (i) => { audio.start(); setActiveMission(i); setScreen('mission'); };
+  const goToMap = () => { music.sfx.click(); setScreen('map'); };
+
+  const startMission = (i) => {
+    music.sfx.click();
+    setActiveMission(i); setScreen('mission');
+  };
 
   const finishMission = (correct, total) => {
     const passed = correct/total >= 0.5;
@@ -378,39 +794,48 @@ function App() {
     setTotalAnswered(a => a+total);
     setMissionResult({correct, total});
     setScreen('result');
-    if (passed && completed.size+1 === MISSIONS.length) setTimeout(()=>audio.victory(), 400);
+    if (passed && completed.size+1 === MISSIONS.length) setTimeout(() => music.sfx.victory(), 400);
   };
 
-  const showFinal = () => { audio.victory(); setScreen('final'); };
+  const showFinal = () => { setScreen('final'); };
 
   const resetGame = () => {
-    audio.click();
-    setScreen('intro'); setXp(0); setLives(3);
-    setTotalCorrect(0); setTotalAnswered(0);
+    setScreen('name'); setAnalyst(''); setDistrict('');
+    setXp(0); setLives(3); setTotalCorrect(0); setTotalAnswered(0);
     setCompleted(new Set()); setActiveMission(null); setMissionResult(null);
+    music.stop();
   };
 
-  const hudMission = screen==='mission'&&activeMission!==null ? MISSIONS[activeMission].title : screen==='map' ? 'SELECIONE UMA MISSÃO' : screen==='result' ? 'RESULTADO DA MISSÃO' : '';
+  const toggleMusic = () => {
+    const on = music.toggle();
+    setMusicOn(on);
+  };
+
   const allDone = completed.size === MISSIONS.length;
 
   return (
-    <div style={{background:'#0a0f0a',color:'#e8f5e8',fontFamily:"'Segoe UI',sans-serif",minHeight:'100vh'}}>
-      {screen!=='intro' && (
-        <HUD xp={xp} lives={lives} correct={totalCorrect} total={totalAnswered} mission={hudMission}
-          audioOn={audioOn} onToggle={()=>{const s=audio.toggle();setAudioOn(s);}}/>
+    <div style={{ background:'#1a1208', color:'#e8dfc0', fontFamily:"'Courier Prime',monospace", minHeight:'100vh' }}>
+      {screen !== 'name' && (
+        <HUD xp={xp} lives={lives} correct={totalCorrect} total={totalAnswered}
+          analyst={analyst} musicOn={musicOn} onToggleMusic={toggleMusic} />
       )}
-      {screen==='intro' && <IntroScreen onStart={startGame}/>}
-      {screen==='map' && <MapScreen completed={completed} onSelect={startMission} onFinal={showFinal}/>}
+      {screen==='name' && <NameScreen onStart={handleStart} sfx={music.sfx} />}
+      {screen==='map' && <MapScreen analyst={analyst} district={district} completed={completed} onSelect={startMission} onFinal={showFinal} sfx={music.sfx} />}
       {screen==='mission' && activeMission!==null && (
-        <MissionScreen key={activeMission} mission={MISSIONS[activeMission]} onBack={goToMap}
-          onFinish={finishMission} onXP={v=>setXp(x=>x+v)} onLoseLife={()=>setLives(l=>Math.max(0,l-1))} audio={audio}/>
+        <MissionScreen key={activeMission} mission={MISSIONS[activeMission]} analyst={analyst}
+          onBack={goToMap} onFinish={finishMission}
+          onXP={v=>setXp(x=>x+v)} onLoseLife={()=>setLives(l=>Math.max(0,l-1))}
+          sfx={music.sfx} />
       )}
       {screen==='result' && missionResult && (
-        <ResultScreen correct={missionResult.correct} total={missionResult.total}
-          onBack={goToMap} onRetry={()=>startMission(activeMission)} showFinal={allDone?showFinal:null}/>
+        <ResultScreen analyst={analyst} correct={missionResult.correct} total={missionResult.total}
+          onBack={goToMap} onRetry={()=>startMission(activeMission)}
+          showFinal={allDone?showFinal:null} sfx={music.sfx} />
       )}
       {screen==='final' && (
-        <FinalScreen xp={xp} totalCorrect={totalCorrect} totalAnswered={totalAnswered} onReset={resetGame}/>
+        <FinalScreen analyst={analyst} district={district} xp={xp}
+          totalCorrect={totalCorrect} totalAnswered={totalAnswered}
+          onReset={resetGame} sfx={music.sfx} />
       )}
     </div>
   );
@@ -420,3 +845,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>
+v
