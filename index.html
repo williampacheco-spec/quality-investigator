@@ -10,529 +10,661 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=Oswald:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#1a1208;color:#e8dfc0;font-family:'Courier Prime',monospace;min-height:100vh;overflow-x:hidden;}
+body{background:#f5f0e8;color:#1a1208;font-family:'Courier Prime',monospace;min-height:100vh;}
 #root{position:relative;z-index:1;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.4;}
-body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.7) 100%);pointer-events:none;z-index:0;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.7}94%{opacity:1}96%{opacity:.8}97%{opacity:1}}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.7}94%{opacity:1}}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
-@keyframes timerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-@keyframes timerDrain{from{width:100%}to{width:0%}}
+@keyframes timerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+@keyframes pistaFail{0%{opacity:0;transform:scale(.7)}20%{opacity:1;transform:scale(1.08)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.95)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+
 .fadein{animation:fadeIn .5s ease;}
 .flicker{animation:flicker 8s infinite;}
 button{font-family:'Courier Prime',monospace;cursor:pointer;}
 input{font-family:'Courier Prime',monospace;}
 ::-webkit-scrollbar{width:6px;}
-::-webkit-scrollbar-track{background:#0d0a04;}
-::-webkit-scrollbar-thumb{background:#5c4a1e;border-radius:3px;}
-.paper{background:linear-gradient(135deg,#2a1f0a 0%,#1e1608 50%,#251c09 100%);border:1px solid #5c4a1e;box-shadow:0 4px 20px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,220,100,0.05);}
-.redstring{border-left:3px solid #8b1a1a;padding-left:1rem;}
+::-webkit-scrollbar-track{background:#e8e0cc;}
+::-webkit-scrollbar-thumb{background:#b8a878;border-radius:3px;}
+
+/* Fundo claro tipo papel envelhecido */
+.paper{
+  background:#fff8ee;
+  border:2px solid #c8b878;
+  box-shadow:0 3px 16px rgba(0,0,0,0.12);
+}
+.redstring{border-left:4px solid #8b1a1a;padding-left:1rem;}
+
+/* Cores acessíveis (daltonismo-friendly) */
+:root{
+  --gold:#b8860b;
+  --gold-light:#d4a017;
+  --red:#cc2200;
+  --green:#006633;
+  --blue:#0055aa;
+  --ink:#1a1208;
+  --ink-mid:#4a3a1a;
+  --ink-light:#7a6a4a;
+  --paper:#fff8ee;
+  --paper-dark:#f0e8d0;
+  --border:#c8b878;
+}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script>
 const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwGkSJo6qXv_2JaBK_bEc9J0WqUFL8AEtfY7IvUe01M3IOAX9OD0H5gg8tTO7JAlO7Huw/exec";
+
 async function saveResult(data) {
   try {
     await fetch(SHEETS_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(data)
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(data)
     });
-  } catch(e) { console.warn('Erro ao salvar:', e); }
+  } catch(e){ console.warn('Erro ao salvar:', e); }
 }
 </script>
 <script type="text/babel">
-const { useState, useRef, useEffect } = React;
+const { useState, useRef, useEffect, useCallback } = React;
 
-const C = {
-  gold:'#c9a227',goldLight:'#e8c84a',red:'#8b1a1a',redLight:'#c0392b',
-  ink:'#e8dfc0',inkMuted:'#9a8a6a',inkDim:'#6a5a3a',
-  greenLight:'#4a8a2a',
-};
-
-// ===================== MÚSICA =====================
-function useBGMusic() {
-  const ctxRef=useRef(null),nodesRef=useRef([]),playingRef=useRef(false),enabledRef=useRef(true),intervalRef=useRef(null);
-  const getCtx=()=>{if(!ctxRef.current)ctxRef.current=new(window.AudioContext||window.webkitAudioContext)();return ctxRef.current;};
-  const playNote=(freq,st,dur,type,vol,ac)=>{
-    if(!freq)return;
-    const o=ac.createOscillator(),g=ac.createGain(),f=ac.createBiquadFilter();
-    f.type='lowpass';f.frequency.value=1200;o.connect(f);f.connect(g);g.connect(ac.destination);
-    o.type=type;o.frequency.value=freq;
-    g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(vol,st+0.02);
-    g.gain.setValueAtTime(vol,st+dur-0.05);g.gain.linearRampToValueAtTime(0,st+dur);
-    o.start(st);o.stop(st+dur);nodesRef.current.push(o);
-  };
-  const melody=[[220,.3],[261,.3],[294,.15],[261,.15],[220,.3],[196,.6],[220,.3],[261,.3],[330,.3],[294,.3],[261,.6],[196,.3],[220,.3],[261,.15],[294,.15],[330,.3],[440,.6],[330,.3],[294,.3],[261,.3],[220,.3],[196,.6],[null,.3]];
-  const bass=[[110,.6],[110,.6],[130,.6],[98,.6],[110,.6],[110,.6],[130,.3],[146,.3],[110,.6],[110,.6],[130,.6],[98,.6],[110,.6],[110,.6],[123,.6],[110,.6]];
-  const playSeq=()=>{
-    if(!enabledRef.current)return;
-    const ac=getCtx();if(ac.state==='suspended')ac.resume();
-    let t=ac.currentTime+.1;
-    melody.forEach(([f,d])=>{playNote(f,t,d*.9,'triangle',.1,ac);t+=d;});
-    let bt=ac.currentTime+.1;
-    bass.forEach(([f,d])=>{playNote(f,bt,d*.8,'sawtooth',.07,ac);bt+=d*.75;});
-    let pt=ac.currentTime+.1;
-    for(let i=0;i<16;i++){const no=ac.createOscillator(),ng=ac.createGain();no.connect(ng);ng.connect(ac.destination);no.type='square';no.frequency.value=80;ng.gain.setValueAtTime(.04,pt);ng.gain.linearRampToValueAtTime(0,pt+.05);no.start(pt);no.stop(pt+.05);pt+=.375;}
-    intervalRef.current=setTimeout(playSeq,melody.reduce((s,[,d])=>s+d,0)*1000-200);
-  };
-  const start=()=>{if(playingRef.current||!enabledRef.current)return;playingRef.current=true;playSeq();};
-  const stop=()=>{playingRef.current=false;clearTimeout(intervalRef.current);nodesRef.current.forEach(n=>{try{n.stop();}catch(e){}});nodesRef.current=[];};
-  const toggle=()=>{enabledRef.current=!enabledRef.current;if(!enabledRef.current)stop();else{playingRef.current=false;start();}return enabledRef.current;};
-  const sfx={
-    correct:()=>{if(!enabledRef.current)return;try{const ac=getCtx();if(ac.state==='suspended')ac.resume();[523,659,784,1047].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='triangle';o.frequency.value=f;const t=ac.currentTime+i*.1;g.gain.setValueAtTime(.2,t);g.gain.linearRampToValueAtTime(0,t+.2);o.start(t);o.stop(t+.2);});}catch(e){}},
-    wrong:()=>{if(!enabledRef.current)return;try{const ac=getCtx();if(ac.state==='suspended')ac.resume();[220,196].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sawtooth';o.frequency.value=f;const t=ac.currentTime+i*.15;g.gain.setValueAtTime(.15,t);g.gain.linearRampToValueAtTime(0,t+.25);o.start(t);o.stop(t+.25);});}catch(e){}},
-    click:()=>{if(!enabledRef.current)return;try{const ac=getCtx();if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.value=660;g.gain.setValueAtTime(.08,ac.currentTime);g.gain.linearRampToValueAtTime(0,ac.currentTime+.08);o.start();o.stop(ac.currentTime+.08);}catch(e){}},
-    victory:()=>{if(!enabledRef.current)return;try{const ac=getCtx();if(ac.state==='suspended')ac.resume();[523,587,659,698,784,880,988,1047].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='triangle';o.frequency.value=f;const t=ac.currentTime+i*.1;g.gain.setValueAtTime(.18,t);g.gain.linearRampToValueAtTime(0,t+.3);o.start(t);o.stop(t+.3);});}catch(e){}},
-    timeout:()=>{if(!enabledRef.current)return;try{const ac=getCtx();if(ac.state==='suspended')ac.resume();[440,330,220].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sawtooth';o.frequency.value=f;const t=ac.currentTime+i*.18;g.gain.setValueAtTime(.15,t);g.gain.linearRampToValueAtTime(0,t+.3);o.start(t);o.stop(t+.3);});}catch(e){}},
-  };
-  return{start,stop,toggle,sfx,isOn:()=>enabledRef.current};
-}
-
-// ===================== 15 PERGUNTAS GERAIS =====================
+// ===================== 15 PERGUNTAS (com pegadinhas) =====================
 const ALL_QUESTIONS = [
-  {q:"Por que o registro do MO (Modus Operandi) é obrigatório mesmo quando a decisão está correta?",opts:["Não é obrigatório se a decisão estiver certa","Garante rastreabilidade e aprendizado para toda a operação","É apenas formalidade burocrática","Só é exigido em casos acima de R$10.000"],correct:1,fb:"O MO é parte fundamental do processo — sem ele o caso é NOK mesmo com decisão certa.",fbWrong:"O scorecard avalia o processo completo, não só a decisão final."},
-  {q:"O que é o Modus Operandi (MO) de um caso de fraude?",opts:["O nome do sistema interno de monitorias","O padrão de comportamento fraudulento que explica como o crime foi cometido","Uma métrica de performance individual do analista","O protocolo de escalação para casos complexos"],correct:1,fb:"MO = padrão comportamental da fraude. Documentá-lo permite entender tendências e melhorar modelos.",fbWrong:"MO = Modus Operandi. É o padrão de comportamento fraudulento identificado no caso."},
-  {q:"O que uma contestação PROCEDENTE significa para o Pack Quality?",opts:["O analista foi punido duplamente","O Quality errou — isso alimenta o processo de melhoria interna","O caso volta para reavaliação pelo distrito","O scorecard do analista é zerado"],correct:1,fb:"Contestação procedente = Quality errou. É dado valioso que alimenta calibração e melhoria contínua.",fbWrong:"Contestação procedente significa que o Quality errou na avaliação — é dado para melhoria."},
-  {q:"Qual é o canal oficial para abrir uma contestação de monitoria?",opts:["Slack direto para o analista de Quality","Portal Quality Requests via Jira Service Management","Formulário Google Forms por e-mail","Ticket no Databricks"],correct:1,fb:"Jira Quality Requests garante rastreabilidade, prazo de resposta e histórico estruturado.",fbWrong:"O canal correto é o Jira Quality Requests. Canais informais perdem rastreabilidade e prazo."},
-  {q:"Por que muitos analistas têm receio de contestar um feedback do Quality mesmo quando discordam?",opts:["Porque o processo de contestação é muito caro e demorado","Por medo de parecer problemático — mas esse medo é infundado, contestar é um direito","Porque o Quality nunca reverte apontamentos","Porque a contestação exige aprovação prévia do gestor"],correct:1,fb:"Contestar com evidência é um direito do analista e ajuda o Quality a melhorar. Nunca há consequências negativas por contestar de forma fundamentada.",fbWrong:"O receio de represálias ao contestar é comum — mas infundado. Contestar com evidência é um direito e uma contribuição para a melhoria do processo."},
-  {q:"Você investigou um caso, tomou a decisão certa, mas esqueceu de registrar a comunicação ao cliente. O que acontece no scorecard?",opts:["Fica OK porque a decisão estava correta","Fica NOK — o registro da comunicação é critério obrigatório independente da decisão","Depende do distrito — em alguns é opcional","Só fica NOK se o cliente reclamar depois"],correct:1,fb:"Decisão certa + processo incompleto = NOK. O scorecard avalia o processo todo, não só o resultado. O registro da comunicação protege o analista e o cliente.",fbWrong:"Mesmo com a decisão certa, etapas faltando geram NOK. O scorecard avalia o processo completo — não só onde você chegou, mas como chegou lá."},
-  {q:"Um analista recebeu um feedback NOK e discorda. O que ele deve fazer PRIMEIRO antes de contestar?",opts:["Mandar mensagem no Slack para o analista de Quality","Reunir a evidência técnica que mostra que o critério foi atendido","Escalar direto para o líder do distrito","Aguardar a próxima calibração para resolver"],correct:1,fb:"Antes de contestar, reúna a evidência. Contestação sem evidência técnica tende a ser improcedente. Com evidência sólida, o Quality reverte — e isso é bom para os dois lados.",fbWrong:"O primeiro passo é reunir a evidência técnica que contradiz o apontamento. Só depois abrir a contestação no Jira Quality Requests."},
-  {q:"O Quality identificou um padrão de erro repetido em vários analistas do mesmo distrito. Qual é o próximo passo do Pack?",opts:["Aumentar o número de NOKs desse distrito no mês seguinte","Usar os dados para propor uma calibração e alinhar o critério com o distrito","Reportar o padrão apenas para os líderes sem envolver os analistas","Arquivar o padrão e aguardar a próxima monitoria"],correct:1,fb:"Padrão de erro = oportunidade de aprendizado coletivo. O Pack usa esses dados para propor calibrações e alinhar com o distrito — não para punir, mas para melhorar junto.",fbWrong:"Quando um padrão aparece, o Quality age como parceiro: leva o dado para uma calibração e alinha o critério com o distrito. O objetivo é melhorar, não punir."},
-  {q:"O que diferencia um Apontamento Externo de uma monitoria regular?",opts:["Apontamento Externo é feito por auditores externos ao Nubank","Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence — fora da monitoria regular","Contestação feita por analista de outro distrito","Monitoria realizada em analistas de outros países"],correct:1,fb:"Apontamentos Externos vêm de Reputational, Regulatory, FLC ou InvOps Intelligence — fora da monitoria regular.",fbWrong:"Apontamento Externo = erro identificado por fontes externas à monitoria regular."},
-  {q:"Qual ferramenta do Pack Quality permite analisar padrões de erro por tema para os líderes?",opts:["Notebook no Databricks com categorização por IA (GPT-4o)","O SPOT — apenas para monitorias individuais","QuickSight com dados de SLA","Google Forms da pesquisa NPS"],correct:0,fb:"O notebook com IA (GPT-4o via LiteLLM) categoriza erros por tema — análise que antes era manual e demorada.",fbWrong:"O notebook no Databricks com IA é a ferramenta certa para análise de padrões de erro."},
-  {q:"Se um analista documenta adequadamente a ausência de evidências, sem concluir bloqueio, qual é o resultado esperado?",opts:["Sempre será NOK por não bloquear","Pode ser OK — a decisão deve ser embasada em evidências disponíveis","NOK automático por falta de ação","Precisa de aprovação do IC4"],correct:1,fb:"A decisão deve ser embasada em evidências. Documentar a ausência de evidências é parte do processo correto.",fbWrong:"O que define OK ou NOK é a qualidade do processo investigativo, não apenas a decisão de bloquear."},
-  {q:"O Quality fez uma monitoria e identificou que o analista tomou a decisão certa mas não documentou o raciocínio investigativo. Como o analista pode evitar isso nos próximos casos?",opts:["Esperar o próximo feedback de monitoria para corrigir","Registrar no sistema o passo a passo do raciocínio investigativo durante a análise, não depois","Pedir para o líder documentar por ele","Contestar o feedback pois a decisão estava certa"],correct:1,fb:"Documentar o raciocínio durante a análise é hábito que protege o analista. O Quality avalia o processo completo — e a documentação é parte central disso.",fbWrong:"A documentação do raciocínio investigativo deve acontecer durante a análise. O Quality avalia o processo completo, não só a decisão final."},
-  {q:"Qual é a missão central do Pack Quality InvOps Brasil?",opts:["Punir analistas com erros e atingir meta de NOK","Garantir qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua","Substituir os líderes de distrito nas decisões de performance","Apenas realizar monitorias mensais e reportar"],correct:1,fb:"O Pack Quality é parceiro estratégico — não auditor punitivo. Parceria para uma operação mais inteligente.",fbWrong:"O Pack Quality é muito mais que monitorias — é parceiro na melhoria contínua das decisões."},
-  {q:"O que acontece quando 25% das contestações de um analista são julgadas procedentes?",opts:["O analista está contestando demais e deve parar","1 em cada 4 revelou erro do Quality — dado importante para calibração dos critérios","O analista será desclassificado no ranking de performance","Indica que o Quality está funcionando perfeitamente"],correct:1,fb:"25% de procedência = Quality errou em 1 de cada 4 avaliações. Sinal direto para calibrar critérios.",fbWrong:"Contestações procedentes são dados valiosos. 25% = Quality errou em 1 de cada 4 avaliações."},
-  {q:"Qual é a diferença entre o Pack Quality ser um 'parceiro' e ser um 'auditor' da operação?",opts:["Nenhuma — as duas palavras significam a mesma coisa","Parceiro trabalha junto para melhorar; auditor só fiscaliza e aplica punições","Auditor tem mais autoridade que parceiro","Parceiro é o nome informal e auditor é o nome oficial do papel"],correct:1,fb:"O Pack Quality existe para ser parceiro — identifica padrões, calibra critérios, ouve a operação e age junto para melhorar. Não é fiscal, é aliado.",fbWrong:"A diferença é fundamental: parceiro trabalha junto para melhorar; auditor só fiscaliza. O Pack Quality é parceiro da operação."},
+  {
+    q:"Por que o registro do MO (Modus Operandi) é obrigatório mesmo quando a decisão está correta?",
+    opts:[
+      "A — Não é obrigatório se a decisão estiver certa, o resultado já basta",
+      "B — Garante rastreabilidade e aprendizado para toda a operação, independente da decisão",
+      "C — É exigido apenas para casos com valor acima de R$10.000",
+      "D — Só o IC4 precisa documentar o MO, analistas IC2 e IC3 são isentos"
+    ],
+    correct:1,
+    fb:"O MO é obrigatório sempre — sem ele o caso é NOK mesmo com decisão certa. O processo completo importa tanto quanto o resultado.",
+    fbWrong:"Cuidado com essa! Independente de qualquer valor ou nível, o MO é obrigatório. O scorecard avalia o processo, não só o resultado final."
+  },
+  {
+    q:"O que é o Modus Operandi (MO) de um caso de fraude?",
+    opts:[
+      "A — O nome do sistema interno de monitorias do Nubank",
+      "B — O protocolo de escalação obrigatória para o IC4 em casos graves",
+      "C — O padrão de comportamento fraudulento que explica como o crime foi cometido",
+      "D — A métrica que define o score de performance mensal do analista"
+    ],
+    correct:2,
+    fb:"MO = padrão comportamental da fraude. Documentá-lo permite que o Pack Quality entenda tendências e melhore os modelos de detecção.",
+    fbWrong:"MO é Modus Operandi — o padrão de comportamento da fraude. Não é sistema, protocolo ou métrica de performance."
+  },
+  {
+    q:"Além da decisão final, o que mais o scorecard do Pack Quality avalia?",
+    opts:[
+      "A — Apenas a decisão final importa; o processo é secundário",
+      "B — O tempo que o analista levou para fechar o caso",
+      "C — A qualidade do processo investigativo completo: documentação, MO e comunicação",
+      "D — O número de casos resolvidos no mês"
+    ],
+    correct:2,
+    fb:"O scorecard avalia o processo inteiro — decisão, documentação do MO e comunicação ao cliente. Cada etapa é um critério independente.",
+    fbWrong:"O scorecard vai muito além da decisão. Ele avalia documentação, MO, comunicação ao cliente — o processo completo."
+  },
+  {
+    q:"Você investigou um caso, tomou a decisão certa de bloquear, mas esqueceu de registrar a comunicação ao cliente. O que acontece?",
+    opts:[
+      "A — Fica OK, pois a decisão estava correta e o resultado é o que conta",
+      "B — O Quality considera o contexto e marca como OK com ressalva",
+      "C — Fica NOK — o registro da comunicação é critério obrigatório independente da decisão",
+      "D — Depende do distrito; em alguns a comunicação é opcional"
+    ],
+    correct:2,
+    fb:"Decisão certa + processo incompleto = NOK. O registro da comunicação protege o analista e o cliente. Não há exceção por distrito.",
+    fbWrong:"Mesmo com decisão certa, a falta de registro da comunicação gera NOK. Não existe exceção por distrito — é critério universal."
+  },
+  {
+    q:"Um analista recebeu um feedback NOK e discorda completamente. Qual é o PRIMEIRO passo correto?",
+    opts:[
+      "A — Falar diretamente com o analista de Quality no Slack para resolver informalmente",
+      "B — Reunir a evidência técnica que mostra que o critério foi atendido, depois abrir contestação no Jira",
+      "C — Escalar imediatamente para o líder do distrito resolver",
+      "D — Aceitar o NOK pois contestar pode prejudicar a performance"
+    ],
+    correct:1,
+    fb:"Primeiro reúna a evidência, depois abra a contestação no Jira Quality Requests. Contestar com evidência é um direito — nunca prejudica a performance.",
+    fbWrong:"O caminho correto: evidência primeiro, Jira depois. Slack e escalonamento não são os canais certos. E contestar jamais prejudica a performance."
+  },
+  {
+    q:"O que uma contestação julgada PROCEDENTE significa para o Pack Quality?",
+    opts:[
+      "A — Que o analista ganhou o argumento mas o NOK permanece no histórico",
+      "B — Que o Quality errou na avaliação — dado que alimenta calibração e melhoria",
+      "C — Que o caso volta para reavaliação por um IC4 do distrito",
+      "D — Que o scorecard do analista é automaticamente zerado"
+    ],
+    correct:1,
+    fb:"Contestação procedente = Quality errou. Isso é valioso! O Pack usa esse dado para calibrar critérios e melhorar. O NOK é removido do histórico.",
+    fbWrong:"Contestação procedente significa que o Quality errou — e o NOK é removido. Não existe 'NOK permanente após contestação procedente'."
+  },
+  {
+    q:"Por que muitos analistas têm receio de contestar um feedback mesmo quando discordam?",
+    opts:[
+      "A — Porque o processo de contestação é pago e tem custo para o analista",
+      "B — Por medo de parecer problemático ou sofrer consequências — mas esse medo é completamente infundado",
+      "C — Porque o Quality raramente reverte apontamentos, então não vale tentar",
+      "D — Porque a contestação exige aprovação prévia do gestor direto"
+    ],
+    correct:1,
+    fb:"O medo existe mas é infundado. Contestar com evidência é um direito e nunca gera consequências negativas. O Quality incentiva contestações fundamentadas.",
+    fbWrong:"Não existe custo, raridade de reversão ou aprovação prévia. O medo de represálias é infundado — contestar é um direito sem consequências."
+  },
+  {
+    q:"Uma contestação aberta sem nenhuma evidência técnica tende a ser julgada como:",
+    opts:[
+      "A — Procedente, pois o analista tem sempre o benefício da dúvida",
+      "B — Automaticamente arquivada após 5 dias sem resposta",
+      "C — Improcedente — sem evidência não há como contradizer o critério apontado",
+      "D — Escalada para o M2 decidir independente da evidência"
+    ],
+    correct:2,
+    fb:"Sem evidência técnica, a contestação tende a ser improcedente. O Jira Quality Requests garante o processo, mas a evidência é o que faz a diferença.",
+    fbWrong:"O benefício da dúvida não existe em contestações. Sem evidência técnica concreta, o resultado tende a ser improcedente."
+  },
+  {
+    q:"Qual é o canal OFICIAL para abrir uma contestação de monitoria?",
+    opts:[
+      "A — Slack direto para o analista de Quality responsável pelo distrito",
+      "B — E-mail para o líder do Pack Quality com o caso detalhado",
+      "C — Portal Quality Requests via Jira Service Management",
+      "D — Formulário no Google Forms enviado por e-mail para o Pack"
+    ],
+    correct:2,
+    fb:"Jira Quality Requests é o canal oficial. Garante rastreabilidade, prazo de resposta definido e histórico para análises mensais do Pack.",
+    fbWrong:"Slack, e-mail e Google Forms são canais informais — perdem rastreabilidade e prazo. O canal oficial é o Jira Quality Requests."
+  },
+  {
+    q:"O Quality identificou um padrão de erro idêntico em vários analistas do mesmo distrito. Qual é o próximo passo do Pack?",
+    opts:[
+      "A — Aumentar o percentual de NOKs desse distrito no próximo mês como alerta",
+      "B — Usar os dados para propor uma calibração e alinhar o critério com o distrito",
+      "C — Reportar o padrão apenas aos líderes, sem envolver os analistas diretamente",
+      "D — Aguardar 3 meses para confirmar se é tendência antes de agir"
+    ],
+    correct:1,
+    fb:"Padrão de erro = oportunidade de aprendizado coletivo. O Pack propõe calibração para alinhar o critério com o distrito. A ideia é melhorar, não punir.",
+    fbWrong:"O Quality não aumenta NOKs nem aguarda meses. Padrão identificado = calibração proposta. Parceria para melhorar, não fiscalização para punir."
+  },
+  {
+    q:"O que é um Apontamento Externo no contexto do Pack Quality?",
+    opts:[
+      "A — Um erro identificado por auditor externo contratado pelo Nubank",
+      "B — Uma contestação feita por analista de outro distrito sobre seu próprio caso",
+      "C — Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence — fora da monitoria regular",
+      "D — Uma monitoria surpresa realizada sem aviso prévio ao analista"
+    ],
+    correct:2,
+    fb:"Apontamentos Externos vêm de fontes como Reputational, Regulatory, FLC ou InvOps Intelligence. O Pack avalia, categoriza e converte em apontamentos formais.",
+    fbWrong:"Não é auditor externo, contestação de outro distrito nem monitoria surpresa. São erros identificados por fontes internas específicas fora da monitoria regular."
+  },
+  {
+    q:"Você fez a análise correta e documentou bem, mas não registrou o raciocínio investigativo no sistema. Como evitar NOK?",
+    opts:[
+      "A — Pedir para o líder registrar depois, pois o analista já fez a parte investigativa",
+      "B — Registrar o raciocínio DURANTE a análise, não depois — é parte do processo avaliado",
+      "C — O raciocínio investigativo não precisa ser registrado, só a decisão final",
+      "D — Contestar preventivamente antes da monitoria para garantir OK"
+    ],
+    correct:1,
+    fb:"Registrar o raciocínio durante a análise é o hábito certo. O Quality avalia o processo completo — e o raciocínio documentado é evidência do trabalho bem feito.",
+    fbWrong:"Não existe contestação preventiva nem registro pelo líder. O raciocínio deve ser registrado durante a análise, pelo próprio analista, no sistema."
+  },
+  {
+    q:"Qual é a diferença fundamental entre o Pack Quality ser PARCEIRO e ser AUDITOR da operação?",
+    opts:[
+      "A — Nenhuma diferença prática; os dois papéis fazem o mesmo trabalho",
+      "B — Auditor tem mais autoridade para bloquear decisões dos analistas",
+      "C — Parceiro trabalha junto para melhorar; auditor apenas fiscaliza e aplica sanções",
+      "D — Parceiro é o nome informal e auditor é o nome oficial do cargo"
+    ],
+    correct:2,
+    fb:"A diferença é fundamental: parceiro trabalha junto, calibra critérios e melhora com a operação. Auditor só fiscaliza. O Pack Quality é parceiro.",
+    fbWrong:"Não é questão de autoridade, nomenclatura ou similaridade. Parceiro = trabalha junto para melhorar. Auditor = só fiscaliza. O Pack é parceiro."
+  },
+  {
+    q:"Qual ferramenta do Pack Quality analisa padrões de erro por tema usando Inteligência Artificial?",
+    opts:[
+      "A — O SPOT, acessado durante as monitorias individuais de cada caso",
+      "B — O QuickSight com dashboards de SLA e volume de atendimento",
+      "C — O Google Forms utilizado nas pesquisas de satisfação internas",
+      "D — Notebook no Databricks com categorização por IA (GPT-4o via LiteLLM)"
+    ],
+    correct:3,
+    fb:"O notebook no Databricks com IA categoriza erros por tema e distrito automaticamente — análise que antes era manual e demorava horas.",
+    fbWrong:"SPOT, QuickSight e Google Forms têm outros papéis. A ferramenta de análise de padrões por IA é o notebook no Databricks com GPT-4o."
+  },
+  {
+    q:"Qual é a missão central do Pack Quality InvOps Brasil?",
+    opts:[
+      "A — Garantir que a meta de NOKs mensais seja atingida em todos os distritos",
+      "B — Substituir os líderes de distrito nas decisões de performance individual",
+      "C — Apenas realizar monitorias mensais e entregar relatórios de erro",
+      "D — Garantir qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua"
+    ],
+    correct:3,
+    fb:"O Pack Quality é parceiro estratégico — não auditor punitivo. Monitorias, contestações, calibrações e dados: tudo converge para uma operação mais justa e eficiente.",
+    fbWrong:"Meta de NOKs, substituir líderes ou só fazer relatórios não definem o Pack Quality. A missão é ser parceiro na melhoria contínua das decisões investigativas."
+  },
 ];
 
-// Missões com 3 perguntas cada (15 no total, 5 missões)
-function buildMissions() {
-  // Embaralha as 15 perguntas
-  const shuffled = [...ALL_QUESTIONS].sort(() => Math.random() - .5);
-  const missions = [
-    {id:0,title:"SCORECARD: DECIFRANDO O CÓDIGO",icon:"📊",caseNum:"CASO #001",desc:"Um apontamento NOK chegou na sua mesa. Investigue os critérios antes de tomar uma decisão.",tags:[{label:"Scorecard",color:C.gold}],xpReward:100,story:"O detetive recebeu um envelope lacrado. Dentro, um feedback NOK — o cliente foi bloqueado, o caso fechado. Mas algo está errado no processo. Investigue."},
-    {id:1,title:"CONTESTAÇÃO: A ARTE DE DISCORDAR",icon:"⚖️",caseNum:"CASO #002",desc:"Uma analista sênior acredita que seu apontamento foi injusto.",tags:[{label:"Contestação",color:C.redLight}],xpReward:100,story:"Rosemeire (IC3s) trouxe evidências. O Quality disse que ela não verificou o dispositivo — mas ela tem screenshot. O caso está nas suas mãos."},
-    {id:2,title:"QUALIDADE NA OPERAÇÃO",icon:"🔍",caseNum:"CASO #003",desc:"O dia a dia da operação sob o olhar do Quality.",tags:[{label:"Operação",color:C.greenLight}],xpReward:100,story:"Casos reais chegaram ao escritório. Cada decisão conta. O processo importa tanto quanto o resultado."},
-    {id:3,title:"PARCERIA NA PRÁTICA",icon:"🤝",caseNum:"CASO #004",desc:"O dia a dia entre Quality e operação — situações reais que todo analista já viveu.",tags:[{label:"Parceria",color:C.greenLight}],xpReward:100,story:"Casos do cotidiano chegaram ao escritório. Cada situação é uma oportunidade de entender melhor como o Quality e a operação trabalham juntos."},
-    {id:4,title:"MISSÃO FINAL: QUALIDADE É PARCERIA",icon:"🤝",caseNum:"CASO #005",desc:"O caso mais complexo. Integre tudo que você aprendeu.",tags:[{label:"Integração",color:C.gold}],xpReward:100,story:"Um analista IC3p com 18% de erros, várias contestações e um líder buscando respostas. O Quality tem os dados. A operação tem a experiência. Juntos, vão encontrar o caminho."},
-  ];
-  return missions.map((m, i) => ({...m, questions: shuffled.slice(i*3, i*3+3)}));
-}
+// Embaralha as perguntas
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-.5); }
 
 // ===================== TIMER =====================
-function Timer({seconds, onTimeout, paused}) {
+function Timer({seconds, onTimeout, paused, onTick}){
   const [left, setLeft] = useState(seconds);
   const ref = useRef(null);
-  useEffect(() => {
-    setLeft(seconds);
-  }, [seconds]);
-  useEffect(() => {
-    if(paused) { clearInterval(ref.current); return; }
-    ref.current = setInterval(() => {
-      setLeft(p => {
-        if(p <= 1) { clearInterval(ref.current); onTimeout(); return 0; }
-        return p - 1;
+  useEffect(()=>{ setLeft(seconds); }, [seconds]);
+  useEffect(()=>{
+    if(paused){ clearInterval(ref.current); return; }
+    ref.current = setInterval(()=>{
+      setLeft(p=>{
+        const next = p-1;
+        if(onTick) onTick(next);
+        if(next<=0){ clearInterval(ref.current); onTimeout(); return 0; }
+        return next;
       });
-    }, 1000);
-    return () => clearInterval(ref.current);
-  }, [paused, seconds]);
+    },1000);
+    return ()=>clearInterval(ref.current);
+  },[paused, seconds]);
 
-  const pct = (left / seconds) * 100;
-  const color = left > 15 ? C.greenLight : left > 8 ? '#e67e22' : C.redLight;
-  const urgent = left <= 8;
+  const pct=(left/seconds)*100;
+  const color = left>20?'var(--green)':left>10?'#cc7700':'var(--red)';
+  const urgent = left<=10;
 
   return (
-    <div style={{marginBottom:'1.1rem'}}>
-      <div style={{display:'flex',alignItems:'center',gap:'.75rem',marginBottom:'.4rem'}}>
-        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.7rem',color:'rgba(232,223,192,.5)',letterSpacing:2}}>TEMPO</div>
+    <div style={{marginBottom:'1rem'}}>
+      <div style={{display:'flex',alignItems:'center',gap:'.75rem',marginBottom:'.35rem'}}>
+        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.72rem',color:'var(--ink-light)',letterSpacing:2,fontWeight:'bold'}}>⏱ TEMPO</div>
         <div style={{
-          fontFamily:"'Orbitron',monospace",fontSize:'1.4rem',fontWeight:700,
-          color:color,
-          animation: urgent ? 'timerPulse .6s ease-in-out infinite' : 'none',
-          transition:'color .3s',
-          minWidth:40,textAlign:'center',
-        }}>
-          {String(left).padStart(2,'0')}
-        </div>
-        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.65rem',color:'rgba(232,223,192,.4)'}}>SEG</div>
+          fontFamily:"'Oswald',sans-serif",fontSize:'1.6rem',fontWeight:700,
+          color:color,minWidth:44,textAlign:'center',
+          animation:urgent?'timerPulse .5s ease-in-out infinite':'none',
+        }}>{String(left).padStart(2,'0')}</div>
+        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.65rem',color:'var(--ink-light)',fontWeight:'bold'}}>SEG</div>
       </div>
-      <div style={{height:6,background:'rgba(255,255,255,.08)',borderRadius:3,overflow:'hidden'}}>
-        <div style={{
-          height:'100%',borderRadius:3,
-          background: left > 15 ? `linear-gradient(90deg,${C.greenLight},#5daa35)` : left > 8 ? 'linear-gradient(90deg,#e67e22,#f39c12)' : `linear-gradient(90deg,${C.redLight},#e74c3c)`,
-          width:`${pct}%`,
-          transition:'width 1s linear, background .3s',
-        }}/>
+      <div style={{height:8,background:'#e0d8c0',borderRadius:4,overflow:'hidden',border:'1px solid var(--border)'}}>
+        <div style={{height:'100%',borderRadius:4,background:color,width:`${pct}%`,transition:'width 1s linear, background .3s'}}/>
       </div>
     </div>
   );
 }
 
-// ===================== COMPONENTES =====================
-const DetBtn = ({children,onClick,variant='default',style={},disabled=false})=>{
+// ===================== COMPONENTES BASE =====================
+const Btn = ({children,onClick,variant='default',style={},disabled=false})=>{
+  const cols={
+    default:{bg:'var(--gold)',text:'#fff',border:'var(--gold)',hbg:'var(--gold-light)'},
+    outline:{bg:'transparent',text:'var(--gold)',border:'var(--gold)',hbg:'rgba(184,134,11,.1)'},
+    green:{bg:'var(--green)',text:'#fff',border:'var(--green)',hbg:'#008844'},
+    red:{bg:'var(--red)',text:'#fff',border:'var(--red)',hbg:'#aa1100'},
+    gray:{bg:'#888',text:'#fff',border:'#888',hbg:'#666'},
+  };
   const [hov,setHov]=useState(false);
-  const cols={default:{base:C.gold,hover:C.goldLight,bg:'rgba(201,162,39,0.1)'},danger:{base:C.redLight,hover:'#e74c3c',bg:'rgba(192,57,43,0.1)'},ghost:{base:C.inkMuted,hover:C.ink,bg:'rgba(232,223,192,0.05)'},green:{base:C.greenLight,hover:'#5daa35',bg:'rgba(74,138,42,0.1)'}};
-  const col=cols[variant]||cols.default;
-  return <button onClick={disabled?undefined:onClick} disabled={disabled} onMouseEnter={()=>!disabled&&setHov(true)} onMouseLeave={()=>setHov(false)} style={{fontFamily:"'Special Elite',serif",fontSize:'.82rem',letterSpacing:'2px',padding:'10px 24px',background:hov&&!disabled?col.bg:'transparent',border:`1px solid ${hov&&!disabled?col.hover:col.base}`,color:hov&&!disabled?col.hover:col.base,borderRadius:'2px',cursor:disabled?'not-allowed':'pointer',textTransform:'uppercase',transition:'all .2s',opacity:disabled?.5:1,boxShadow:hov&&!disabled?`0 0 12px ${col.bg}`:'none',...style}}>{children}</button>;
+  const c=cols[variant]||cols.default;
+  return (
+    <button onClick={disabled?undefined:onClick} disabled={disabled}
+      onMouseEnter={()=>!disabled&&setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{
+        fontFamily:"'Oswald',sans-serif",fontSize:'1rem',letterSpacing:'2px',
+        fontWeight:600,padding:'12px 28px',
+        background:hov&&!disabled?c.hbg:c.bg,
+        border:`2px solid ${c.border}`,color:c.text,
+        borderRadius:'4px',cursor:disabled?'not-allowed':'pointer',
+        textTransform:'uppercase',transition:'all .15s',
+        opacity:disabled?.5:1,
+        boxShadow:hov&&!disabled?'0 3px 12px rgba(0,0,0,0.2)':'0 2px 6px rgba(0,0,0,0.1)',
+        ...style
+      }}>{children}</button>
+  );
 };
 
 // TELA PISTA
-const PistaScreen = ({onAnswer, sfx}) => {
-  const [answered, setAnswered] = useState(false);
-  const handle = (sim) => { sfx.click(); setAnswered(true); setTimeout(() => onAnswer(sim), 500); };
+const PistaScreen = ({onAnswer})=>{
+  const [ans,setAns]=useState(null);
+  const handle=(sim)=>{ setAns(sim); setTimeout(()=>onAnswer(sim),500); };
   return (
-    <div className="fadein" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'85vh',padding:'2rem',textAlign:'center',gap:'1.5rem'}}>
-      <div style={{fontFamily:"'Special Elite',serif",fontSize:'.7rem',color:C.gold,letterSpacing:4}}>— ANTES DE COMEÇAR —</div>
-      <div className="paper" style={{maxWidth:480,width:'100%',padding:'2rem',borderRadius:2,position:'relative'}}>
-        <div style={{position:'absolute',top:12,right:14,fontFamily:"'Special Elite',serif",fontSize:'.6rem',color:C.redLight,border:`1px solid ${C.redLight}`,padding:'3px 8px',borderRadius:2,letterSpacing:2,opacity:.7,transform:'rotate(3deg)'}}>CONFIDENCIAL</div>
+    <div className="fadein" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'100vh',padding:'2rem',textAlign:'center',background:'#f5f0e8',gap:'1.5rem'}}>
+      <div style={{fontFamily:"'Special Elite',serif",fontSize:'.8rem',color:'var(--gold)',letterSpacing:4}}>— ANTES DE COMEÇAR —</div>
+      <div className="paper" style={{maxWidth:480,width:'100%',padding:'2rem',borderRadius:4,position:'relative'}}>
+        <div style={{position:'absolute',top:12,right:14,fontFamily:"'Special Elite',serif",fontSize:'.65rem',color:'var(--red)',border:'2px solid var(--red)',padding:'3px 8px',borderRadius:3,letterSpacing:2,transform:'rotate(3deg)',fontWeight:'bold'}}>CONFIDENCIAL</div>
         <div style={{fontSize:'2.5rem',marginBottom:'1rem'}}>🔍</div>
-        <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1.2rem',color:C.ink,fontWeight:700,marginBottom:'1rem'}}>Você trouxe sua pista para essa investigação?</div>
-        <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.85rem',color:C.inkMuted,lineHeight:1.8,marginBottom:'1.5rem'}}>Analistas preparados recebem bônus de <strong style={{color:C.gold}}>+10 XP</strong> na investigação.</div>
+        <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1.3rem',color:'var(--ink)',fontWeight:700,marginBottom:'1rem',lineHeight:1.4}}>Você trouxe sua pista para essa investigação?</div>
+        <div style={{fontSize:'.9rem',color:'var(--ink-mid)',lineHeight:1.8,marginBottom:'1.5rem'}}>Analistas preparados recebem bônus de <strong style={{color:'var(--gold)'}}>+10 XP</strong> na investigação.</div>
         <div style={{display:'flex',gap:'1rem',justifyContent:'center',flexWrap:'wrap'}}>
-          <DetBtn onClick={()=>handle(true)} variant="green" style={{fontSize:'1rem',padding:'14px 32px'}}>✓ SIM, TROUXE!</DetBtn>
-          <DetBtn onClick={()=>handle(false)} variant="ghost" style={{fontSize:'1rem',padding:'14px 32px'}}>✗ NÃO TROUXE</DetBtn>
+          <Btn onClick={()=>handle(true)} variant="green" style={{fontSize:'1.1rem',padding:'14px 32px'}}>✓ SIM, TROUXE!</Btn>
+          <Btn onClick={()=>handle(false)} variant="outline" style={{fontSize:'1.1rem',padding:'14px 32px'}}>✗ NÃO TROUXE</Btn>
         </div>
-        {answered&&<div className="fadein" style={{marginTop:'1rem',fontFamily:"'Special Elite',serif",fontSize:'.8rem',color:C.greenLight,letterSpacing:1}}>✓ REGISTRADO — CARREGANDO...</div>}
+        {ans!==null&&<div className="fadein" style={{marginTop:'1rem',fontFamily:"'Special Elite',serif",fontSize:'.85rem',color:'var(--green)',fontWeight:'bold',letterSpacing:1}}>✓ REGISTRADO — CARREGANDO...</div>}
       </div>
     </div>
   );
 };
 
-// TELA NOME (sem distrito)
-const NameScreen = ({hasPista, onStart, sfx}) => {
-  const [name,setName]=useState('');
+// TELA NOME (email)
+const NameScreen = ({hasPista, onStart})=>{
+  const [email,setEmail]=useState('');
   const [shk,setShk]=useState(false);
-  const handleStart=()=>{
-    if(!name.trim()){setShk(true);setTimeout(()=>setShk(false),600);return;}
-    sfx.click();onStart(name.trim());
+  const isValid=(e)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const handle=()=>{
+    if(!email.trim()||!isValid(email.trim())){setShk(true);setTimeout(()=>setShk(false),600);return;}
+    onStart(email.trim());
   };
   return (
-    <div className="fadein" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'85vh',padding:'2rem',textAlign:'center',gap:'1.5rem'}}>
+    <div className="fadein" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'100vh',padding:'2rem',textAlign:'center',background:'#f5f0e8',gap:'1.5rem'}}>
       <div>
-        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.72rem',letterSpacing:'5px',color:C.gold,marginBottom:'.5rem'}}>— DOSSIER DE IDENTIFICAÇÃO —</div>
-        <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'clamp(2rem,7vw,3.5rem)',fontWeight:700,color:C.ink,lineHeight:1.05,textShadow:'0 0 40px rgba(201,162,39,0.3)'}}>QUALITY<br/><span style={{color:C.gold}} className="flicker">INVESTIGATOR</span></div>
-        <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.78rem',color:C.inkMuted,letterSpacing:'3px',marginTop:'.5rem'}}>— PACK QUALITY · INVOPS BRASIL —</div>
-        {hasPista&&<div className="fadein" style={{marginTop:'.75rem',fontFamily:"'Special Elite',serif",fontSize:'.75rem',color:C.greenLight,border:`1px solid ${C.greenLight}`,display:'inline-block',padding:'4px 14px',borderRadius:2,letterSpacing:1}}>🔍 +10 XP DE BÔNUS ATIVADO</div>}
+        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.8rem',letterSpacing:5,color:'var(--gold)',marginBottom:'.5rem'}}>— DOSSIER DE IDENTIFICAÇÃO —</div>
+        <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'clamp(2rem,7vw,3.5rem)',fontWeight:700,color:'var(--ink)',lineHeight:1.05}}>QUALITY<br/><span style={{color:'var(--gold)'}} className="flicker">INVESTIGATOR</span></div>
+        <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.85rem',color:'var(--ink-light)',letterSpacing:3,marginTop:'.5rem',fontWeight:'bold'}}>— PACK QUALITY · INVOPS BRASIL —</div>
+        {hasPista&&<div className="fadein" style={{marginTop:'.75rem',fontFamily:"'Special Elite',serif",fontSize:'.8rem',color:'var(--green)',border:'2px solid var(--green)',display:'inline-block',padding:'5px 16px',borderRadius:3,letterSpacing:1,fontWeight:'bold'}}>🔍 +10 XP DE BÔNUS ATIVADO</div>}
       </div>
-      <div className="paper" style={{maxWidth:440,width:'100%',padding:'2rem',borderRadius:2,position:'relative',animation:shk?'shake .4s ease':'none'}}>
-        <div style={{position:'absolute',top:12,right:14,fontFamily:"'Special Elite',serif",fontSize:'.6rem',color:C.redLight,border:`1px solid ${C.redLight}`,padding:'3px 8px',borderRadius:2,letterSpacing:2,opacity:.7,transform:'rotate(3deg)'}}>CONFIDENCIAL</div>
-        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.7rem',color:C.gold,letterSpacing:3,marginBottom:'1.5rem',borderBottom:`1px solid ${C.inkDim}`,paddingBottom:'.75rem'}}>IDENTIFIQUE-SE ANTES DE PROSSEGUIR</div>
+      <div className="paper" style={{maxWidth:440,width:'100%',padding:'2rem',borderRadius:4,position:'relative',animation:shk?'shake .4s ease':'none'}}>
+        <div style={{position:'absolute',top:12,right:14,fontFamily:"'Special Elite',serif",fontSize:'.65rem',color:'var(--red)',border:'2px solid var(--red)',padding:'3px 8px',borderRadius:3,letterSpacing:2,transform:'rotate(3deg)',fontWeight:'bold'}}>CONFIDENCIAL</div>
+        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.75rem',color:'var(--gold)',letterSpacing:3,marginBottom:'1.5rem',borderBottom:'2px solid var(--border)',paddingBottom:'.75rem',fontWeight:'bold'}}>IDENTIFIQUE-SE ANTES DE PROSSEGUIR</div>
         <div style={{marginBottom:'1.75rem',textAlign:'left'}}>
-          <label style={{fontFamily:"'Special Elite',serif",fontSize:'.72rem',color:C.inkMuted,letterSpacing:2,display:'block',marginBottom:'.5rem'}}>▸ NOME DO ANALISTA</label>
-          <input value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleStart()} placeholder="Digite seu nome..." maxLength={30}
-            style={{width:'100%',padding:'.75rem 1rem',background:'rgba(0,0,0,0.4)',border:`1px solid ${name?C.gold:C.inkDim}`,borderRadius:2,color:C.ink,fontSize:'.95rem',outline:'none',transition:'border .2s',fontFamily:"'Courier Prime',monospace"}}/>
+          <label style={{fontFamily:"'Oswald',sans-serif",fontSize:'.85rem',color:'var(--ink)',letterSpacing:2,display:'block',marginBottom:'.5rem',fontWeight:600}}>▸ E-MAIL DO ANALISTA</label>
+          <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handle()} placeholder="seu.email@nubank.com.br" type="email"
+            style={{width:'100%',padding:'.85rem 1rem',background:'#fff',border:`2px solid ${email&&isValid(email)?'var(--green)':'var(--border)'}`,borderRadius:4,color:'var(--ink)',fontSize:'1rem',outline:'none',transition:'border .2s',fontWeight:'bold'}}/>
+          {email&&!isValid(email)&&<div style={{fontSize:'.75rem',color:'var(--red)',marginTop:'.3rem',fontWeight:'bold'}}>⚠ E-mail inválido</div>}
         </div>
-        <DetBtn onClick={handleStart} style={{width:'100%',justifyContent:'center'}}>◉ ENTRAR NO CASO</DetBtn>
+        <Btn onClick={handle} variant="default" style={{width:'100%'}}>◉ ENTRAR NO CASO</Btn>
       </div>
-      <div style={{fontFamily:"'Special Elite',serif",fontSize:'.7rem',color:C.inkDim,letterSpacing:2}}>5 CASOS · 15 PERGUNTAS · 500 XP · ⏱ 25s POR PERGUNTA</div>
+      <div style={{fontFamily:"'Special Elite',serif",fontSize:'.75rem',color:'var(--ink-light)',letterSpacing:2,fontWeight:'bold'}}>15 PERGUNTAS SEGUIDAS · ⏱ 30s POR PERGUNTA</div>
     </div>
   );
 };
 
 // HUD
-const HUD=({xp,lives,correct,total,name,musicOn,onToggleMusic})=>(
-  <div style={{position:'sticky',top:0,zIndex:100,background:'rgba(13,10,4,0.97)',borderBottom:`1px solid ${C.inkDim}`,padding:'.55rem 1.2rem',display:'flex',alignItems:'center',gap:'1rem',flexWrap:'wrap',fontFamily:"'Courier Prime',monospace"}}>
+const HUD=({xp,lives,correct,total,email,onToggle})=>(
+  <div style={{position:'sticky',top:0,zIndex:100,background:'#fff8ee',borderBottom:'3px solid var(--gold)',padding:'.6rem 1.2rem',display:'flex',alignItems:'center',gap:'1rem',flexWrap:'wrap',boxShadow:'0 2px 8px rgba(0,0,0,0.1)'}}>
     <div style={{display:'flex',alignItems:'center',gap:'.5rem'}}>
-      <div style={{width:30,height:30,borderRadius:'50%',background:'rgba(201,162,39,0.15)',border:`1px solid ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.75rem',color:C.gold,fontFamily:"'Special Elite',serif"}}>{name?name[0].toUpperCase():'?'}</div>
-      <div style={{fontFamily:"'Special Elite',serif",fontSize:'.72rem',color:C.ink,maxWidth:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{name||'ANALISTA'}</div>
+      <div style={{width:34,height:34,borderRadius:'50%',background:'var(--gold)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.85rem',color:'#fff',fontFamily:"'Oswald',sans-serif",fontWeight:700}}>{email?email[0].toUpperCase():'?'}</div>
+      <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.8rem',color:'var(--ink)',fontWeight:'bold',maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{email||'ANALISTA'}</div>
     </div>
-    <div style={{color:C.inkDim}}>|</div>
-    <div><div style={{fontSize:'.58rem',color:C.inkMuted,letterSpacing:1,marginBottom:2}}>XP</div><div style={{color:C.gold,fontWeight:700,fontSize:'.95rem'}}>{xp}</div></div>
-    <div style={{flex:1,minWidth:60}}><div style={{height:4,background:'rgba(201,162,39,0.12)',borderRadius:2,overflow:'hidden'}}><div style={{height:'100%',background:C.gold,borderRadius:2,width:`${Math.min(100,xp/500*100)}%`,transition:'width .5s'}}/></div></div>
-    <div style={{color:C.inkDim}}>|</div>
-    <div><div style={{fontSize:'.58rem',color:C.inkMuted,letterSpacing:1,marginBottom:2}}>VIDAS</div><div style={{display:'flex',gap:3}}>{[0,1,2].map(i=><span key={i} style={{color:i<lives?C.redLight:'#2a2218',fontSize:'.95rem'}}>♥</span>)}</div></div>
-    <div style={{color:C.inkDim}}>|</div>
-    <div><div style={{fontSize:'.58rem',color:C.inkMuted,letterSpacing:1,marginBottom:2}}>ACERTOS</div><div style={{color:C.gold,fontWeight:700,fontSize:'.88rem'}}>{correct}/{total}</div></div>
-    <button onClick={onToggleMusic} style={{background:'none',border:`1px solid ${C.inkDim}`,borderRadius:2,cursor:'pointer',fontSize:'.85rem',padding:'3px 8px',color:C.inkMuted,marginLeft:'auto'}}>{musicOn?'🎵':'🔇'}</button>
-  </div>
-);
-
-// MAPA
-const MapScreen=({name,completed,missions,onSelect,onFinal,sfx})=>(
-  <div className="fadein" style={{padding:'2rem',minHeight:'80vh'}}>
-    <div style={{maxWidth:900,margin:'0 auto'}}>
-      <div style={{marginBottom:'2rem',borderBottom:`1px solid ${C.inkDim}`,paddingBottom:'1rem'}}>
-        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.7rem',color:C.inkMuted,letterSpacing:3,marginBottom:'.3rem'}}>ESCRITÓRIO DE INVESTIGAÇÕES — PACK QUALITY</div>
-        <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1.3rem',color:C.gold}}>MURAL DE CASOS</div>
-        <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.82rem',color:C.inkMuted,marginTop:'.3rem'}}>Det. {name} · ⏱ 25 segundos por pergunta</div>
+    <div style={{color:'var(--border)'}}>|</div>
+    <div>
+      <div style={{fontSize:'.6rem',color:'var(--ink-light)',letterSpacing:1,marginBottom:1,fontWeight:'bold'}}>XP</div>
+      <div style={{color:'var(--gold)',fontWeight:700,fontSize:'1rem',fontFamily:"'Oswald',sans-serif"}}>{xp}</div>
+    </div>
+    <div style={{flex:1,minWidth:60}}>
+      <div style={{height:6,background:'#e0d8c0',borderRadius:3,overflow:'hidden',border:'1px solid var(--border)'}}>
+        <div style={{height:'100%',background:'var(--gold)',borderRadius:3,width:`${Math.min(100,xp/500*100)}%`,transition:'width .5s'}}/>
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:'1.1rem'}}>
-        {missions.map((m,i)=>{
-          const locked=i>0&&!completed.has(i-1),done=completed.has(i);
-          return (
-            <div key={i} onClick={()=>{if(!locked){sfx.click();onSelect(i);}}} className="paper"
-              style={{borderRadius:2,padding:'1.25rem',cursor:locked?'not-allowed':'pointer',opacity:locked?.45:1,position:'relative',border:done?`1px solid ${C.gold}`:`1px solid ${C.inkDim}`,transition:'all .2s'}}
-              onMouseEnter={e=>!locked&&(e.currentTarget.style.borderColor=C.gold)}
-              onMouseLeave={e=>!locked&&(e.currentTarget.style.borderColor=done?C.gold:C.inkDim)}>
-              {done&&<div style={{position:'absolute',top:10,right:10,fontFamily:"'Special Elite',serif",fontSize:'.6rem',color:C.greenLight,border:`1px solid ${C.greenLight}`,padding:'2px 8px',borderRadius:1,transform:'rotate(-3deg)',letterSpacing:1}}>RESOLVIDO</div>}
-              {locked&&<div style={{position:'absolute',top:10,right:10,fontFamily:"'Special Elite',serif",fontSize:'.6rem',color:C.redLight,border:`1px solid ${C.redLight}`,padding:'2px 8px',borderRadius:1,letterSpacing:1}}>LACRADO</div>}
-              <div style={{fontFamily:"'Special Elite',serif",fontSize:'.65rem',color:C.inkMuted,letterSpacing:2,marginBottom:'.3rem'}}>{m.caseNum}</div>
-              <div style={{fontSize:'1rem',fontWeight:700,color:C.ink,marginBottom:'.4rem',fontFamily:"'Oswald',sans-serif"}}>{m.icon} {m.title}</div>
-              <div style={{fontSize:'.8rem',color:C.inkMuted,lineHeight:1.65,marginBottom:'.7rem',fontFamily:"'Courier Prime',monospace"}}>{m.desc}</div>
-              <div style={{display:'flex',gap:'.4rem',flexWrap:'wrap',marginBottom:'.5rem'}}>{m.tags.map((t,j)=><span key={j} style={{fontSize:'.65rem',padding:'2px 8px',border:`1px solid ${t.color}55`,color:t.color,borderRadius:1,fontFamily:"'Special Elite',serif",letterSpacing:1}}>{t.label}</span>)}</div>
-              <div style={{fontFamily:"'Special Elite',serif",fontSize:'.68rem',color:C.gold}}>+{m.xpReward} XP · 3 perguntas</div>
-            </div>
-          );
-        })}
-      </div>
-      {completed.size===missions.length&&<div style={{textAlign:'center',marginTop:'2rem'}}><DetBtn variant="green" onClick={()=>{sfx.victory();onFinal();}}>🏆 ENCERRAR O CASO</DetBtn></div>}
+    </div>
+    <div style={{color:'var(--border)'}}>|</div>
+    <div>
+      <div style={{fontSize:'.6rem',color:'var(--ink-light)',letterSpacing:1,marginBottom:1,fontWeight:'bold'}}>VIDAS</div>
+      <div style={{display:'flex',gap:3}}>{[0,1,2].map(i=><span key={i} style={{color:i<lives?'var(--red)':'#ccc',fontSize:'1.1rem'}}>♥</span>)}</div>
+    </div>
+    <div style={{color:'var(--border)'}}>|</div>
+    <div>
+      <div style={{fontSize:'.6rem',color:'var(--ink-light)',letterSpacing:1,marginBottom:1,fontWeight:'bold'}}>ACERTOS</div>
+      <div style={{color:'var(--green)',fontWeight:700,fontSize:'.95rem',fontFamily:"'Oswald',sans-serif"}}>{correct}/{total}</div>
     </div>
   </div>
 );
 
-// MISSÃO COM TIMER
-const MissionScreen=({mission,onBack,onFinish,onXP,onLoseLife,sfx})=>{
-  const [qIdx,setQIdx]=useState(0);
-  const [answered,setAnswered]=useState(null);
-  const [correct,setCorrect]=useState(0);
-  const [total,setTotal]=useState(0);
-  const [timerKey,setTimerKey]=useState(0);
-  const [timedOut,setTimedOut]=useState(false);
+// OVERLAY PISTA NÃO VALIDADA (timeout)
+const TimeoutOverlay = ({onContinue, correctOpt})=>{
+  const [countdown, setCountdown] = useState(5);
+  useEffect(()=>{
+    const iv = setInterval(()=>setCountdown(c=>{ if(c<=1){clearInterval(iv);onContinue();return 0;} return c-1; }),1000);
+    return ()=>clearInterval(iv);
+  },[]);
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(200,60,0,0.92)',zIndex:500,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',textAlign:'center',padding:'2rem',animation:'pistaFail .4s ease'}}>
+      <div style={{fontSize:'5rem',marginBottom:'1rem'}}>⏰</div>
+      <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'clamp(1.5rem,5vw,2.5rem)',fontWeight:900,color:'#fff',letterSpacing:3,marginBottom:'.5rem'}}>PISTA NÃO VALIDADA!</div>
+      <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'1rem',color:'rgba(255,255,255,.85)',marginBottom:'1.5rem',lineHeight:1.8}}>Tempo esgotado! A resposta correta era:</div>
+      <div style={{background:'rgba(255,255,255,.15)',border:'2px solid rgba(255,255,255,.4)',borderRadius:8,padding:'1rem 1.5rem',fontFamily:"'Oswald',sans-serif",fontSize:'1.1rem',color:'#fff',fontWeight:600,maxWidth:500,lineHeight:1.6,marginBottom:'1.5rem'}}>{correctOpt}</div>
+      <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1.3rem',color:'rgba(255,255,255,.7)',letterSpacing:2}}>CONTINUANDO EM {countdown}s...</div>
+      <div style={{marginTop:'1rem',height:6,width:200,background:'rgba(255,255,255,.2)',borderRadius:3,overflow:'hidden'}}>
+        <div style={{height:'100%',background:'#fff',borderRadius:3,width:`${countdown/5*100}%`,transition:'width 1s linear'}}/>
+      </div>
+    </div>
+  );
+};
 
-  const q=mission.questions[qIdx];
-  const isLast=qIdx>=mission.questions.length-1;
+// TELA DE JOGO (perguntas corridas, sem missões)
+const GameScreen = ({questions, email, hasPista, onFinish, onXP, onLoseLife, xp, lives, correct, total})=>{
+  const [qIdx, setQIdx] = useState(0);
+  const [selected, setSelected] = useState(null); // opção selecionada (não confirmada)
+  const [confirmed, setConfirmed] = useState(false); // se confirmou
+  const [timedOut, setTimedOut] = useState(false);
+  const [showTimeout, setShowTimeout] = useState(false);
+  const [timerKey, setTimerKey] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(30);
 
-  const handleTimeout=()=>{
-    if(answered!==null)return;
-    sfx.timeout();
+  const q = questions[qIdx];
+  const isLast = qIdx >= questions.length - 1;
+
+  // XP por velocidade: base 25 + bônus de até 15 pelo tempo restante
+  const calcXP = (tLeft) => 25 + Math.floor((tLeft / 30) * 15);
+
+  const handleTimeout = ()=>{
+    if(confirmed) return;
     setTimedOut(true);
-    setAnswered(-1); // -1 = timeout
-    setTotal(t=>t+1);
+    setShowTimeout(true);
     onLoseLife();
   };
 
-  const answer=(i)=>{
-    if(answered!==null)return;
-    const ok=i===q.correct;
-    setAnswered(i);setTotal(t=>t+1);setTimedOut(false);
-    if(ok){setCorrect(c=>c+1);onXP(25);sfx.correct();}
-    else{onLoseLife();sfx.wrong();}
+  const handleSelect = (i)=>{
+    if(confirmed) return;
+    setSelected(i);
   };
 
-  const next=()=>{
-    sfx.click();
-    const fc=correct+(answered===q.correct?1:0),ft=total+1;
-    if(isLast)onFinish(fc,ft);
-    else{setQIdx(q=>q+1);setAnswered(null);setTimedOut(false);setTimerKey(k=>k+1);}
+  const handleConfirm = ()=>{
+    if(selected===null||confirmed) return;
+    setConfirmed(true);
+    const ok = selected === q.correct;
+    if(ok){ const pts=calcXP(timeLeft); onXP(pts); }
+    else{ onLoseLife(); }
   };
+
+  const next = ()=>{
+    if(isLast){ onFinish(); return; }
+    setQIdx(i=>i+1);
+    setSelected(null);
+    setConfirmed(false);
+    setTimedOut(false);
+    setTimerKey(k=>k+1);
+    setTimeLeft(30);
+  };
+
+  const pct = Math.round((qIdx/questions.length)*100);
 
   return (
-    <div className="fadein" style={{maxWidth:720,margin:'0 auto',padding:'1.5rem'}}>
-      <button onClick={()=>{sfx.click();onBack();}} style={{background:'none',border:'none',color:C.inkMuted,cursor:'pointer',fontFamily:"'Special Elite',serif",fontSize:'.78rem',marginBottom:'1.5rem',padding:0,letterSpacing:1}}>← VOLTAR AO MURAL</button>
-      <div style={{display:'flex',gap:'1rem',alignItems:'center',marginBottom:'1.5rem',paddingBottom:'1rem',borderBottom:`1px solid ${C.inkDim}`}}>
-        <div style={{width:52,height:52,borderRadius:2,background:'rgba(201,162,39,0.08)',border:`1px solid ${C.gold}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.6rem',flexShrink:0}}>{mission.icon}</div>
-        <div>
-          <div style={{fontFamily:"'Special Elite',serif",fontSize:'.65rem',color:C.inkMuted,letterSpacing:2,marginBottom:'.2rem'}}>{mission.caseNum}</div>
-          <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1rem',color:C.ink,fontWeight:600}}>{mission.title}</div>
-        </div>
-      </div>
+    <div style={{background:'#f5f0e8',minHeight:'100vh'}}>
+      {showTimeout&&<TimeoutOverlay correctOpt={q.opts[q.correct]} onContinue={()=>{setShowTimeout(false);next();}}/>}
 
-      <div className="paper redstring" style={{borderRadius:2,padding:'1.25rem',marginBottom:'1.1rem'}}>
-        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.65rem',color:C.redLight,letterSpacing:2,marginBottom:'.55rem'}}>// RELATO DO CASO</div>
-        <p style={{lineHeight:1.9,fontSize:'.9rem',fontFamily:"'Courier Prime',monospace",color:C.ink}}>{mission.story}</p>
-      </div>
+      <HUD xp={xp} lives={lives} correct={correct} total={total} email={email}/>
 
-      {/* Progresso + Timer */}
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'.75rem',fontFamily:"'Special Elite',serif",fontSize:'.7rem',color:C.inkMuted,letterSpacing:1}}>
-        <div style={{display:'flex',alignItems:'center',gap:'.75rem'}}>
-          <span>PERGUNTA {qIdx+1}/{mission.questions.length}</span>
-          <div style={{display:'flex',gap:5}}>{mission.questions.map((_,i)=><div key={i} style={{width:9,height:9,borderRadius:'50%',background:i<qIdx?C.gold:i===qIdx?'rgba(201,162,39,.4)':'#2a1f0a',border:`1px solid ${i<=qIdx?C.gold:C.inkDim}`,transition:'background .3s'}}/>)}</div>
-        </div>
-      </div>
-
-      {/* Timer */}
-      <Timer key={timerKey} seconds={25} onTimeout={handleTimeout} paused={answered!==null}/>
-
-      <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1rem',fontWeight:600,color:C.ink,marginBottom:'.9rem',lineHeight:1.7}}>{q.q}</div>
-
-      <div style={{display:'flex',flexDirection:'column',gap:'.55rem'}}>
-        {q.opts.map((o,i)=>{
-          let bg='rgba(0,0,0,0.3)',border=C.inkDim,col=C.inkMuted;
-          if(answered!==null){
-            if(i===q.correct){bg='rgba(74,138,42,0.15)';border=C.greenLight;col=C.ink;}
-            else if(i===answered&&answered!==q.correct&&answered!==-1){bg='rgba(139,26,26,0.15)';border=C.redLight;col=C.ink;}
-          }
-          return <button key={i} onClick={()=>answer(i)} disabled={answered!==null}
-            style={{background:bg,border:`1px solid ${border}`,borderRadius:2,padding:'.8rem 1rem',textAlign:'left',cursor:answered!==null?'default':'pointer',width:'100%',fontFamily:"'Courier Prime',monospace",fontSize:'.87rem',color:col,display:'flex',alignItems:'flex-start',gap:'.6rem',transition:'all .15s'}}
-            onMouseEnter={e=>answered===null&&(e.currentTarget.style.borderColor=C.gold)}
-            onMouseLeave={e=>answered===null&&(e.currentTarget.style.borderColor=C.inkDim)}>
-            <span style={{fontFamily:"'Special Elite',serif",color:C.gold,fontSize:'.7rem',minWidth:16,paddingTop:2,flexShrink:0}}>{'ABCD'[i]}</span>
-            <span>{o}</span>
-          </button>;
-        })}
-      </div>
-
-      {answered!==null&&(
-        <div className="fadein" style={{background:timedOut?'rgba(139,26,26,0.12)':answered===q.correct?'rgba(74,138,42,0.08)':'rgba(139,26,26,0.08)',border:`1px solid ${timedOut||answered!==q.correct?C.redLight:C.greenLight}`,borderRadius:2,padding:'1rem',marginTop:'.85rem'}}>
-          <div style={{fontFamily:"'Special Elite',serif",fontSize:'.68rem',letterSpacing:1,color:timedOut||answered!==q.correct?C.redLight:C.greenLight,marginBottom:'.45rem'}}>
-            {timedOut?'⏰ TEMPO ESGOTADO!':answered===q.correct?'✓ PISTA CONFIRMADA!':'✗ PISTA FALSA'}
+      <div style={{maxWidth:680,margin:'0 auto',padding:'1.5rem'}}>
+        {/* Progresso geral */}
+        <div style={{marginBottom:'1rem'}}>
+          <div style={{display:'flex',justifyContent:'space-between',fontFamily:"'Oswald',sans-serif",fontSize:'.85rem',color:'var(--ink-mid)',fontWeight:600,marginBottom:'.3rem'}}>
+            <span>PERGUNTA {qIdx+1} DE {questions.length}</span>
+            <span style={{color:'var(--gold)'}}>{pct}% CONCLUÍDO</span>
           </div>
-          <div style={{fontSize:'.87rem',lineHeight:1.8,fontFamily:"'Courier Prime',monospace",color:C.ink}}>
-            {timedOut||answered!==q.correct?q.fbWrong:q.fb}
+          <div style={{height:8,background:'#e0d8c0',borderRadius:4,overflow:'hidden',border:'1px solid var(--border)'}}>
+            <div style={{height:'100%',background:'var(--gold)',borderRadius:4,width:`${pct}%`,transition:'width .4s'}}/>
           </div>
         </div>
-      )}
 
-      {answered!==null&&(
-        <div style={{textAlign:'right',marginTop:'1.1rem'}}>
-          <DetBtn onClick={next} variant={isLast?'green':'default'}>{isLast?'ENCERRAR INVESTIGAÇÃO ◎':'PRÓXIMA PISTA →'}</DetBtn>
+        {/* Timer */}
+        {!confirmed&&!timedOut&&(
+          <Timer key={timerKey} seconds={30} onTimeout={handleTimeout} paused={confirmed||timedOut} onTick={setTimeLeft}/>
+        )}
+
+        {/* Pergunta */}
+        <div className="paper" style={{borderRadius:4,padding:'1.5rem',marginBottom:'1rem'}}>
+          <div style={{fontFamily:"'Special Elite',serif",fontSize:'.7rem',color:'var(--red)',letterSpacing:2,marginBottom:'.75rem',fontWeight:'bold'}}>// PISTA {qIdx+1}</div>
+          <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'clamp(.95rem,2.5vw,1.15rem)',fontWeight:700,color:'var(--ink)',lineHeight:1.75}}>{q.q}</div>
         </div>
-      )}
+
+        {/* Opções */}
+        <div style={{display:'flex',flexDirection:'column',gap:'.65rem',marginBottom:'1rem'}}>
+          {q.opts.map((o,i)=>{
+            let bg='#fff', border='var(--border)', col='var(--ink)', bw='2px';
+            if(selected===i&&!confirmed){ bg='#fff8dd';border='var(--gold)';bw='3px'; }
+            if(confirmed||timedOut){
+              if(i===q.correct){ bg='#e8f5e8';border='var(--green)';col='var(--green)';bw='3px'; }
+              else if(i===selected&&selected!==q.correct){ bg='#fde8e8';border='var(--red)';col='var(--red)';bw='3px'; }
+            }
+            return (
+              <button key={i} onClick={()=>handleSelect(i)}
+                disabled={confirmed||timedOut}
+                style={{background:bg,border:`${bw} solid ${border}`,borderRadius:4,padding:'1rem 1.1rem',textAlign:'left',cursor:confirmed||timedOut?'default':'pointer',width:'100%',fontFamily:"'Courier Prime',monospace",fontSize:'clamp(.85rem,2vw,.95rem)',color:col,transition:'all .15s',fontWeight:'bold',lineHeight:1.6,boxShadow:selected===i&&!confirmed?'0 2px 8px rgba(184,134,11,.3)':'0 1px 3px rgba(0,0,0,.08)'}}>
+                {o}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Botão confirmar */}
+        {!confirmed&&!timedOut&&(
+          <div style={{textAlign:'center',marginBottom:'1rem'}}>
+            <Btn onClick={handleConfirm} disabled={selected===null} variant={selected!==null?'default':'gray'} style={{width:'100%',fontSize:'1.1rem',padding:'14px'}}>
+              ✓ CONFIRMAR RESPOSTA
+            </Btn>
+            {selected===null&&<div style={{marginTop:'.5rem',fontFamily:"'Oswald',sans-serif",fontSize:'.8rem',color:'var(--ink-light)',letterSpacing:1}}>Selecione uma opção antes de confirmar</div>}
+          </div>
+        )}
+
+        {/* Feedback */}
+        {(confirmed||timedOut)&&!showTimeout&&(
+          <div className="fadein" style={{background:(!timedOut&&selected===q.correct)?'#e8f5e8':'#fde8e8',border:`2px solid ${(!timedOut&&selected===q.correct)?'var(--green)':'var(--red)'}`,borderRadius:4,padding:'1.1rem',marginBottom:'1rem'}}>
+            <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'.9rem',letterSpacing:1,color:(!timedOut&&selected===q.correct)?'var(--green)':'var(--red)',marginBottom:'.5rem',fontWeight:700}}>
+              {(!timedOut&&selected===q.correct)?'✓ PISTA CONFIRMADA!':'✗ PISTA FALSA'}
+            </div>
+            <div style={{fontSize:'.9rem',lineHeight:1.8,color:'var(--ink)',fontWeight:'bold'}}>{(!timedOut&&selected===q.correct)?q.fb:q.fbWrong}</div>
+          </div>
+        )}
+
+        {/* Próxima */}
+        {(confirmed||timedOut)&&!showTimeout&&(
+          <Btn onClick={next} variant={isLast?'green':'default'} style={{width:'100%',fontSize:'1.1rem',padding:'14px'}}>
+            {isLast?'🏆 VER RESULTADO FINAL':'PRÓXIMA PISTA →'}
+          </Btn>
+        )}
+      </div>
     </div>
   );
 };
 
-// RESULTADO
-const ResultScreen=({correct,total,onBack,onRetry,showFinal,sfx})=>{
-  const pct=Math.round(correct/total*100),passed=pct>=50;
+// TELA FINAL
+const FinalScreen = ({email,xp,correct,total,timeSeconds,hasPista,onReset})=>{
+  const pct = Math.round(correct/total*100);
+  const rank = pct>=90?'DETETIVE LENDÁRIO':pct>=75?'INVESTIGADOR SÊNIOR':pct>=60?'ANALISTA CERTIFICADO':'INVESTIGADOR JÚNIOR';
+  const badge = pct>=90?'🥇':pct>=75?'🥈':pct>=60?'🥉':'📋';
+  const mins = Math.floor(timeSeconds/60), secs = timeSeconds%60;
   return (
-    <div className="fadein" style={{maxWidth:520,margin:'0 auto',padding:'2rem',textAlign:'center'}}>
-      <button onClick={()=>{sfx.click();onBack();}} style={{background:'none',border:'none',color:C.inkMuted,cursor:'pointer',fontFamily:"'Special Elite',serif",fontSize:'.78rem',marginBottom:'1.5rem',display:'block',padding:0,letterSpacing:1}}>← VOLTAR AO MURAL</button>
-      <div style={{fontSize:'3rem',marginBottom:'.7rem'}}>{pct===100?'🏅':pct>=75?'⭐':pct>=50?'✅':'❌'}</div>
-      <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1.4rem',fontWeight:700,color:passed?C.gold:C.redLight,marginBottom:'.4rem'}}>{pct===100?'CASO PERFEITO!':pct>=75?'CASO EXCELENTE!':pct>=50?'CASO RESOLVIDO!':'CASO EM ABERTO'}</div>
-      <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.85rem',color:C.inkMuted,marginBottom:'1.4rem'}}>{pct===100?'Você dominou todos os critérios!':pct>=75?'Ótima investigação!':pct>=50?'Passou! Reveja os erros.':'Precisa de 50% para avançar.'}</div>
-      <div style={{fontFamily:"'Special Elite',serif",fontSize:'1.9rem',color:C.gold,marginBottom:'1.1rem'}}>+{correct*25} XP</div>
-      <div className="paper" style={{borderRadius:2,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem',padding:'1.25rem',marginBottom:'1.4rem'}}>
-        {[[String(correct),'Acertos',C.greenLight],[String(total),'Perguntas',C.ink],[pct+'%','Aproveit.',C.gold]].map(([v,l,c])=>(
-          <div key={l} style={{textAlign:'center'}}><div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1.3rem',fontWeight:700,color:c}}>{v}</div><div style={{fontSize:'.7rem',color:C.inkMuted,marginTop:'.2rem',fontFamily:"'Special Elite',serif",letterSpacing:1}}>{l}</div></div>
-        ))}
-      </div>
-      <div style={{display:'flex',gap:'.9rem',flexWrap:'wrap',justifyContent:'center'}}>
-        <DetBtn onClick={()=>{sfx.click();onBack();}}>PRÓXIMO CASO</DetBtn>
-        <DetBtn variant="ghost" onClick={()=>{sfx.click();onRetry();}}>↺ REINVESTIGAR</DetBtn>
-      </div>
-      {showFinal&&<div style={{marginTop:'1.4rem'}}><DetBtn variant="green" onClick={()=>{sfx.victory();showFinal();}}>🏆 ENCERRAR O CASO</DetBtn></div>}
-    </div>
-  );
-};
+    <div className="fadein" style={{background:'#f5f0e8',minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',padding:'2rem',textAlign:'center'}}>
+      <div style={{fontSize:'4rem',marginBottom:'1rem',display:'inline-block',animation:'bounce 1s ease infinite'}}>🏆</div>
+      <div style={{fontFamily:"'Special Elite',serif",fontSize:'.8rem',color:'var(--gold)',letterSpacing:4,marginBottom:'.5rem',fontWeight:'bold'}}>— INVESTIGAÇÃO CONCLUÍDA —</div>
+      <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'2rem',fontWeight:700,color:'var(--ink)',marginBottom:'.5rem'}}>CASO ENCERRADO!</div>
+      <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.9rem',color:'var(--ink-mid)',fontWeight:'bold'}}>{email}</div>
 
-// FINAL
-const FinalScreen=({name,xp,totalCorrect,totalAnswered,timeSeconds,hasPista,onReset,sfx})=>{
-  const pct=Math.round(totalCorrect/totalAnswered*100);
-  const rank=pct>=90?'DETETIVE LENDÁRIO':pct>=75?'INVESTIGADOR SÊNIOR':pct>=60?'ANALISTA CERTIFICADO':'INVESTIGADOR JÚNIOR';
-  const badge=pct>=90?'🥇':pct>=75?'🥈':pct>=60?'🥉':'📋';
-  const mins=Math.floor(timeSeconds/60),secs=timeSeconds%60;
-  return (
-    <div className="fadein" style={{maxWidth:640,margin:'0 auto',padding:'2rem',textAlign:'center'}}>
-      <div style={{fontSize:'4rem',marginBottom:'.9rem',display:'inline-block',animation:'bounce 1s ease infinite'}}>🏆</div>
-      <div style={{fontFamily:"'Special Elite',serif",fontSize:'.7rem',color:C.gold,letterSpacing:4,marginBottom:'.5rem'}}>— CASO ENCERRADO —</div>
-      <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'2rem',fontWeight:700,color:C.gold,textShadow:'0 0 30px rgba(201,162,39,.35)',marginBottom:'.7rem'}}>INVESTIGAÇÃO CONCLUÍDA</div>
-      <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.88rem',color:C.inkMuted}}>Det. {name}</div>
-      <div className="paper" style={{display:'inline-block',borderRadius:2,padding:'1rem 2rem',margin:'1.5rem 0',border:`1px solid ${C.gold}`}}>
-        <div style={{fontSize:'2rem',marginBottom:'.3rem'}}>{badge}</div>
-        <div style={{fontFamily:"'Special Elite',serif",fontSize:'.82rem',letterSpacing:3,color:C.gold}}>{rank}</div>
+      <div className="paper" style={{display:'inline-block',borderRadius:4,padding:'1rem 2rem',margin:'1.5rem 0',border:'3px solid var(--gold)'}}>
+        <div style={{fontSize:'2.5rem',marginBottom:'.3rem'}}>{badge}</div>
+        <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1rem',letterSpacing:3,color:'var(--gold)',fontWeight:700}}>{rank}</div>
       </div>
-      <div className="paper" style={{borderRadius:2,padding:'1.5rem',textAlign:'left',marginBottom:'1.5rem'}}>
-        {[['XP Total',`${xp} XP`],['Acertos Totais',`${totalCorrect} / ${totalAnswered}`],['Aproveitamento Geral',`${pct}%`],['Tempo Total',`${mins}m ${String(secs).padStart(2,'0')}s`],['Bônus Pista',hasPista?'+10 XP ✓':'Não trouxe'],['Casos Resolvidos','5 / 5']].map(([l,v])=>(
-          <div key={l} style={{display:'flex',justifyContent:'space-between',padding:'.65rem 0',borderBottom:`1px solid ${C.inkDim}`,fontSize:'.87rem'}}>
-            <span style={{fontFamily:"'Courier Prime',monospace",color:C.inkMuted}}>{l}</span>
-            <span style={{fontFamily:"'Special Elite',serif",color:C.gold,letterSpacing:1}}>{v}</span>
+
+      <div className="paper" style={{borderRadius:4,padding:'1.5rem',textAlign:'left',marginBottom:'1.5rem',maxWidth:500,width:'100%'}}>
+        {[
+          ['XP Total', `${xp} XP`, 'var(--gold)'],
+          ['Acertos', `${correct} / ${total}`, 'var(--green)'],
+          ['Aproveitamento', `${pct}%`, 'var(--blue)'],
+          ['Tempo Total', `${mins}m ${String(secs).padStart(2,'0')}s`, 'var(--ink)'],
+          ['Bônus Pista', hasPista?'+10 XP ✓':'Não trouxe', hasPista?'var(--green)':'var(--ink-light)'],
+        ].map(([l,v,c])=>(
+          <div key={l} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'.7rem 0',borderBottom:'2px solid var(--border)'}}>
+            <span style={{fontFamily:"'Oswald',sans-serif",fontSize:'.9rem',color:'var(--ink-mid)',fontWeight:600,letterSpacing:1}}>{l}</span>
+            <span style={{fontFamily:"'Oswald',sans-serif",fontSize:'1rem',color:c,fontWeight:700}}>{v}</span>
           </div>
         ))}
       </div>
-      <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.82rem',color:C.inkMuted,lineHeight:1.9,marginBottom:'1.5rem',fontStyle:'italic'}}>"Qualidade não é punição — é parceria."<br/><span style={{fontSize:'.75rem',color:C.inkDim}}>— Pack Quality, InvOps Brasil</span></div>
-      <DetBtn variant="green" onClick={()=>{sfx.click();onReset();}}>↺ NOVO CASO</DetBtn>
+
+      <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.85rem',color:'var(--ink-mid)',lineHeight:1.9,marginBottom:'1.5rem',fontStyle:'italic',fontWeight:'bold'}}>"Qualidade não é punição — é parceria."<br/><span style={{fontSize:'.75rem',color:'var(--ink-light)'}}>— Pack Quality, InvOps Brasil</span></div>
     </div>
   );
 };
 
 // ===================== APP =====================
 function App(){
-  const [screen,setScreen]=useState('pista');
-  const [hasPista,setHasPista]=useState(false);
-  const [name,setName]=useState('');
-  const [missions,setMissions]=useState([]);
-  const [xp,setXp]=useState(0);
-  const [lives,setLives]=useState(3);
-  const [totalCorrect,setTotalCorrect]=useState(0);
-  const [totalAnswered,setTotalAnswered]=useState(0);
-  const [completed,setCompleted]=useState(new Set());
-  const [activeMission,setActiveMission]=useState(null);
-  const [missionResult,setMissionResult]=useState(null);
-  const [musicOn,setMusicOn]=useState(true);
-  const [startTime,setStartTime]=useState(null);
-  const music=useBGMusic();
+  const [screen, setScreen] = useState('pista');
+  const [hasPista, setHasPista] = useState(false);
+  const [email, setEmail] = useState('');
+  const [questions, setQuestions] = useState([]);
+  const [xp, setXp] = useState(0);
+  const [lives, setLives] = useState(3);
+  const [correct, setCorrect] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [startTime, setStartTime] = useState(null);
+  const [alreadyPlayed, setAlreadyPlayed] = useState(false);
 
-  const handlePista=(sim)=>{setHasPista(sim);setScreen('name');};
+  const handlePista = (sim)=>{ setHasPista(sim); setScreen('name'); };
 
-  const handleStart=(n)=>{
-    setName(n);
-    setMissions(buildMissions());
-    const bonus=hasPista?10:0;
-    setXp(bonus);
+  const handleStart = async (em)=>{
+    // Verifica se já jogou (localStorage)
+    const key = 'qi_played_'+em.toLowerCase();
+    if(localStorage.getItem(key)){
+      setAlreadyPlayed(true);
+      setEmail(em);
+      setScreen('already');
+      return;
+    }
+    setEmail(em);
+    setQuestions(shuffle(ALL_QUESTIONS));
+    const bonus = hasPista?10:0;
+    setXp(bonus); setLives(3); setCorrect(0); setTotal(0);
     setStartTime(Date.now());
-    setScreen('map');
-    setTimeout(()=>music.start(),300);
+    setScreen('game');
   };
 
-  const goToMap=()=>{music.sfx.click();setScreen('map');};
-  const startMission=(i)=>{music.sfx.click();setActiveMission(i);setScreen('mission');};
-
-  const finishMission=(correct,total)=>{
-    const passed=correct/total>=0.5;
-    if(passed)setCompleted(prev=>new Set([...prev,activeMission]));
-    setTotalCorrect(c=>c+correct);
-    setTotalAnswered(a=>a+total);
-    setMissionResult({correct,total});
-    setScreen('result');
-    if(passed&&completed.size+1===missions.length)setTimeout(()=>music.sfx.victory(),400);
-  };
-
-  const showFinal=async()=>{
-    const elapsed=Math.round((Date.now()-startTime)/1000);
-    const pct=Math.round(totalCorrect/totalAnswered*100);
-    await saveResult({
-      email:name, // usando nome como identificador
-      district:'Geral',
-      xp, totalCorrect, totalAnswered, pct,
-      timeSeconds:elapsed, hasPista,
-      completedAt:new Date().toISOString(),
-    });
+  const handleFinish = async ()=>{
+    const elapsed = Math.round((Date.now()-startTime)/1000);
+    const pct = total>0?Math.round(correct/total*100):0;
+    // Marca como jogado
+    localStorage.setItem('qi_played_'+email.toLowerCase(), '1');
+    // Salva resultado
+    await saveResult({ email, district:'Geral', xp, totalCorrect:correct, totalAnswered:total, pct, timeSeconds:elapsed, hasPista, completedAt:new Date().toISOString() });
     setScreen('final');
   };
 
-  const resetGame=()=>{
-    setScreen('pista');setName('');setMissions([]);
-    setXp(0);setLives(3);setTotalCorrect(0);setTotalAnswered(0);
-    setCompleted(new Set());setActiveMission(null);setMissionResult(null);
-    setHasPista(false);setStartTime(null);music.stop();
-  };
+  const elapsed = startTime?Math.round((Date.now()-startTime)/1000):0;
 
-  const allDone=completed.size===missions.length&&missions.length>0;
-  const elapsed=startTime?Math.round((Date.now()-startTime)/1000):0;
+  if(screen==='already') return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'100vh',background:'#f5f0e8',padding:'2rem',textAlign:'center',gap:'1.5rem'}}>
+      <div style={{fontSize:'3rem'}}>🔒</div>
+      <div style={{fontFamily:"'Oswald',sans-serif",fontSize:'1.5rem',fontWeight:700,color:'var(--red)'}}>CASO JÁ INVESTIGADO!</div>
+      <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.95rem',color:'var(--ink-mid)',lineHeight:1.8,fontWeight:'bold',maxWidth:400}}>O e-mail <strong>{email}</strong> já participou desta investigação.<br/>Cada analista pode jogar apenas uma vez.</div>
+      <div style={{fontFamily:"'Courier Prime',monospace",fontSize:'.85rem',color:'var(--ink-light)',lineHeight:1.8}}>Se acredita que isso é um erro, fale com o Pack Quality.</div>
+    </div>
+  );
 
   return (
-    <div style={{background:'#1a1208',color:'#e8dfc0',fontFamily:"'Courier Prime',monospace",minHeight:'100vh'}}>
-      {!['pista','name'].includes(screen)&&(
-        <HUD xp={xp} lives={lives} correct={totalCorrect} total={totalAnswered}
-          name={name} musicOn={musicOn} onToggleMusic={()=>{const on=music.toggle();setMusicOn(on);}}/>
-      )}
-      {screen==='pista'&&<PistaScreen onAnswer={handlePista} sfx={music.sfx}/>}
-      {screen==='name'&&<NameScreen hasPista={hasPista} onStart={handleStart} sfx={music.sfx}/>}
-      {screen==='map'&&<MapScreen name={name} completed={completed} missions={missions} onSelect={startMission} onFinal={showFinal} sfx={music.sfx}/>}
-      {screen==='mission'&&activeMission!==null&&(
-        <MissionScreen key={activeMission} mission={missions[activeMission]}
-          onBack={goToMap} onFinish={finishMission}
-          onXP={v=>setXp(x=>x+v)} onLoseLife={()=>setLives(l=>Math.max(0,l-1))}
-          sfx={music.sfx}/>
-      )}
-      {screen==='result'&&missionResult&&(
-        <ResultScreen correct={missionResult.correct} total={missionResult.total}
-          onBack={goToMap} onRetry={()=>startMission(activeMission)}
-          showFinal={allDone?showFinal:null} sfx={music.sfx}/>
+    <div>
+      {screen==='pista'&&<PistaScreen onAnswer={handlePista}/>}
+      {screen==='name'&&<NameScreen hasPista={hasPista} onStart={handleStart}/>}
+      {screen==='game'&&(
+        <GameScreen
+          questions={questions} email={email} hasPista={hasPista}
+          xp={xp} lives={lives} correct={correct} total={total}
+          onXP={v=>{ setXp(x=>x+v); setCorrect(c=>c+1); setTotal(t=>t+1); }}
+          onLoseLife={()=>{ setLives(l=>Math.max(0,l-1)); setTotal(t=>t+1); }}
+          onFinish={handleFinish}
+        />
       )}
       {screen==='final'&&(
-        <FinalScreen name={name} xp={xp}
-          totalCorrect={totalCorrect} totalAnswered={totalAnswered}
-          timeSeconds={elapsed} hasPista={hasPista}
-          onReset={resetGame} sfx={music.sfx}/>
+        <FinalScreen email={email} xp={xp} correct={correct} total={total} timeSeconds={elapsed} hasPista={hasPista} onReset={()=>setScreen('pista')}/>
       )}
     </div>
   );
