@@ -159,6 +159,66 @@ body{background:#f5f0e8;color:#1a1208;font-family:'Courier Prime',monospace;min-
 
 /* ALREADY */
 .already-msg{font-size:.95rem;color:var(--ink-mid);line-height:1.8;font-weight:bold;}
+
+/* ─── TEMAS ─── */
+/* TEMA: ESCURO (padrão noir) */
+body.theme-dark{
+  background:#1a1208;
+  --gold:#e8c84a;--gold-light:#f0d060;--red:#ff6644;--green:#44cc77;
+  --blue:#66aaff;--ink:#e8dfc0;--ink-mid:#c0a878;--ink-light:#8a7a5a;
+  --paper:#2a1f0a;--border:#5c4a1e;
+}
+body.theme-dark .paper{background:#2a1f0a;border-color:#5c4a1e;box-shadow:0 3px 16px rgba(0,0,0,0.5);}
+body.theme-dark .opt-btn{background:#1e1608;color:#e8dfc0;border-color:#5c4a1e;}
+body.theme-dark .opt-btn:hover:not(:disabled){border-color:var(--gold);}
+body.theme-dark .field-input{background:#1e1608;color:#e8dfc0;border-color:#5c4a1e;}
+body.theme-dark #hud{background:#1a1208;border-bottom-color:var(--gold);}
+body.theme-dark .hud-bar-bg,.theme-dark .timer-bar-bg,.theme-dark .progress-bar-bg{background:#3a2d14;}
+
+/* TEMA: ALTO CONTRASTE (daltonismo) */
+body.theme-contrast{
+  background:#000;
+  --gold:#ffffff;--gold-light:#eeeeee;--red:#ffffff;--green:#ffffff;
+  --blue:#ffffff;--ink:#ffffff;--ink-mid:#cccccc;--ink-light:#aaaaaa;
+  --paper:#111111;--border:#ffffff;
+}
+body.theme-contrast .paper{background:#111;border:3px solid #fff;box-shadow:none;}
+body.theme-contrast .opt-btn{background:#111;color:#fff;border:3px solid #666;}
+body.theme-contrast .opt-btn:hover:not(:disabled){border-color:#fff;background:#222;}
+body.theme-contrast .opt-btn.selected{background:#333;border-color:#fff;border-width:4px;}
+body.theme-contrast .opt-btn.correct{background:#000;border-color:#fff;color:#fff;text-decoration:underline;}
+body.theme-contrast .opt-btn.wrong{background:#333;border-color:#fff;color:#ccc;text-decoration:line-through;}
+body.theme-contrast .field-input{background:#111;color:#fff;border:3px solid #fff;}
+body.theme-contrast #hud{background:#000;border-bottom:4px solid #fff;}
+body.theme-contrast .btn-gold{background:#fff;color:#000;border-color:#fff;}
+body.theme-contrast .btn-gold:hover{background:#ddd;}
+body.theme-contrast .btn-green{background:#fff;color:#000;border-color:#fff;}
+body.theme-contrast .btn-outline{border-color:#fff;color:#fff;}
+body.theme-contrast .feedback.correct{background:#222;border:3px solid #fff;}
+body.theme-contrast .feedback.wrong{background:#222;border:3px dashed #fff;}
+body.theme-contrast .feedback.correct .feedback-title::before{content:"✓ ";}
+body.theme-contrast .feedback.wrong .feedback-title::before{content:"✗ ";}
+body.theme-contrast #timeout-overlay{background:rgba(0,0,0,0.97);border:4px solid #fff;}
+body.theme-contrast .timer-bar-fill,.theme-contrast .progress-bar-fill,.theme-contrast .hud-bar-fill{background:#fff !important;}
+body.theme-contrast .hud-bar-bg,.theme-contrast .timer-bar-bg,.theme-contrast .progress-bar-bg{background:#333;border-color:#666;}
+body.theme-contrast .stamp{border-color:#fff;color:#fff;}
+body.theme-contrast .card-title{border-bottom-color:#fff;}
+body.theme-contrast .stat-row{border-bottom-color:#555;}
+body.theme-contrast .stat-val{color:#fff !important;}
+body.theme-contrast .rank-badge{border-color:#fff !important;}
+body.theme-contrast .rank-name{color:#fff !important;}
+
+/* SELETOR DE TEMA */
+.theme-selector{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem;}
+.theme-btn{font-family:'Oswald',sans-serif;font-size:.8rem;font-weight:600;padding:10px 18px;border-radius:4px;cursor:pointer;letter-spacing:1px;transition:all .15s;border:2px solid;display:flex;align-items:center;gap:.5rem;}
+.theme-btn.light{background:#f5f0e8;color:#1a1208;border-color:#c8b878;}
+.theme-btn.light:hover,.theme-btn.light.active{background:#fff8ee;border-color:#b8860b;box-shadow:0 2px 8px rgba(184,134,11,.3);}
+.theme-btn.dark{background:#2a1f0a;color:#e8dfc0;border-color:#5c4a1e;}
+.theme-btn.dark:hover,.theme-btn.dark.active{background:#1a1208;border-color:#e8c84a;box-shadow:0 2px 8px rgba(232,200,74,.3);}
+.theme-btn.contrast{background:#000;color:#fff;border-color:#fff;}
+.theme-btn.contrast:hover,.theme-btn.contrast.active{background:#111;box-shadow:0 2px 8px rgba(255,255,255,.4);}
+.theme-btn.active{transform:scale(1.05);}
+.theme-label{font-family:'Special Elite',serif;font-size:.72rem;color:var(--ink-light);letter-spacing:2px;text-align:center;margin-bottom:.5rem;font-weight:bold;}
 </style>
 </head>
 <body>
@@ -180,6 +240,25 @@ body{background:#f5f0e8;color:#1a1208;font-family:'Courier Prime',monospace;min-
   <div style="font-family:'Special Elite',serif;font-size:.8rem;color:var(--gold);letter-spacing:4px;font-weight:bold;margin-bottom:1rem;">— ANTES DE COMEÇAR —</div>
   <div class="paper pista-card">
     <div class="stamp">CONFIDENCIAL</div>
+
+    <!-- SELETOR DE TEMA -->
+    <div style="margin-bottom:1.25rem;">
+      <div class="theme-label">🎨 ESCOLHA O VISUAL</div>
+      <div class="theme-selector">
+        <button class="theme-btn light active" id="theme-light" onclick="setTheme('light')">
+          ☀️ CLARO
+        </button>
+        <button class="theme-btn dark" id="theme-dark" onclick="setTheme('dark')">
+          🌙 ESCURO
+        </button>
+        <button class="theme-btn contrast" id="theme-contrast" onclick="setTheme('contrast')">
+          ◑ ALTO CONTRASTE
+        </button>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);margin-bottom:1.25rem;"></div>
+
     <div style="font-size:2.5rem;margin-bottom:1rem;text-align:center;">🔍</div>
     <div style="font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--ink);font-weight:700;margin-bottom:1rem;line-height:1.4;text-align:center;">Você trouxe sua pista para essa investigação?</div>
     <div style="font-size:.9rem;color:var(--ink-mid);line-height:1.8;margin-bottom:1.5rem;text-align:center;">Analistas preparados recebem bônus de <strong style="color:var(--gold)">+10 XP</strong>.</div>
@@ -303,6 +382,30 @@ body{background:#f5f0e8;color:#1a1208;font-family:'Courier Prime',monospace;min-
 const BIN_ID = '6a2c0badda38895dfeb4fb50';
 const MASTER_KEY = '$2a$10$wjfXgrsC/PZ.R/HwB5.5aO7t5PCFQ8v4ppgcedXPOFovWfc72T5Na';
 const BIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+
+// ─── TEMA ───
+function setTheme(theme){
+  document.body.classList.remove('theme-dark','theme-contrast');
+  if(theme==='dark') document.body.classList.add('theme-dark');
+  else if(theme==='contrast') document.body.classList.add('theme-contrast');
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('theme-'+theme).classList.add('active');
+  localStorage.setItem('qi_theme', theme);
+}
+// Restaurar tema salvo
+(function(){
+  const t = localStorage.getItem('qi_theme') || 'light';
+  if(t!=='light'){
+    document.body.classList.add('theme-'+t);
+    setTimeout(()=>{
+      const btn = document.getElementById('theme-'+t);
+      if(btn){
+        document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+    }, 100);
+  }
+})();
 
 // ─── ESTADO ───
 let state = {
