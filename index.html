@@ -208,6 +208,57 @@ body.theme-contrast .stat-val{color:#fff !important;}
 body.theme-contrast .rank-badge{border-color:#fff !important;}
 body.theme-contrast .rank-name{color:#fff !important;}
 
+/* TEMA: NUBANK (roxo + verde, daltonismo-friendly) */
+body.theme-nubank{
+  background:#1a0a2e;
+  --gold:#00d164;--gold-light:#00e872;--red:#ff6b35;--green:#00d164;
+  --blue:#a78bfa;--ink:#f0e6ff;--ink-mid:#c4a8f0;--ink-light:#8b6abf;
+  --paper:#2d1057;--border:#6b21a8;
+}
+body.theme-nubank .paper{background:#2d1057;border-color:#6b21a8;box-shadow:0 3px 16px rgba(130,10,209,0.3);}
+body.theme-nubank .opt-btn{background:#1e0a3c;color:#f0e6ff;border-color:#6b21a8;}
+body.theme-nubank .opt-btn:hover:not(:disabled){border-color:#00d164;box-shadow:0 2px 8px rgba(0,209,100,.3);}
+body.theme-nubank .opt-btn.selected{background:#3b0f7a;border-color:#00d164;border-width:3px;}
+body.theme-nubank .opt-btn.correct{background:#003d1e;border-color:#00d164;color:#00d164;}
+body.theme-nubank .opt-btn.wrong{background:#3d1000;border-color:#ff6b35;color:#ff6b35;}
+body.theme-nubank .field-input{background:#1e0a3c;color:#f0e6ff;border-color:#6b21a8;}
+body.theme-nubank .field-input:focus{border-color:#00d164;}
+body.theme-nubank .field-input.valid{border-color:#00d164;}
+body.theme-nubank #hud{background:#1a0a2e;border-bottom:3px solid #820AD1;}
+body.theme-nubank .hud-bar-bg,.theme-nubank .timer-bar-bg,.theme-nubank .progress-bar-bg{background:#3b0f7a;border-color:#6b21a8;}
+body.theme-nubank .hud-bar-fill{background:#00d164 !important;}
+body.theme-nubank .progress-bar-fill{background:#820AD1 !important;}
+body.theme-nubank .btn-gold{background:#820AD1;color:#fff;border-color:#820AD1;}
+body.theme-nubank .btn-gold:hover{background:#9b12f5;}
+body.theme-nubank .btn-green{background:#00d164;color:#000;border-color:#00d164;}
+body.theme-nubank .btn-green:hover{background:#00e872;}
+body.theme-nubank .btn-outline{border-color:#00d164;color:#00d164;}
+body.theme-nubank .btn-outline:hover{background:rgba(0,209,100,.1);}
+body.theme-nubank .feedback.correct{background:#003d1e;border:2px solid #00d164;}
+body.theme-nubank .feedback.correct .feedback-title{color:#00d164;}
+body.theme-nubank .feedback.wrong{background:#3d1000;border:2px solid #ff6b35;}
+body.theme-nubank .feedback.wrong .feedback-title{color:#ff6b35;}
+body.theme-nubank #timeout-overlay{background:rgba(26,10,46,0.97);border:3px solid #820AD1;}
+body.theme-nubank .stamp{border-color:#00d164;color:#00d164;}
+body.theme-nubank .card-title{color:#00d164;border-bottom-color:#6b21a8;}
+body.theme-nubank .q-case{color:#00d164;}
+body.theme-nubank .rank-badge{border-color:#820AD1 !important;}
+body.theme-nubank .rank-name{color:#00d164 !important;}
+body.theme-nubank .stat-val{color:#00d164 !important;}
+body.theme-nubank .hud-val{color:#00d164;}
+body.theme-nubank .hud-val.green{color:#00d164;}
+body.theme-nubank .hud-avatar{background:#820AD1;}
+body.theme-nubank .hud-group{color:#00d164;}
+body.theme-nubank .big-title .gold{color:#820AD1;}
+body.theme-nubank .badge-bonus{color:#00d164;border-color:#00d164;}
+body.theme-nubank .theme-label{color:#c4a8f0;}
+body.theme-nubank .footer-info{color:#8b6abf;}
+body.theme-nubank .progress-top span:last-child{color:#00d164;}
+body.theme-nubank .confirm-hint{color:#8b6abf;}
+body.theme-nubank .field-hint{color:#8b6abf;}
+body.theme-nubank .field-label{color:#f0e6ff;}
+body.theme-nubank .timeout-answer{background:rgba(130,10,209,.2);border-color:rgba(130,10,209,.6);}
+
 /* SELETOR DE TEMA */
 .theme-selector{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem;}
 .theme-btn{font-family:'Oswald',sans-serif;font-size:.8rem;font-weight:600;padding:10px 18px;border-radius:4px;cursor:pointer;letter-spacing:1px;transition:all .15s;border:2px solid;display:flex;align-items:center;gap:.5rem;}
@@ -217,6 +268,8 @@ body.theme-contrast .rank-name{color:#fff !important;}
 .theme-btn.dark:hover,.theme-btn.dark.active{background:#1a1208;border-color:#e8c84a;box-shadow:0 2px 8px rgba(232,200,74,.3);}
 .theme-btn.contrast{background:#000;color:#fff;border-color:#fff;}
 .theme-btn.contrast:hover,.theme-btn.contrast.active{background:#111;box-shadow:0 2px 8px rgba(255,255,255,.4);}
+.theme-btn.nubank{background:#1a0a2e;color:#00d164;border-color:#820AD1;}
+.theme-btn.nubank:hover,.theme-btn.nubank.active{background:#2d1057;border-color:#00d164;box-shadow:0 2px 8px rgba(0,209,100,.35);}
 .theme-btn.active{transform:scale(1.05);}
 .theme-label{font-family:'Special Elite',serif;font-size:.72rem;color:var(--ink-light);letter-spacing:2px;text-align:center;margin-bottom:.5rem;font-weight:bold;}
 </style>
@@ -253,6 +306,9 @@ body.theme-contrast .rank-name{color:#fff !important;}
         </button>
         <button class="theme-btn contrast" id="theme-contrast" onclick="setTheme('contrast')">
           ◑ ALTO CONTRASTE
+        </button>
+        <button class="theme-btn nubank" id="theme-nubank" onclick="setTheme('nubank')">
+          💜 NUBANK
         </button>
       </div>
     </div>
@@ -385,9 +441,10 @@ const BIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
 
 // ─── TEMA ───
 function setTheme(theme){
-  document.body.classList.remove('theme-dark','theme-contrast');
+  document.body.classList.remove('theme-dark','theme-contrast','theme-nubank');
   if(theme==='dark') document.body.classList.add('theme-dark');
   else if(theme==='contrast') document.body.classList.add('theme-contrast');
+  else if(theme==='nubank') document.body.classList.add('theme-nubank');
   document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('theme-'+theme).classList.add('active');
   localStorage.setItem('qi_theme', theme);
