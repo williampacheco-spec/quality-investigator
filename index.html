@@ -8,7 +8,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=Oswald:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 
-/* ── TEMAS ── */
 body{
   --bg:#f5f0e8;--paper:#fff8ee;--border:#c8b878;
   --gold:#b8860b;--gold-h:#d4a017;
@@ -17,71 +16,54 @@ body{
   background:var(--bg);color:var(--ink);
   font-family:'Courier Prime',monospace;min-height:100vh;
 }
-body.dark{
-  --bg:#1a1208;--paper:#2a1f0a;--border:#5c4a1e;
-  --gold:#e8c84a;--gold-h:#f0d060;
-  --red:#ff6644;--green:#44cc77;--blue:#66aaff;
-  --ink:#e8dfc0;--ink-mid:#c0a878;--ink-light:#8a7a5a;
-  background:var(--bg);color:var(--ink);
-}
-body.nubank{
-  --bg:#1a0a2e;--paper:#2d1057;--border:#6b21a8;
-  --gold:#00d164;--gold-h:#00e872;
-  --red:#ff6b35;--green:#00d164;--blue:#a78bfa;
-  --ink:#f0e6ff;--ink-mid:#c4a8f0;--ink-light:#8b6abf;
-  background:var(--bg);color:var(--ink);
-}
-body.contrast{
-  --bg:#000;--paper:#111;--border:#fff;
-  --gold:#fff;--gold-h:#ddd;
-  --red:#fff;--green:#fff;--blue:#fff;
-  --ink:#fff;--ink-mid:#ccc;--ink-light:#aaa;
-  background:var(--bg);color:var(--ink);
-}
+body.dark{--bg:#1a1208;--paper:#2a1f0a;--border:#5c4a1e;--gold:#e8c84a;--gold-h:#f0d060;--red:#ff6644;--green:#44cc77;--blue:#66aaff;--ink:#e8dfc0;--ink-mid:#c0a878;--ink-light:#8a7a5a;background:var(--bg);color:var(--ink);}
+body.nubank{--bg:#1a0a2e;--paper:#2d1057;--border:#6b21a8;--gold:#00d164;--gold-h:#00e872;--red:#ff6b35;--green:#00d164;--blue:#a78bfa;--ink:#f0e6ff;--ink-mid:#c4a8f0;--ink-light:#8b6abf;background:var(--bg);color:var(--ink);}
+body.contrast{--bg:#000;--paper:#111;--border:#fff;--gold:#fff;--gold-h:#ddd;--red:#fff;--green:#fff;--blue:#fff;--ink:#fff;--ink-mid:#ccc;--ink-light:#aaa;background:var(--bg);color:var(--ink);}
 
-/* ── BASE ── */
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 button{cursor:pointer;font-family:'Courier Prime',monospace;}
 input{font-family:'Courier Prime',monospace;}
-
 .paper{background:var(--paper);border:2px solid var(--border);box-shadow:0 3px 16px rgba(0,0,0,0.12);}
-body.contrast .paper{border-width:3px;}
 
-/* ── ANIMAÇÕES ── */
+/* ANIMAÇÕES */
 @keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes flicker{0%,100%{opacity:1}93%{opacity:.7}96%{opacity:.85}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 @keyframes detectiveBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
 @keyframes countPop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+@keyframes comboIn{0%{transform:scale(.3) rotate(-10deg);opacity:0}60%{transform:scale(1.2) rotate(3deg)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+@keyframes comboOut{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-40px)}}
+@keyframes stampIn{0%{transform:scale(3) rotate(-20deg);opacity:0}70%{transform:scale(.95) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(-5deg);opacity:1}}
+@keyframes tipSlide{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .fadein{animation:fadeIn .4s ease;}
 .flicker{animation:flicker 8s infinite;}
 .bounce{animation:bounce 1s ease infinite;}
 
-/* ── SCREENS ── */
+/* SCREENS */
 .screen{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center;}
 .screen.on{display:flex;}
 #s-game{display:none;min-height:100vh;padding:0;}
 #s-game.on{display:block;}
 
-/* ── THEME SELECTOR ── */
+/* TEMA */
 .theme-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;}
 .th-btn{font-family:'Oswald',sans-serif;font-size:.78rem;font-weight:600;padding:8px 14px;border-radius:4px;cursor:pointer;letter-spacing:1px;border:2px solid;transition:all .15s;}
 .th-btn.th-light{background:#f5f0e8;color:#1a1208;border-color:#c8b878;}
 .th-btn.th-dark{background:#2a1f0a;color:#e8dfc0;border-color:#5c4a1e;}
 .th-btn.th-nubank{background:#1a0a2e;color:#00d164;border-color:#820AD1;}
 .th-btn.th-contrast{background:#000;color:#fff;border-color:#fff;}
-.th-btn.sel{transform:scale(1.08);box-shadow:0 0 12px rgba(0,0,0,0.3);}
+.th-btn.sel{transform:scale(1.08);}
 .th-btn.th-light.sel{border-color:#b8860b;box-shadow:0 0 12px rgba(184,134,11,.4);}
 .th-btn.th-dark.sel{border-color:#e8c84a;box-shadow:0 0 12px rgba(232,200,74,.4);}
 .th-btn.th-nubank.sel{border-color:#00d164;box-shadow:0 0 12px rgba(0,209,100,.4);}
 .th-btn.th-contrast.sel{box-shadow:0 0 12px rgba(255,255,255,.5);}
 .th-label{font-family:'Special Elite',serif;font-size:.7rem;color:var(--ink-light);letter-spacing:2px;margin-bottom:.4rem;font-weight:bold;}
 
-/* ── BOTÕES ── */
+/* BOTÕES */
 .btn{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:600;padding:12px 28px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;border:2px solid;transition:all .15s;}
 .btn-gold{background:var(--gold);color:#fff;border-color:var(--gold);}
 .btn-gold:hover{background:var(--gold-h);}
@@ -92,9 +74,9 @@ body.nubank .btn-green{color:#000;}
 .btn-full{width:100%;}
 .btn-lg{font-size:1.1rem;padding:14px 32px;}
 
-/* ── NAME CARD ── */
+/* NAME */
 .name-card{max-width:440px;width:100%;padding:2rem;border-radius:4px;position:relative;}
-.stamp{position:absolute;top:12px;right:14px;font-family:'Special Elite',serif;font-size:.65rem;color:var(--red);border:2px solid var(--red);padding:3px 8px;border-radius:3px;letter-spacing:2px;transform:rotate(3deg);font-weight:bold;}
+.stamp-confidential{position:absolute;top:12px;right:14px;font-family:'Special Elite',serif;font-size:.65rem;color:var(--red);border:2px solid var(--red);padding:3px 8px;border-radius:3px;letter-spacing:2px;transform:rotate(3deg);font-weight:bold;}
 .card-title{font-family:'Special Elite',serif;font-size:.75rem;color:var(--gold);letter-spacing:3px;margin-bottom:1.5rem;border-bottom:2px solid var(--border);padding-bottom:.75rem;font-weight:bold;}
 .field-label{font-family:'Oswald',sans-serif;font-size:.85rem;color:var(--ink);letter-spacing:2px;display:block;margin-bottom:.5rem;font-weight:600;}
 .field-input{width:100%;padding:.85rem 1rem;background:var(--paper);border:2px solid var(--border);border-radius:4px;color:var(--ink);font-size:1rem;outline:none;transition:border .2s;font-weight:bold;}
@@ -106,7 +88,7 @@ body.nubank .btn-green{color:#000;}
 .pack-sub{font-size:.85rem;color:var(--ink-light);letter-spacing:3px;margin-top:.5rem;font-weight:bold;}
 .footer-hint{font-family:'Special Elite',serif;font-size:.75rem;color:var(--ink-light);letter-spacing:2px;margin-top:1rem;font-weight:bold;}
 
-/* ── COUNTDOWN ── */
+/* COUNTDOWN */
 .cd-detective{font-size:clamp(80px,18vw,130px);animation:detectiveBob 1.5s ease-in-out infinite;display:inline-block;line-height:1;}
 .cd-title{font-family:'Oswald',sans-serif;font-size:clamp(1.2rem,4vw,1.8rem);font-weight:700;color:var(--ink);letter-spacing:3px;margin:.75rem 0 .25rem;}
 .cd-sub{font-family:'Special Elite',serif;font-size:clamp(.8rem,2vw,1rem);color:var(--ink-mid);letter-spacing:2px;margin-bottom:1rem;}
@@ -114,7 +96,7 @@ body.nubank .btn-green{color:#000;}
 .cd-bar-bg{width:200px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:1rem auto 0;}
 .cd-bar{height:100%;background:var(--gold);border-radius:3px;transition:width 1s linear;}
 
-/* ── HUD ── */
+/* HUD */
 #hud{position:sticky;top:0;z-index:100;background:var(--paper);border-bottom:3px solid var(--gold);padding:.6rem 1.2rem;display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.1);}
 .hud-av{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-weight:700;color:#fff;font-size:.85rem;flex-shrink:0;}
 body.nubank .hud-av{background:#820AD1;}
@@ -126,8 +108,11 @@ body.nubank .hud-av{background:#820AD1;}
 .hud-bar-bg{flex:1;min-width:50px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
 .hud-bar{height:100%;background:var(--gold);border-radius:3px;transition:width .5s;}
 .heart{font-size:1rem;}
+/* COMBO no HUD */
+.combo-badge{font-family:'Oswald',sans-serif;font-size:.75rem;font-weight:700;color:#fff;background:var(--red);padding:2px 10px;border-radius:12px;letter-spacing:1px;display:none;}
+body.nubank .combo-badge{background:#820AD1;}
 
-/* ── GAME ── */
+/* GAME */
 #game-wrap{max-width:680px;margin:0 auto;padding:1.5rem;}
 .prog-row{display:flex;justify-content:space-between;font-family:'Oswald',sans-serif;font-size:.82rem;color:var(--ink-mid);font-weight:600;margin-bottom:.3rem;}
 .prog-row span:last-child{color:var(--gold);}
@@ -142,6 +127,17 @@ body.nubank .hud-av{background:#820AD1;}
 .timer-bg{height:7px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:1rem;}
 .timer-fill{height:100%;border-radius:4px;transition:width 1s linear,background .3s;}
 
+/* COMBO OVERLAY */
+#combo-overlay{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:300;pointer-events:none;text-align:center;display:none;}
+#combo-overlay.show{display:block;animation:comboIn .4s ease,comboOut .4s ease 1.2s forwards;}
+.combo-text{font-family:'Oswald',sans-serif;font-size:clamp(2rem,8vw,4rem);font-weight:900;color:#ff8800;text-shadow:0 0 30px rgba(255,136,0,.6),0 4px 0 rgba(0,0,0,.3);letter-spacing:3px;}
+.combo-sub{font-family:'Special Elite',serif;font-size:1rem;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);letter-spacing:2px;}
+
+/* DICA */
+#tip-wrap{background:var(--paper);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:4px;padding:.9rem 1.1rem;margin-bottom:1rem;animation:tipSlide .4s ease;display:none;}
+.tip-lbl{font-family:'Special Elite',serif;font-size:.68rem;color:var(--gold);letter-spacing:2px;font-weight:bold;margin-bottom:.3rem;}
+.tip-txt{font-size:.88rem;color:var(--ink-mid);line-height:1.7;font-style:italic;}
+
 /* QUESTÃO */
 .q-paper{border-radius:4px;padding:1.5rem;margin-bottom:1rem;}
 .q-label{font-family:'Special Elite',serif;font-size:.7rem;color:var(--red);letter-spacing:2px;margin-bottom:.75rem;font-weight:bold;}
@@ -151,7 +147,7 @@ body.nubank .hud-av{background:#820AD1;}
 .opts{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;}
 .opt{background:var(--paper);border:2px solid var(--border);border-radius:4px;padding:.9rem 1rem;text-align:left;cursor:pointer;width:100%;font-size:clamp(.82rem,2vw,.93rem);color:var(--ink);transition:all .15s;font-weight:bold;line-height:1.6;}
 .opt:hover:not(:disabled){border-color:var(--gold);}
-.opt.sel{background:var(--paper);border-color:var(--gold);border-width:3px;}
+.opt.sel{border-color:var(--gold);border-width:3px;}
 body.contrast .opt.sel{background:#222;}
 .opt.ok{background:rgba(0,102,51,.12);border-color:var(--green);border-width:3px;color:var(--green);}
 body.contrast .opt.ok{background:#111;text-decoration:underline;}
@@ -167,11 +163,20 @@ body.contrast .opt.no{background:#111;text-decoration:line-through;}
 .fb{border-radius:4px;padding:1rem;margin-bottom:1rem;animation:fadeIn .3s ease;}
 .fb.ok{background:rgba(0,102,51,.1);border:2px solid var(--green);}
 .fb.no{background:rgba(204,34,0,.08);border:2px solid var(--red);}
-body.contrast .fb.ok,.body.contrast .fb.no{background:#111;border-width:3px;}
 .fb-title{font-family:'Oswald',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:1px;margin-bottom:.4rem;}
 .fb.ok .fb-title{color:var(--green);}
 .fb.no .fb-title{color:var(--red);}
 .fb-text{font-size:.88rem;line-height:1.8;color:var(--ink);font-weight:bold;}
+
+/* STAMP CASO RESOLVIDO */
+#stamp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;}
+#stamp-overlay.on{display:flex;}
+.stamp-box{text-align:center;animation:stampIn .6s ease forwards;}
+.stamp-seal{font-family:'Oswald',sans-serif;font-size:clamp(1.5rem,5vw,2.8rem);font-weight:900;color:#00cc44;border:6px solid #00cc44;padding:1.5rem 2.5rem;border-radius:8px;letter-spacing:4px;transform:rotate(-5deg);text-shadow:0 0 20px rgba(0,204,68,.5);box-shadow:0 0 40px rgba(0,204,68,.4),inset 0 0 40px rgba(0,204,68,.1);}
+body.nubank .stamp-seal{color:#00d164;border-color:#00d164;}
+body.dark .stamp-seal{color:#44cc77;border-color:#44cc77;}
+body.contrast .stamp-seal{color:#fff;border-color:#fff;}
+.stamp-sub{font-family:'Special Elite',serif;font-size:1rem;color:rgba(255,255,255,.7);margin-top:1rem;letter-spacing:2px;}
 
 /* TIMEOUT OVERLAY */
 #to-overlay{display:none;position:fixed;inset:0;background:rgba(160,30,0,.95);z-index:500;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;}
@@ -184,24 +189,45 @@ body.contrast .fb.ok,.body.contrast .fb.no{background:#111;border-width:3px;}
 .to-bar-bg{margin-top:.75rem;height:5px;width:180px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden;}
 .to-bar{height:100%;background:#fff;border-radius:3px;transition:width 1s linear;}
 
+/* MENSAGEM PERSONALIZADA */
+.personal-msg{background:var(--paper);border:2px solid var(--gold);border-radius:4px;padding:1rem 1.25rem;margin-bottom:1.25rem;max-width:480px;width:100%;text-align:left;}
+.personal-msg-title{font-family:'Oswald',sans-serif;font-size:.8rem;color:var(--gold);font-weight:700;letter-spacing:2px;margin-bottom:.4rem;}
+.personal-msg-text{font-size:.88rem;color:var(--ink-mid);line-height:1.7;font-style:italic;}
+
+/* BADGES */
+.badges-wrap{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin-bottom:1.25rem;max-width:480px;}
+.badge-item{font-family:'Special Elite',serif;font-size:.78rem;padding:6px 14px;border-radius:20px;font-weight:bold;letter-spacing:1px;}
+.badge-expert{background:rgba(0,102,51,.15);border:2px solid var(--green);color:var(--green);}
+.badge-reforco{background:rgba(204,34,0,.1);border:2px solid var(--red);color:var(--red);}
+
 /* FINAL */
-.rank-badge{display:inline-block;border-radius:4px;padding:1rem 2rem;margin:1.5rem 0;border:3px solid var(--gold);}
+.rank-badge{display:inline-block;border-radius:4px;padding:1rem 2rem;margin:1.25rem 0;border:3px solid var(--gold);}
 .rank-icon{font-size:2.5rem;margin-bottom:.3rem;}
 .rank-name{font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:3px;color:var(--gold);font-weight:700;}
 .stat-row{display:flex;justify-content:space-between;align-items:center;padding:.65rem 0;border-bottom:2px solid var(--border);}
 .stat-lbl{font-family:'Oswald',sans-serif;font-size:.88rem;color:var(--ink-mid);font-weight:600;letter-spacing:1px;}
 .stat-val{font-family:'Oswald',sans-serif;font-size:.95rem;font-weight:700;}
 .result-card{border-radius:4px;padding:1.5rem;text-align:left;max-width:480px;width:100%;}
-
-/* ALREADY */
 .already-card{max-width:420px;padding:1.5rem;border-radius:4px;font-size:.95rem;color:var(--ink-mid);line-height:1.8;font-weight:bold;}
-
-/* SAVING */
 .saving-icon{font-size:3rem;margin-bottom:1rem;}
 .saving-txt{font-family:'Oswald',sans-serif;font-size:1.2rem;color:var(--gold);font-weight:700;letter-spacing:2px;}
 </style>
 </head>
 <body>
+
+<!-- COMBO OVERLAY -->
+<div id="combo-overlay">
+  <div class="combo-text" id="combo-txt">🔥 COMBO x3!</div>
+  <div class="combo-sub" id="combo-sub">+XP BÔNUS</div>
+</div>
+
+<!-- STAMP OVERLAY -->
+<div id="stamp-overlay">
+  <div class="stamp-box">
+    <div class="stamp-seal">✓ CASO RESOLVIDO</div>
+    <div class="stamp-sub">Sequência perfeita!</div>
+  </div>
+</div>
 
 <!-- TIMEOUT OVERLAY -->
 <div id="to-overlay">
@@ -220,7 +246,6 @@ body.contrast .fb.ok,.body.contrast .fb.no{background:#111;border-width:3px;}
     <div class="big-title">QUALITY<br><span class="big-gold flicker">INVESTIGATOR</span></div>
     <div class="pack-sub">— PACK QUALITY · INVOPS BRASIL —</div>
   </div>
-  <!-- TEMA -->
   <div style="margin-bottom:1rem;">
     <div class="th-label">🎨 ESCOLHA O VISUAL</div>
     <div class="theme-row">
@@ -230,33 +255,28 @@ body.contrast .fb.ok,.body.contrast .fb.no{background:#111;border-width:3px;}
       <button class="th-btn th-contrast" id="tb-contrast" onclick="setTheme('contrast')">◑ CONTRASTE</button>
     </div>
   </div>
-  <!-- CARD -->
   <div class="paper name-card fadein">
-    <div class="stamp">CONFIDENCIAL</div>
+    <div class="stamp-confidential">CONFIDENCIAL</div>
     <div class="card-title">IDENTIFIQUE-SE ANTES DE PROSSEGUIR</div>
     <div style="margin-bottom:1.5rem;">
       <label class="field-label">▸ E-MAIL DO ANALISTA</label>
-      <input class="field-input" id="email-in" type="email" placeholder="seu.email@nubank.com.br"
-        oninput="onEmail()" onkeydown="if(event.key==='Enter')tryStart()"/>
+      <input class="field-input" id="email-in" type="email" placeholder="seu.email@nubank.com.br" oninput="onEmail()" onkeydown="if(event.key==='Enter')tryStart()"/>
       <div class="field-err" id="email-err">⚠ E-mail inválido</div>
     </div>
-    <button class="btn btn-gold btn-full" id="start-btn" onclick="tryStart()">◉ ENTRAR NO CASO</button>
+    <button class="btn btn-gold btn-full" onclick="tryStart()">◉ ENTRAR NO CASO</button>
     <div class="field-err" id="start-err" style="margin-top:.5rem;">⚠ Informe um e-mail válido!</div>
   </div>
   <div class="footer-hint">15 PERGUNTAS · ⏱ 30s POR PERGUNTA</div>
 </div>
 
-<!-- TELA JÁ JOGOU -->
+<!-- JÁ JOGOU -->
 <div class="screen" id="s-already">
   <div style="font-size:3rem;margin-bottom:1rem;">🔒</div>
   <div style="font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;color:var(--red);margin-bottom:1rem;">CASO JÁ INVESTIGADO!</div>
-  <div class="paper already-card">
-    O e-mail <strong id="already-em"></strong> já participou desta investigação.<br>Cada analista pode jogar apenas uma vez.<br><br>
-    <span style="font-size:.85rem;color:var(--ink-light);">Se acredita que é um erro, fale com o Pack Quality.</span>
-  </div>
+  <div class="paper already-card">O e-mail <strong id="already-em"></strong> já participou desta investigação.<br>Cada analista pode jogar apenas uma vez.<br><br><span style="font-size:.85rem;color:var(--ink-light);">Se acredita que é um erro, fale com o Pack Quality.</span></div>
 </div>
 
-<!-- TELA COUNTDOWN -->
+<!-- COUNTDOWN -->
 <div class="screen" id="s-cd">
   <div class="cd-detective" id="cd-icon">🕵️</div>
   <div class="cd-title" id="cd-title">PREPARE-SE!</div>
@@ -265,7 +285,7 @@ body.contrast .fb.ok,.body.contrast .fb.no{background:#111;border-width:3px;}
   <div class="cd-bar-bg"><div class="cd-bar" id="cd-bar" style="width:100%"></div></div>
 </div>
 
-<!-- TELA JOGO -->
+<!-- JOGO -->
 <div id="s-game">
   <div id="hud">
     <div class="hud-av" id="hud-av">?</div>
@@ -277,6 +297,7 @@ body.contrast .fb.ok,.body.contrast .fb.no{background:#111;border-width:3px;}
     <div><div class="hud-lbl">VIDAS</div><div style="display:flex;gap:2px;" id="hud-lives"></div></div>
     <div class="hud-sep">|</div>
     <div><div class="hud-lbl">ACERTOS</div><div class="hud-val g" id="hud-acc">0/0</div></div>
+    <div class="combo-badge" id="combo-badge">🔥 COMBO</div>
   </div>
   <div id="game-wrap">
     <div class="prog-row"><span id="q-num">PERGUNTA 1 DE 15</span><span id="q-pct">0%</span></div>
@@ -289,13 +310,17 @@ body.contrast .fb.ok,.body.contrast .fb.no{background:#111;border-width:3px;}
       </div>
       <div class="timer-bg"><div class="timer-fill" id="t-bar" style="width:100%;background:var(--green);"></div></div>
     </div>
+    <div id="tip-wrap">
+      <div class="tip-lbl">💡 SABIA QUE?</div>
+      <div class="tip-txt" id="tip-txt"></div>
+    </div>
     <div class="paper q-paper">
       <div class="q-label" id="q-lbl">// PISTA 1</div>
       <div class="q-text" id="q-text"></div>
     </div>
     <div class="opts" id="opts"></div>
     <div class="confirm-wrap" id="conf-wrap">
-      <button class="btn btn-gray btn-full" id="conf-btn" onclick="confirm_answer()">✓ CONFIRMAR RESPOSTA</button>
+      <button class="btn btn-gray btn-full" id="conf-btn" onclick="confirmAnswer()">✓ CONFIRMAR RESPOSTA</button>
       <div class="confirm-hint" id="conf-hint">Selecione uma opção antes de confirmar</div>
     </div>
     <div id="fb-wrap" style="display:none;"></div>
@@ -316,32 +341,55 @@ body.contrast .fb.ok,.body.contrast .fb.no{background:#111;border-width:3px;}
   <div style="font-size:4rem;margin-bottom:1rem;" class="bounce">🏆</div>
   <div style="font-family:'Special Elite',serif;font-size:.8rem;color:var(--gold);letter-spacing:4px;font-weight:bold;margin-bottom:.5rem;">— INVESTIGAÇÃO CONCLUÍDA —</div>
   <div style="font-family:'Oswald',sans-serif;font-size:2rem;font-weight:700;color:var(--ink);margin-bottom:.25rem;">CASO ENCERRADO!</div>
-  <div style="font-size:.9rem;color:var(--ink-mid);font-weight:bold;" id="fin-sub"></div>
-  <div class="paper rank-badge">
-    <div class="rank-icon" id="fin-icon"></div>
-    <div class="rank-name" id="fin-rank"></div>
-  </div>
+  <div style="font-size:.9rem;color:var(--ink-mid);font-weight:bold;margin-bottom:.5rem;" id="fin-sub"></div>
+  <div class="paper rank-badge"><div class="rank-icon" id="fin-icon"></div><div class="rank-name" id="fin-rank"></div></div>
+  <!-- MENSAGEM PERSONALIZADA -->
+  <div class="personal-msg" id="fin-msg"><div class="personal-msg-title">🕵️ ANÁLISE DO DETETIVE QUALITER</div><div class="personal-msg-text" id="fin-msg-txt"></div></div>
+  <!-- BADGES DE TEMA -->
+  <div style="font-family:'Oswald',sans-serif;font-size:.8rem;color:var(--ink-mid);letter-spacing:2px;margin-bottom:.5rem;font-weight:600;">SEUS TEMAS</div>
+  <div class="badges-wrap" id="fin-badges"></div>
+  <!-- STATS -->
   <div class="paper result-card" id="fin-stats"></div>
   <div style="font-size:.85rem;color:var(--ink-mid);line-height:1.9;margin:1.5rem 0;font-style:italic;font-weight:bold;">"Qualidade não é punição — é parceria."</div>
 </div>
 
 <script>
-// ── JSONBIN ──
 const BIN_ID='6a2c0badda38895dfeb4fb50';
 const MKEY='$2a$10$wjfXgrsC/PZ.R/HwB5.5aO7t5PCFQ8v4ppgcedXPOFovWfc72T5Na';
 const BURL='https://api.jsonbin.io/v3/b/'+BIN_ID;
 
 // ── TEMA ──
 function setTheme(t){
-  document.body.className = t==='light' ? '' : t;
+  document.body.className=t==='light'?'':t;
   document.querySelectorAll('.th-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('tb-'+t).classList.add('sel');
   localStorage.setItem('qi_theme',t);
 }
-(function(){
-  const t=localStorage.getItem('qi_theme')||'light';
-  setTheme(t);
-})();
+(function(){setTheme(localStorage.getItem('qi_theme')||'light');})();
+
+// ── DICAS ──
+const TIPS=[
+  "O Pack Quality realiza monitorias mensais em todos os 5 distritos: Mule Account, Identity Fraud, Victims Prevention, Gamers e Transactional.",
+  "Contestações procedentes são dados valiosos — elas mostram onde o Quality precisa calibrar seus critérios de avaliação.",
+  "O notebook no Databricks com IA categoriza automaticamente os temas de erro mais frequentes por distrito.",
+  "Na pesquisa Quality Engagement, 97 de 211 analistas responderam — uma adesão de 46% com NPS Geral +55.",
+  "O prazo para contestar uma monitoria é até o 3º dia útil do mês seguinte à data da monitoria.",
+  "Apontamentos Externos vêm de fontes como Reputational, Regulatory e InvOps Intelligence — fora da monitoria regular.",
+  "76% das respostas abertas da pesquisa NPS pediram revisão dos critérios do scorecard.",
+  "Q13 (clareza nos retornos de contestação) teve 22% de detratores — o maior índice da pesquisa.",
+  "O Pack Quality tem 9 iniciativas de melhoria mapeadas com projeção de NPS +65 a +72 na Fase 2.",
+  "Registrar o MO durante a análise (não depois) é o hábito que separa um processo OK de um NOK.",
+  "O canal oficial de contestação é o Jira Quality Requests — garante rastreabilidade e SLA de resposta.",
+  "Calibrações entre Quality e distritos (Roda de Conversa) reduzem contestações e fortalecem a parceria.",
+];
+
+// ── CATEGORIAS DE PERGUNTAS ──
+const CATS={
+  0:'MO e Processo',1:'MO e Processo',2:'Scorecard',3:'Scorecard',
+  4:'Contestação',5:'Contestação',6:'Contestação',7:'Contestação',
+  8:'Contestação',9:'Parceria',10:'Apontamentos',11:'Contestação',
+  12:'Apontamentos',13:'Parceria',14:'Missão'
+};
 
 // ── PERGUNTAS ──
 const QS=[
@@ -365,14 +413,22 @@ const QS=[
 function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
 
 // ── ESTADO ──
-let G={email:'',qs:[],idx:0,sel:null,conf:false,tout:false,xp:0,lives:3,correct:0,total:0,t0:null,tLeft:30,tInt:null};
+let G={
+  email:'',qs:[],idx:0,sel:null,conf:false,tout:false,
+  xp:0,lives:3,correct:0,total:0,t0:null,tLeft:30,tInt:null,
+  combo:0,maxCombo:0,
+  catResults:{}, // {catName: {correct, total}}
+  tipIdx:0,
+};
 
 // ── UTILS ──
 function isEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
 function go(id){
   ['s-name','s-already','s-cd','s-game','s-save','s-final'].forEach(s=>{
     const el=document.getElementById(s);
-    if(el){el.classList.remove('on');el.style.display='none';}
+    if(!el)return;
+    el.classList.remove('on');
+    el.style.display='none';
   });
   const el=document.getElementById(id);
   if(!el)return;
@@ -404,7 +460,8 @@ function tryStart(){
   G.qs=shuffle(QS);
   G.idx=0;G.sel=null;G.conf=false;G.tout=false;
   G.xp=0;G.lives=3;G.correct=0;G.total=0;
-  G.t0=Date.now();
+  G.combo=0;G.maxCombo=0;G.catResults={};
+  G.t0=Date.now();G.tipIdx=0;
   go('s-cd');
   runCD();
 }
@@ -426,22 +483,17 @@ function runCD(){
     document.getElementById('cd-title').textContent=title;
     document.getElementById('cd-sub').textContent=sub;
     const n=document.getElementById('cd-num');
-    n.textContent=num;
-    n.style.animation='none';
-    void n.offsetWidth;
-    n.style.animation='countPop .6s ease';
+    n.textContent=num;n.style.animation='none';
+    void n.offsetWidth;n.style.animation='countPop .6s ease';
     document.getElementById('cd-bar').style.width=(num/5*100)+'%';
-    i++;
-    setTimeout(tick,1000);
+    i++;setTimeout(tick,1000);
   }
   tick();
 }
 
 // ── JOGO ──
 function startGame(){
-  go('s-game');
-  updHUD();
-  renderQ();
+  go('s-game');updHUD();renderQ();
 }
 
 function updHUD(){
@@ -452,6 +504,9 @@ function updHUD(){
   document.getElementById('hud-acc').textContent=G.correct+'/'+G.total;
   const lv=document.getElementById('hud-lives');lv.innerHTML='';
   for(let i=0;i<3;i++){const s=document.createElement('span');s.className='heart';s.style.color=i<G.lives?'var(--red)':'#ccc';s.textContent='♥';lv.appendChild(s);}
+  const cb=document.getElementById('combo-badge');
+  if(G.combo>=3){cb.style.display='block';cb.textContent='🔥 COMBO x'+G.combo;}
+  else cb.style.display='none';
 }
 
 function renderQ(){
@@ -463,12 +518,19 @@ function renderQ(){
   document.getElementById('prog').style.width=pct+'%';
   document.getElementById('q-lbl').textContent='// PISTA '+(G.idx+1);
   document.getElementById('q-text').textContent=q.q;
+
+  // Dica a cada 5 perguntas
+  const tipWrap=document.getElementById('tip-wrap');
+  if(G.idx>0&&G.idx%5===0){
+    document.getElementById('tip-txt').textContent=TIPS[G.tipIdx%TIPS.length];
+    G.tipIdx++;tipWrap.style.display='block';
+  }else tipWrap.style.display='none';
+
   const opts=document.getElementById('opts');opts.innerHTML='';
   q.opts.forEach((o,i)=>{
     const b=document.createElement('button');
     b.className='opt';b.textContent=o;
-    b.onclick=()=>selOpt(i);
-    opts.appendChild(b);
+    b.onclick=()=>selOpt(i);opts.appendChild(b);
   });
   const cb=document.getElementById('conf-btn');
   cb.className='btn btn-gray btn-full';cb.disabled=true;
@@ -489,24 +551,44 @@ function selOpt(i){
   document.getElementById('conf-hint').style.display='none';
 }
 
-function confirm_answer(){
+function confirmAnswer(){
   if(G.sel===null||G.conf)return;
   stopTimer();G.conf=true;
-  const q=G.qs[G.idx];const ok=G.sel===q.c;
+  const q=G.qs[G.idx];
+  // Encontra índice original desta questão
+  const origIdx=QS.findIndex(x=>x.q===q.q);
+  const cat=CATS[origIdx]||'Geral';
+  const ok=G.sel===q.c;
   G.total++;
+  if(!G.catResults[cat])G.catResults[cat]={correct:0,total:0};
+  G.catResults[cat].total++;
+
   document.querySelectorAll('.opt').forEach((b,i)=>{
     b.disabled=true;b.classList.remove('sel');
     if(i===q.c)b.classList.add('ok');
     else if(i===G.sel&&!ok)b.classList.add('no');
   });
-  if(ok){const pts=25+Math.floor((G.tLeft/30)*15);G.xp+=pts;G.correct++;}
-  else{G.lives=Math.max(0,G.lives-1);}
+
+  if(ok){
+    const pts=25+Math.floor((G.tLeft/30)*15);
+    G.xp+=pts;G.correct++;G.combo++;
+    G.catResults[cat].correct++;
+    if(G.combo>G.maxCombo)G.maxCombo=G.combo;
+    // COMBO
+    if(G.combo>=3)showCombo(G.combo,pts);
+    // STAMP a cada sequência de 5 corretas
+    if(G.combo>0&&G.combo%5===0)showStamp();
+  }else{
+    G.lives=Math.max(0,G.lives-1);G.combo=0;
+  }
   updHUD();
+
   const fw=document.getElementById('fb-wrap');
   fw.style.display='block';
   fw.innerHTML='<div class="fb '+(ok?'ok':'no')+'"><div class="fb-title">'+(ok?'✓ PISTA CONFIRMADA!':'✗ PISTA FALSA')+'</div><div class="fb-text">'+(ok?q.fb:q.fw)+'</div></div>';
   document.getElementById('conf-wrap').style.display='none';
   document.getElementById('timer-wrap').style.display='none';
+
   const isLast=G.idx>=G.qs.length-1;
   const nb=document.getElementById('next-btn');
   nb.textContent=isLast?'🏆 VER RESULTADO FINAL':'PRÓXIMA PISTA →';
@@ -519,10 +601,27 @@ function nextQ(){
   G.idx++;renderQ();window.scrollTo(0,0);
 }
 
+// ── COMBO ──
+function showCombo(n,pts){
+  const ov=document.getElementById('combo-overlay');
+  const emojis=n>=10?'🔥🔥🔥':n>=7?'🔥🔥':n>=5?'🔥⚡':'🔥';
+  document.getElementById('combo-txt').textContent=emojis+' COMBO x'+n+'!';
+  document.getElementById('combo-sub').textContent='+'+pts+' XP BÔNUS';
+  ov.style.display='none';void ov.offsetWidth;
+  ov.style.display='block';ov.className='show';
+  setTimeout(()=>{ov.style.display='none';ov.className='';},1800);
+}
+
+// ── STAMP ──
+function showStamp(){
+  const ov=document.getElementById('stamp-overlay');
+  ov.classList.add('on');
+  setTimeout(()=>ov.classList.remove('on'),2200);
+}
+
 // ── TIMER ──
 function startTimer(){
-  G.tLeft=30;updTimer(30);
-  clearInterval(G.tInt);
+  G.tLeft=30;updTimer(30);clearInterval(G.tInt);
   G.tInt=setInterval(()=>{
     G.tLeft--;updTimer(G.tLeft);
     if(G.tLeft<=0){clearInterval(G.tInt);handleTimeout();}
@@ -539,7 +638,7 @@ function updTimer(t){
 }
 function handleTimeout(){
   if(G.conf)return;
-  stopTimer();G.tout=true;G.lives=Math.max(0,G.lives-1);G.total++;updHUD();
+  stopTimer();G.tout=true;G.lives=Math.max(0,G.lives-1);G.total++;G.combo=0;updHUD();
   const q=G.qs[G.idx];
   document.getElementById('to-answer').textContent=q.opts[q.c];
   const ov=document.getElementById('to-overlay');ov.classList.add('on');
@@ -568,10 +667,46 @@ async function finishGame(){
     const r=await fetch(BURL+'/latest',{headers:{'X-Master-Key':MKEY}});
     const d=await r.json();
     const list=d.record?.resultados||[];
-    list.push({email:G.email,group:'Geral',xp:G.xp,correct:G.correct,total:G.total,pct,timeSeconds:elapsed,completedAt:new Date().toISOString()});
+    list.push({
+      email:G.email,group:'Geral',xp:G.xp,
+      correct:G.correct,total:G.total,pct,
+      timeSeconds:elapsed,maxCombo:G.maxCombo,
+      catResults:G.catResults,
+      completedAt:new Date().toISOString()
+    });
     await fetch(BURL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MKEY},body:JSON.stringify({resultados:list})});
   }catch(e){console.warn('Erro ao salvar:',e);}
   showFinal(elapsed,pct);
+}
+
+// ── MENSAGEM PERSONALIZADA ──
+function getPersonalMsg(pct,catResults,maxCombo){
+  const cats=Object.entries(catResults);
+  const worst=cats.sort((a,b)=>(a[1].correct/a[1].total)-(b[1].correct/b[1].total))[0];
+  const best=cats.sort((a,b)=>(b[1].correct/b[1].total)-(a[1].correct/a[1].total))[0];
+  if(pct===100)return'Investigação perfeita! Você acertou absolutamente tudo — o Det. Qualiter não poderia estar mais orgulhoso. Você está pronto para qualquer missão.';
+  if(pct>=80){
+    const msg=best?`Você brilhou especialmente em "${best[0]}". `:'';
+    const msg2=worst&&worst[1].correct<worst[1].total?`Vale reforçar "${worst[0]}" para chegar à perfeição.`:'';
+    return`Excelente investigação! ${msg}${msg2}`;
+  }
+  if(pct>=60){
+    const msg=worst?`O maior ponto de atenção foi "${worst[0]}" — vale revisar este tema com o Pack Quality.`:'';
+    return`Boa investigação! Você está no caminho certo. ${msg}`;
+  }
+  const msg=worst?`Foque especialmente em "${worst[0]}" — este foi o tema com mais dificuldade desta vez.`:'';
+  return`A investigação teve percalços, mas cada erro é uma pista para melhorar. ${msg} O Pack Quality está aqui para ajudar!`;
+}
+
+// ── BADGES ──
+function getBadges(catResults){
+  const badges=[];
+  Object.entries(catResults).forEach(([cat,{correct,total}])=>{
+    const pct=Math.round(correct/total*100);
+    if(pct>=80)badges.push({cat,pct,type:'expert'});
+    else if(pct<50)badges.push({cat,pct,type:'reforco'});
+  });
+  return badges;
 }
 
 function showFinal(elapsed,pct){
@@ -581,8 +716,35 @@ function showFinal(elapsed,pct){
   document.getElementById('fin-sub').textContent=G.email;
   document.getElementById('fin-icon').textContent=badge;
   document.getElementById('fin-rank').textContent=rank;
-  const rows=[['XP Total',G.xp+' XP','var(--gold)'],['Acertos',G.correct+' / '+G.total,'var(--green)'],['Aproveitamento',pct+'%','var(--blue)'],['Tempo',m+'m '+String(s).padStart(2,'0')+'s','var(--ink)']];
-  document.getElementById('fin-stats').innerHTML=rows.map(([l,v,c])=>'<div class="stat-row"><span class="stat-lbl">'+l+'</span><span class="stat-val" style="color:'+c+'">'+v+'</span></div>').join('');
+
+  // Mensagem personalizada
+  document.getElementById('fin-msg-txt').textContent=getPersonalMsg(pct,G.catResults,G.maxCombo);
+
+  // Badges
+  const badges=getBadges(G.catResults);
+  const bw=document.getElementById('fin-badges');
+  if(badges.length>0){
+    bw.innerHTML=badges.map(b=>
+      b.type==='expert'
+        ?`<span class="badge-item badge-expert">🏅 Expert em ${b.cat}</span>`
+        :`<span class="badge-item badge-reforco">📚 Reforçar: ${b.cat}</span>`
+    ).join('');
+    bw.previousElementSibling.style.display='block';
+  }else{
+    bw.innerHTML='<span class="badge-item badge-expert">✨ Desempenho equilibrado em todos os temas!</span>';
+  }
+
+  // Stats
+  const rows=[
+    ['XP Total',G.xp+' XP','var(--gold)'],
+    ['Acertos',G.correct+' / '+G.total,'var(--green)'],
+    ['Aproveitamento',pct+'%','var(--blue)'],
+    ['Tempo',m+'m '+String(s).padStart(2,'0')+'s','var(--ink)'],
+    ['Maior Combo','🔥 x'+G.maxCombo,'var(--red)'],
+  ];
+  document.getElementById('fin-stats').innerHTML=rows.map(([l,v,c])=>
+    '<div class="stat-row"><span class="stat-lbl">'+l+'</span><span class="stat-val" style="color:'+c+'">'+v+'</span></div>'
+  ).join('');
   go('s-final');
 }
 </script>
