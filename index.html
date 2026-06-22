@@ -18,7 +18,7 @@ body{
 }
 body.dark{--bg:#1a1208;--paper:#2a1f0a;--border:#5c4a1e;--gold:#e8c84a;--gold-h:#f0d060;--red:#ff6644;--green:#44cc77;--blue:#66aaff;--ink:#e8dfc0;--ink-mid:#c0a878;--ink-light:#8a7a5a;background:var(--bg);color:var(--ink);}
 body.nubank{--bg:#1a0a2e;--paper:#2d1057;--border:#6b21a8;--gold:#00d164;--gold-h:#00e872;--red:#ff6b35;--green:#00d164;--blue:#a78bfa;--ink:#f0e6ff;--ink-mid:#c4a8f0;--ink-light:#8b6abf;background:var(--bg);color:var(--ink);}
-body.contrast{--bg:#000;--paper:#111;--border:#fff;--gold:#fff;--gold-h:#ddd;--red:#fff;--green:#fff;--blue:#fff;--ink:#fff;--ink-mid:#ccc;--ink-light:#aaa;background:var(--bg);color:var(--ink);}
+
 
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
@@ -107,7 +107,7 @@ body.nubank .hud-av{background:#820AD1;}
 .hud-val.g{color:var(--green);}
 .hud-bar-bg{flex:1;min-width:50px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
 .hud-bar{height:100%;background:var(--gold);border-radius:3px;transition:width .5s;}
-.heart{font-size:1rem;}
+
 /* COMBO no HUD */
 .combo-badge{font-family:'Oswald',sans-serif;font-size:.75rem;font-weight:700;color:#fff;background:var(--red);padding:2px 10px;border-radius:12px;letter-spacing:1px;display:none;}
 body.nubank .combo-badge{background:#820AD1;}
@@ -148,11 +148,11 @@ body.nubank .combo-badge{background:#820AD1;}
 .opt{background:var(--paper);border:2px solid var(--border);border-radius:4px;padding:.9rem 1rem;text-align:left;cursor:pointer;width:100%;font-size:clamp(.82rem,2vw,.93rem);color:var(--ink);transition:all .15s;font-weight:bold;line-height:1.6;}
 .opt:hover:not(:disabled){border-color:var(--gold);}
 .opt.sel{border-color:var(--gold);border-width:3px;}
-body.contrast .opt.sel{background:#222;}
+
 .opt.ok{background:rgba(0,102,51,.12);border-color:var(--green);border-width:3px;color:var(--green);}
-body.contrast .opt.ok{background:#111;text-decoration:underline;}
+
 .opt.no{background:rgba(204,34,0,.1);border-color:var(--red);border-width:3px;color:var(--red);}
-body.contrast .opt.no{background:#111;text-decoration:line-through;}
+
 .opt:disabled{cursor:default;}
 
 /* CONFIRMAR */
@@ -175,7 +175,7 @@ body.contrast .opt.no{background:#111;text-decoration:line-through;}
 .stamp-seal{font-family:'Oswald',sans-serif;font-size:clamp(1.5rem,5vw,2.8rem);font-weight:900;color:#00cc44;border:6px solid #00cc44;padding:1.5rem 2.5rem;border-radius:8px;letter-spacing:4px;transform:rotate(-5deg);text-shadow:0 0 20px rgba(0,204,68,.5);box-shadow:0 0 40px rgba(0,204,68,.4),inset 0 0 40px rgba(0,204,68,.1);}
 body.nubank .stamp-seal{color:#00d164;border-color:#00d164;}
 body.dark .stamp-seal{color:#44cc77;border-color:#44cc77;}
-body.contrast .stamp-seal{color:#fff;border-color:#fff;}
+
 .stamp-sub{font-family:'Special Elite',serif;font-size:1rem;color:rgba(255,255,255,.7);margin-top:1rem;letter-spacing:2px;}
 
 /* TIMEOUT OVERLAY */
@@ -211,6 +211,29 @@ body.contrast .stamp-seal{color:#fff;border-color:#fff;}
 .already-card{max-width:420px;padding:1.5rem;border-radius:4px;font-size:.95rem;color:var(--ink-mid);line-height:1.8;font-weight:bold;}
 .saving-icon{font-size:3rem;margin-bottom:1rem;}
 .saving-txt{font-family:'Oswald',sans-serif;font-size:1.2rem;color:var(--gold);font-weight:700;letter-spacing:2px;}
+
+/* ── INTRO ANIMADA ── */
+@keyframes floatUpDown{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-12px) rotate(5deg)}66%{transform:translateY(-6px) rotate(-3deg)}}
+@keyframes heroFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-16px) scale(1.05)}}
+@keyframes titleGlow{0%,100%{text-shadow:0 0 20px rgba(184,134,11,.3)}50%{text-shadow:0 0 40px rgba(184,134,11,.7),0 0 80px rgba(184,134,11,.3)}}
+@keyframes cardEntrance{from{opacity:0;transform:translateY(40px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes badgePulse{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.02)}}
+@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(200vh)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.float-el{position:fixed;z-index:0;animation:floatUpDown 4s ease-in-out infinite;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15));pointer-events:none;user-select:none;}
+body.dark .float-el{filter:drop-shadow(0 4px 12px rgba(232,200,74,.3));}
+body.nubank .float-el{filter:drop-shadow(0 4px 12px rgba(0,209,100,.3));}
+
+.hero-detective{font-size:clamp(70px,18vw,110px);animation:heroFloat 3s ease-in-out infinite;line-height:1;filter:drop-shadow(0 8px 24px rgba(0,0,0,.2));margin-bottom:.25rem;}
+body.dark .hero-detective{filter:drop-shadow(0 8px 30px rgba(232,200,74,.4));}
+body.nubank .hero-detective{filter:drop-shadow(0 8px 30px rgba(130,10,209,.5));}
+
+.intro-badge{font-family:'Special Elite',serif;font-size:.72rem;color:var(--gold);letter-spacing:4px;font-weight:bold;animation:badgePulse 2s ease-in-out infinite;border:1px solid var(--gold);padding:4px 16px;border-radius:2px;}
+.intro-title{font-family:'Oswald',sans-serif;font-size:clamp(2.2rem,8vw,4rem);font-weight:900;color:var(--ink);line-height:1.05;}
+.intro-gold{color:var(--gold);animation:titleGlow 2.5s ease-in-out infinite;display:inline-block;}
+.intro-tagline{font-family:'Special Elite',serif;font-size:clamp(.75rem,2vw,.95rem);color:var(--ink-mid);letter-spacing:2px;min-height:1.4rem;}
+.cursor-blink{animation:blink .7s step-end infinite;}
 </style>
 </head>
 <body>
@@ -252,7 +275,6 @@ body.contrast .stamp-seal{color:#fff;border-color:#fff;}
       <button class="th-btn th-light sel" id="tb-light" onclick="setTheme('light')">☀️ CLARO</button>
       <button class="th-btn th-dark" id="tb-dark" onclick="setTheme('dark')">🌙 ESCURO</button>
       <button class="th-btn th-nubank" id="tb-nubank" onclick="setTheme('nubank')">💜 NUBANK</button>
-      <button class="th-btn th-contrast" id="tb-contrast" onclick="setTheme('contrast')">◑ CONTRASTE</button>
     </div>
   </div>
   <div class="paper name-card fadein">
@@ -293,8 +315,6 @@ body.contrast .stamp-seal{color:#fff;border-color:#fff;}
     <div class="hud-sep">|</div>
     <div><div class="hud-lbl">XP</div><div class="hud-val" id="hud-xp">0</div></div>
     <div class="hud-bar-bg"><div class="hud-bar" id="hud-bar" style="width:0%"></div></div>
-    <div class="hud-sep">|</div>
-    <div><div class="hud-lbl">VIDAS</div><div style="display:flex;gap:2px;" id="hud-lives"></div></div>
     <div class="hud-sep">|</div>
     <div><div class="hud-lbl">ACERTOS</div><div class="hud-val g" id="hud-acc">0/0</div></div>
     <div class="combo-badge" id="combo-badge">🔥 COMBO</div>
@@ -502,8 +522,7 @@ function updHUD(){
   document.getElementById('hud-xp').textContent=G.xp;
   document.getElementById('hud-bar').style.width=Math.min(100,G.xp/500*100)+'%';
   document.getElementById('hud-acc').textContent=G.correct+'/'+G.total;
-  const lv=document.getElementById('hud-lives');lv.innerHTML='';
-  for(let i=0;i<3;i++){const s=document.createElement('span');s.className='heart';s.style.color=i<G.lives?'var(--red)':'#ccc';s.textContent='♥';lv.appendChild(s);}
+
   const cb=document.getElementById('combo-badge');
   if(G.combo>=3){cb.style.display='block';cb.textContent='🔥 COMBO x'+G.combo;}
   else cb.style.display='none';
@@ -578,8 +597,7 @@ function confirmAnswer(){
     if(G.combo>=3)showCombo(G.combo,pts);
     // STAMP a cada sequência de 5 corretas
     if(G.combo>0&&G.combo%5===0)showStamp();
-  }else{
-    G.lives=Math.max(0,G.lives-1);G.combo=0;
+  }else{G.combo=0;
   }
   updHUD();
 
@@ -638,7 +656,7 @@ function updTimer(t){
 }
 function handleTimeout(){
   if(G.conf)return;
-  stopTimer();G.tout=true;G.lives=Math.max(0,G.lives-1);G.total++;G.combo=0;updHUD();
+  stopTimer();G.tout=true;G.total++;G.combo=0;updHUD();
   const q=G.qs[G.idx];
   document.getElementById('to-answer').textContent=q.opts[q.c];
   const ov=document.getElementById('to-overlay');ov.classList.add('on');
@@ -747,6 +765,74 @@ function showFinal(elapsed,pct){
   ).join('');
   go('s-final');
 }
+
+// ── INTRO ANIMADA ──
+(function initIntro(){
+  // Typewriter
+  const phrases=['Investigando padrões de fraude...','Calibrando critérios de qualidade...','Analisando contestações procedentes...','Protegendo a operação com dados...','Parceria entre Quality e operação.'];
+  let pi=0,ci=0,deleting=false,wait=0;
+  const el=document.getElementById('intro-tagline');
+  if(!el)return;
+  function type(){
+    if(wait>0){wait--;setTimeout(type,80);return;}
+    const phrase=phrases[pi];
+    if(!deleting){
+      ci++;
+      el.innerHTML=phrase.slice(0,ci)+'<span class="cursor-blink">|</span>';
+      if(ci>=phrase.length){deleting=false;wait=20;
+        setTimeout(()=>{deleting=true;setTimeout(type,80);},1800);return;}
+      setTimeout(type,55);
+    }else{
+      ci--;
+      el.innerHTML=phrase.slice(0,ci)+'<span class="cursor-blink">|</span>';
+      if(ci<=0){deleting=false;pi=(pi+1)%phrases.length;setTimeout(type,300);return;}
+      setTimeout(type,30);
+    }
+  }
+  setTimeout(type,800);
+
+  // Canvas partículas
+  const cv=document.getElementById('intro-canvas');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+
+  const particles=Array.from({length:50},()=>({
+    x:Math.random()*window.innerWidth,
+    y:Math.random()*window.innerHeight,
+    r:Math.random()*2+.5,
+    vx:(Math.random()-.5)*.4,
+    vy:(Math.random()-.5)*.4,
+    o:Math.random()*.4+.1,
+  }));
+
+  let animId;
+  function drawParticles(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const isDark=document.body.classList.contains('dark');
+    const isNubank=document.body.classList.contains('nubank');
+    const color=isNubank?'0,209,100':isDark?'232,200,74':'184,134,11';
+    particles.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=cv.width;if(p.x>cv.width)p.x=0;
+      if(p.y<0)p.y=cv.height;if(p.y>cv.height)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${color},${p.o})`;ctx.fill();
+    });
+    animId=requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+
+  // Para animação quando sair da tela
+  const obs=new MutationObserver(()=>{
+    if(!document.getElementById('s-name').classList.contains('on')){
+      cancelAnimationFrame(animId);
+    }
+  });
+  obs.observe(document.getElementById('s-name'),{attributes:true,attributeFilter:['class','style']});
+})();
+
 </script>
 </body>
 </html>
