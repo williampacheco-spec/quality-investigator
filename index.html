@@ -593,38 +593,37 @@ function startGame(){
 }
 
 function runCountdown(){
-  let t = 5;
   const msgs = [
-    ['PREPARE-SE!', 'Sua investigação está prestes a começar...'],
-    ['FOCO!', 'Revise o que você sabe sobre Quality...'],
-    ['QUASE LÁ!', 'O Pack Quality está observando...'],
-    ['ATENÇÃO!', 'As pistas não vão se revelar sozinhas...'],
-    ['VÁ!', 'A investigação começa agora!'],
+    ['PREPARE-SE!', 'Sua investigação está prestes a começar...', '🕵️', 5],
+    ['FOCO!', 'Revise o que você sabe sobre Quality...', '🔍', 4],
+    ['QUASE LÁ!', 'O Pack Quality está observando...', '📋', 3],
+    ['ATENÇÃO!', 'As pistas não vão se revelar sozinhas...', '🗂️', 2],
+    ['VÁ!', 'A investigação começa agora!', '⚡', 1],
   ];
-  const detectives = ['🕵️','🔍','📋','🗂️','⚡'];
+  let idx = 0;
 
   function tick(){
-    const idx = 5 - t;
-    document.getElementById('cd-num').textContent = t;
-    document.getElementById('cd-num').style.animation = 'none';
-    setTimeout(()=>{ document.getElementById('cd-num').style.animation = 'countPulse 1s ease-in-out'; }, 10);
-    document.getElementById('cd-title').textContent = msgs[idx][0];
-    document.getElementById('cd-sub').textContent = msgs[idx][1];
-    document.getElementById('cd-detective').textContent = detectives[idx];
-    document.getElementById('cd-bar').style.width = (t/5*100) + '%';
-    // Dots
-    for(let i=0;i<5;i++){
-      document.getElementById('cd-dot-'+i).classList.toggle('active', i <= idx);
-    }
-    // Alterna pés
-    document.getElementById('cd-feet').textContent = idx%2===0 ? '👣' : '🔎';
-    t--;
-    if(t >= 0) setTimeout(tick, 1000);
-    else{
+    if(idx >= msgs.length){
       showScreen('game-screen');
       updateHUD();
       renderQuestion();
+      return;
     }
+    const [title, sub, icon, num] = msgs[idx];
+    document.getElementById('cd-num').textContent = num;
+    document.getElementById('cd-num').style.animation = 'none';
+    void document.getElementById('cd-num').offsetWidth;
+    document.getElementById('cd-num').style.animation = 'countPulse 1s ease-in-out';
+    document.getElementById('cd-title').textContent = title;
+    document.getElementById('cd-sub').textContent = sub;
+    document.getElementById('cd-detective').textContent = icon;
+    document.getElementById('cd-bar').style.width = (num/5*100) + '%';
+    for(let i=0;i<5;i++){
+      document.getElementById('cd-dot-'+i).classList.toggle('active', i <= idx);
+    }
+    document.getElementById('cd-feet').textContent = idx%2===0 ? '👣' : '🔎';
+    idx++;
+    setTimeout(tick, 1000);
   }
   tick();
 }
