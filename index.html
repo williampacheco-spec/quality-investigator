@@ -7,971 +7,583 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=Oswald:wght@400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:#f5f0e8;color:#1a1208;font-family:'Courier Prime',monospace;min-height:100vh;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.7}94%{opacity:1}}
-@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
-@keyframes timerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-.fadein{animation:fadeIn .5s ease;}
-.flicker{animation:flicker 8s infinite;}
-::-webkit-scrollbar{width:6px;}
-::-webkit-scrollbar-track{background:#e8e0cc;}
-::-webkit-scrollbar-thumb{background:#b8a878;border-radius:3px;}
-
-:root{
-  --gold:#b8860b;--gold-light:#d4a017;--red:#cc2200;--green:#006633;
-  --blue:#0055aa;--ink:#1a1208;--ink-mid:#4a3a1a;--ink-light:#7a6a4a;
-  --paper:#fff8ee;--border:#c8b878;
+/* ── TEMAS ── */
+body{
+  --bg:#f5f0e8;--paper:#fff8ee;--border:#c8b878;
+  --gold:#b8860b;--gold-h:#d4a017;
+  --red:#cc2200;--green:#006633;--blue:#0055aa;
+  --ink:#1a1208;--ink-mid:#4a3a1a;--ink-light:#7a6a4a;
+  background:var(--bg);color:var(--ink);
+  font-family:'Courier Prime',monospace;min-height:100vh;
+}
+body.dark{
+  --bg:#1a1208;--paper:#2a1f0a;--border:#5c4a1e;
+  --gold:#e8c84a;--gold-h:#f0d060;
+  --red:#ff6644;--green:#44cc77;--blue:#66aaff;
+  --ink:#e8dfc0;--ink-mid:#c0a878;--ink-light:#8a7a5a;
+  background:var(--bg);color:var(--ink);
+}
+body.nubank{
+  --bg:#1a0a2e;--paper:#2d1057;--border:#6b21a8;
+  --gold:#00d164;--gold-h:#00e872;
+  --red:#ff6b35;--green:#00d164;--blue:#a78bfa;
+  --ink:#f0e6ff;--ink-mid:#c4a8f0;--ink-light:#8b6abf;
+  background:var(--bg);color:var(--ink);
+}
+body.contrast{
+  --bg:#000;--paper:#111;--border:#fff;
+  --gold:#fff;--gold-h:#ddd;
+  --red:#fff;--green:#fff;--blue:#fff;
+  --ink:#fff;--ink-mid:#ccc;--ink-light:#aaa;
+  background:var(--bg);color:var(--ink);
 }
 
-/* LAYOUT */
-#app{min-height:100vh;}
-.screen{display:none;min-height:100vh;}
-.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;}
-#game-screen.active{display:block !important;padding:0;}
+/* ── BASE ── */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+button{cursor:pointer;font-family:'Courier Prime',monospace;}
+input{font-family:'Courier Prime',monospace;}
 
-/* PAPER */
 .paper{background:var(--paper);border:2px solid var(--border);box-shadow:0 3px 16px rgba(0,0,0,0.12);}
-.stamp{position:absolute;top:12px;right:14px;font-family:'Special Elite',serif;font-size:.65rem;color:var(--red);border:2px solid var(--red);padding:3px 8px;border-radius:3px;letter-spacing:2px;transform:rotate(3deg);font-weight:bold;}
+body.contrast .paper{border-width:3px;}
 
-/* BOTÕES */
-.btn{font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:2px;font-weight:600;padding:12px 28px;border-radius:4px;cursor:pointer;text-transform:uppercase;transition:all .15s;border:2px solid;}
+/* ── ANIMAÇÕES ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes flicker{0%,100%{opacity:1}93%{opacity:.7}96%{opacity:.85}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes detectiveBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+@keyframes countPop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+.fadein{animation:fadeIn .4s ease;}
+.flicker{animation:flicker 8s infinite;}
+.bounce{animation:bounce 1s ease infinite;}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;text-align:center;}
+.screen.on{display:flex;}
+#s-game{display:none;min-height:100vh;padding:0;}
+#s-game.on{display:block;}
+
+/* ── THEME SELECTOR ── */
+.theme-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;}
+.th-btn{font-family:'Oswald',sans-serif;font-size:.78rem;font-weight:600;padding:8px 14px;border-radius:4px;cursor:pointer;letter-spacing:1px;border:2px solid;transition:all .15s;}
+.th-btn.th-light{background:#f5f0e8;color:#1a1208;border-color:#c8b878;}
+.th-btn.th-dark{background:#2a1f0a;color:#e8dfc0;border-color:#5c4a1e;}
+.th-btn.th-nubank{background:#1a0a2e;color:#00d164;border-color:#820AD1;}
+.th-btn.th-contrast{background:#000;color:#fff;border-color:#fff;}
+.th-btn.sel{transform:scale(1.08);box-shadow:0 0 12px rgba(0,0,0,0.3);}
+.th-btn.th-light.sel{border-color:#b8860b;box-shadow:0 0 12px rgba(184,134,11,.4);}
+.th-btn.th-dark.sel{border-color:#e8c84a;box-shadow:0 0 12px rgba(232,200,74,.4);}
+.th-btn.th-nubank.sel{border-color:#00d164;box-shadow:0 0 12px rgba(0,209,100,.4);}
+.th-btn.th-contrast.sel{box-shadow:0 0 12px rgba(255,255,255,.5);}
+.th-label{font-family:'Special Elite',serif;font-size:.7rem;color:var(--ink-light);letter-spacing:2px;margin-bottom:.4rem;font-weight:bold;}
+
+/* ── BOTÕES ── */
+.btn{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:600;padding:12px 28px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;border:2px solid;transition:all .15s;}
 .btn-gold{background:var(--gold);color:#fff;border-color:var(--gold);}
-.btn-gold:hover{background:var(--gold-light);}
+.btn-gold:hover{background:var(--gold-h);}
 .btn-green{background:var(--green);color:#fff;border-color:var(--green);}
-.btn-green:hover{background:#008844;}
-.btn-outline{background:transparent;color:var(--gold);border-color:var(--gold);}
-.btn-outline:hover{background:rgba(184,134,11,.1);}
-.btn-gray{background:#999;color:#fff;border-color:#999;opacity:.6;cursor:not-allowed;}
+body.nubank .btn-green{color:#000;}
+.btn-green:hover{filter:brightness(1.15);}
+.btn-gray{background:#999;color:#fff;border-color:#999;opacity:.55;cursor:not-allowed;}
 .btn-full{width:100%;}
 .btn-lg{font-size:1.1rem;padding:14px 32px;}
 
-/* HUD */
-#hud{position:sticky;top:0;z-index:100;background:var(--paper);border-bottom:3px solid var(--gold);padding:.6rem 1.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
-.hud-avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-weight:700;color:#fff;font-size:.9rem;flex-shrink:0;}
-.hud-name{font-family:'Courier Prime',monospace;font-size:.78rem;font-weight:bold;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.hud-group{font-family:'Oswald',sans-serif;font-size:.65rem;color:var(--gold);font-weight:700;letter-spacing:1px;}
+/* ── NAME CARD ── */
+.name-card{max-width:440px;width:100%;padding:2rem;border-radius:4px;position:relative;}
+.stamp{position:absolute;top:12px;right:14px;font-family:'Special Elite',serif;font-size:.65rem;color:var(--red);border:2px solid var(--red);padding:3px 8px;border-radius:3px;letter-spacing:2px;transform:rotate(3deg);font-weight:bold;}
+.card-title{font-family:'Special Elite',serif;font-size:.75rem;color:var(--gold);letter-spacing:3px;margin-bottom:1.5rem;border-bottom:2px solid var(--border);padding-bottom:.75rem;font-weight:bold;}
+.field-label{font-family:'Oswald',sans-serif;font-size:.85rem;color:var(--ink);letter-spacing:2px;display:block;margin-bottom:.5rem;font-weight:600;}
+.field-input{width:100%;padding:.85rem 1rem;background:var(--paper);border:2px solid var(--border);border-radius:4px;color:var(--ink);font-size:1rem;outline:none;transition:border .2s;font-weight:bold;}
+.field-input:focus{border-color:var(--gold);}
+.field-input.ok{border-color:var(--green);}
+.field-err{font-size:.75rem;color:var(--red);margin-top:.3rem;font-weight:bold;display:none;}
+.big-title{font-family:'Oswald',sans-serif;font-size:clamp(2rem,7vw,3.5rem);font-weight:700;color:var(--ink);line-height:1.05;}
+.big-gold{color:var(--gold);}
+.pack-sub{font-size:.85rem;color:var(--ink-light);letter-spacing:3px;margin-top:.5rem;font-weight:bold;}
+.footer-hint{font-family:'Special Elite',serif;font-size:.75rem;color:var(--ink-light);letter-spacing:2px;margin-top:1rem;font-weight:bold;}
+
+/* ── COUNTDOWN ── */
+.cd-detective{font-size:clamp(80px,18vw,130px);animation:detectiveBob 1.5s ease-in-out infinite;display:inline-block;line-height:1;}
+.cd-title{font-family:'Oswald',sans-serif;font-size:clamp(1.2rem,4vw,1.8rem);font-weight:700;color:var(--ink);letter-spacing:3px;margin:.75rem 0 .25rem;}
+.cd-sub{font-family:'Special Elite',serif;font-size:clamp(.8rem,2vw,1rem);color:var(--ink-mid);letter-spacing:2px;margin-bottom:1rem;}
+.cd-num{font-family:'Oswald',sans-serif;font-size:clamp(4rem,14vw,8rem);font-weight:900;color:var(--gold);line-height:1;animation:countPop .6s ease;}
+.cd-bar-bg{width:200px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:1rem auto 0;}
+.cd-bar{height:100%;background:var(--gold);border-radius:3px;transition:width 1s linear;}
+
+/* ── HUD ── */
+#hud{position:sticky;top:0;z-index:100;background:var(--paper);border-bottom:3px solid var(--gold);padding:.6rem 1.2rem;display:flex;align-items:center;gap:.9rem;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.hud-av{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-weight:700;color:#fff;font-size:.85rem;flex-shrink:0;}
+body.nubank .hud-av{background:#820AD1;}
+.hud-name{font-size:.78rem;font-weight:bold;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);}
 .hud-sep{color:var(--border);}
-.hud-label{font-size:.6rem;color:var(--ink-light);letter-spacing:1px;font-weight:bold;margin-bottom:1px;}
-.hud-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:1rem;color:var(--gold);}
-.hud-val.green{color:var(--green);}
-.hud-bar-wrap{flex:1;min-width:60px;}
-.hud-bar-bg{height:6px;background:#e0d8c0;border-radius:3px;overflow:hidden;border:1px solid var(--border);}
-.hud-bar-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .5s;}
-.heart{font-size:1.1rem;}
-.heart.lost{color:#ccc;}
-.heart.full{color:var(--red);}
+.hud-lbl{font-size:.58rem;color:var(--ink-light);letter-spacing:1px;margin-bottom:1px;font-weight:bold;}
+.hud-val{font-family:'Oswald',sans-serif;font-weight:700;font-size:.95rem;color:var(--gold);}
+.hud-val.g{color:var(--green);}
+.hud-bar-bg{flex:1;min-width:50px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.hud-bar{height:100%;background:var(--gold);border-radius:3px;transition:width .5s;}
+.heart{font-size:1rem;}
+
+/* ── GAME ── */
+#game-wrap{max-width:680px;margin:0 auto;padding:1.5rem;}
+.prog-row{display:flex;justify-content:space-between;font-family:'Oswald',sans-serif;font-size:.82rem;color:var(--ink-mid);font-weight:600;margin-bottom:.3rem;}
+.prog-row span:last-child{color:var(--gold);}
+.prog-bg{height:7px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:1rem;}
+.prog-fill{height:100%;background:var(--gold);border-radius:4px;transition:width .4s;}
 
 /* TIMER */
-.timer-wrap{margin-bottom:1rem;}
-.timer-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.35rem;}
-.timer-label{font-family:'Special Elite',serif;font-size:.72rem;color:var(--ink-light);letter-spacing:2px;font-weight:bold;}
-.timer-num{font-family:'Oswald',sans-serif;font-size:1.6rem;font-weight:700;min-width:44px;text-align:center;transition:color .3s;}
+.timer-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.3rem;}
+.timer-lbl{font-family:'Special Elite',serif;font-size:.7rem;color:var(--ink-light);letter-spacing:2px;font-weight:bold;}
+.timer-num{font-family:'Oswald',sans-serif;font-size:1.6rem;font-weight:700;min-width:42px;text-align:center;}
 .timer-sec{font-family:'Special Elite',serif;font-size:.65rem;color:var(--ink-light);font-weight:bold;}
-.timer-bar-bg{height:8px;background:#e0d8c0;border-radius:4px;overflow:hidden;border:1px solid var(--border);}
-.timer-bar-fill{height:100%;border-radius:4px;transition:width 1s linear, background .3s;}
-
-/* PROGRESSO */
-.progress-wrap{margin-bottom:1rem;}
-.progress-top{display:flex;justify-content:space-between;font-family:'Oswald',sans-serif;font-size:.85rem;color:var(--ink-mid);font-weight:600;margin-bottom:.3rem;}
-.progress-bar-bg{height:8px;background:#e0d8c0;border-radius:4px;overflow:hidden;border:1px solid var(--border);}
-.progress-bar-fill{height:100%;background:var(--gold);border-radius:4px;transition:width .4s;}
+.timer-bg{height:7px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:1rem;}
+.timer-fill{height:100%;border-radius:4px;transition:width 1s linear,background .3s;}
 
 /* QUESTÃO */
-.q-card{border-radius:4px;padding:1.5rem;margin-bottom:1rem;}
-.q-case{font-family:'Special Elite',serif;font-size:.7rem;color:var(--red);letter-spacing:2px;margin-bottom:.75rem;font-weight:bold;}
-.q-text{font-family:'Oswald',sans-serif;font-size:clamp(.95rem,2.5vw,1.15rem);font-weight:700;color:var(--ink);line-height:1.75;}
+.q-paper{border-radius:4px;padding:1.5rem;margin-bottom:1rem;}
+.q-label{font-family:'Special Elite',serif;font-size:.7rem;color:var(--red);letter-spacing:2px;margin-bottom:.75rem;font-weight:bold;}
+.q-text{font-family:'Oswald',sans-serif;font-size:clamp(.95rem,2.5vw,1.12rem);font-weight:700;color:var(--ink);line-height:1.75;}
 
 /* OPÇÕES */
-.opts{display:flex;flex-direction:column;gap:.65rem;margin-bottom:1rem;}
-.opt-btn{background:#fff;border:2px solid var(--border);border-radius:4px;padding:1rem 1.1rem;text-align:left;cursor:pointer;width:100%;font-family:'Courier Prime',monospace;font-size:clamp(.85rem,2vw,.95rem);color:var(--ink);transition:all .15s;font-weight:bold;line-height:1.6;box-shadow:0 1px 3px rgba(0,0,0,.08);}
-.opt-btn:hover:not(:disabled){border-color:var(--gold);box-shadow:0 2px 8px rgba(184,134,11,.2);}
-.opt-btn.selected{background:#fff8dd;border-color:var(--gold);border-width:3px;box-shadow:0 2px 8px rgba(184,134,11,.3);}
-.opt-btn.correct{background:#e8f5e8;border-color:var(--green);border-width:3px;color:var(--green);}
-.opt-btn.wrong{background:#fde8e8;border-color:var(--red);border-width:3px;color:var(--red);}
-.opt-btn:disabled{cursor:default;}
+.opts{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;}
+.opt{background:var(--paper);border:2px solid var(--border);border-radius:4px;padding:.9rem 1rem;text-align:left;cursor:pointer;width:100%;font-size:clamp(.82rem,2vw,.93rem);color:var(--ink);transition:all .15s;font-weight:bold;line-height:1.6;}
+.opt:hover:not(:disabled){border-color:var(--gold);}
+.opt.sel{background:var(--paper);border-color:var(--gold);border-width:3px;}
+body.contrast .opt.sel{background:#222;}
+.opt.ok{background:rgba(0,102,51,.12);border-color:var(--green);border-width:3px;color:var(--green);}
+body.contrast .opt.ok{background:#111;text-decoration:underline;}
+.opt.no{background:rgba(204,34,0,.1);border-color:var(--red);border-width:3px;color:var(--red);}
+body.contrast .opt.no{background:#111;text-decoration:line-through;}
+.opt:disabled{cursor:default;}
 
 /* CONFIRMAR */
 .confirm-wrap{text-align:center;margin-bottom:1rem;}
-.confirm-hint{margin-top:.5rem;font-family:'Oswald',sans-serif;font-size:.8rem;color:var(--ink-light);letter-spacing:1px;}
+.confirm-hint{font-family:'Oswald',sans-serif;font-size:.78rem;color:var(--ink-light);letter-spacing:1px;margin-top:.4rem;}
 
 /* FEEDBACK */
-.feedback{border-radius:4px;padding:1.1rem;margin-bottom:1rem;}
-.feedback.correct{background:#e8f5e8;border:2px solid var(--green);}
-.feedback.wrong{background:#fde8e8;border:2px solid var(--red);}
-.feedback-title{font-family:'Oswald',sans-serif;font-size:.9rem;letter-spacing:1px;font-weight:700;margin-bottom:.5rem;}
-.feedback.correct .feedback-title{color:var(--green);}
-.feedback.wrong .feedback-title{color:var(--red);}
-.feedback-text{font-size:.9rem;line-height:1.8;color:var(--ink);font-weight:bold;}
+.fb{border-radius:4px;padding:1rem;margin-bottom:1rem;animation:fadeIn .3s ease;}
+.fb.ok{background:rgba(0,102,51,.1);border:2px solid var(--green);}
+.fb.no{background:rgba(204,34,0,.08);border:2px solid var(--red);}
+body.contrast .fb.ok,.body.contrast .fb.no{background:#111;border-width:3px;}
+.fb-title{font-family:'Oswald',sans-serif;font-size:.88rem;font-weight:700;letter-spacing:1px;margin-bottom:.4rem;}
+.fb.ok .fb-title{color:var(--green);}
+.fb.no .fb-title{color:var(--red);}
+.fb-text{font-size:.88rem;line-height:1.8;color:var(--ink);font-weight:bold;}
 
 /* TIMEOUT OVERLAY */
-#timeout-overlay{display:none;position:fixed;inset:0;background:rgba(180,40,0,0.94);z-index:500;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;}
-#timeout-overlay.active{display:flex;}
-.timeout-icon{font-size:5rem;margin-bottom:1rem;}
-.timeout-title{font-family:'Oswald',sans-serif;font-size:clamp(1.5rem,5vw,2.5rem);font-weight:900;color:#fff;letter-spacing:3px;margin-bottom:.75rem;}
-.timeout-sub{font-family:'Courier Prime',monospace;font-size:1rem;color:rgba(255,255,255,.85);margin-bottom:1.5rem;line-height:1.8;font-weight:bold;}
-.timeout-answer{background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);border-radius:8px;padding:1rem 1.5rem;font-family:'Oswald',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;max-width:500px;line-height:1.6;margin-bottom:1.5rem;}
-.timeout-cd{font-family:'Oswald',sans-serif;font-size:1.3rem;color:rgba(255,255,255,.7);letter-spacing:2px;}
-.timeout-bar-bg{margin-top:1rem;height:6px;width:200px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden;}
-.timeout-bar-fill{height:100%;background:#fff;border-radius:3px;transition:width 1s linear;}
+#to-overlay{display:none;position:fixed;inset:0;background:rgba(160,30,0,.95);z-index:500;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;}
+#to-overlay.on{display:flex;}
+.to-icon{font-size:5rem;margin-bottom:1rem;}
+.to-title{font-family:'Oswald',sans-serif;font-size:clamp(1.5rem,5vw,2.4rem);font-weight:900;color:#fff;letter-spacing:3px;margin-bottom:.75rem;}
+.to-sub{font-size:1rem;color:rgba(255,255,255,.85);margin-bottom:1.25rem;line-height:1.8;font-weight:bold;}
+.to-answer{background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);border-radius:8px;padding:1rem 1.5rem;font-family:'Oswald',sans-serif;font-size:1.05rem;color:#fff;font-weight:700;max-width:480px;line-height:1.6;margin-bottom:1.5rem;}
+.to-cd{font-family:'Oswald',sans-serif;font-size:1.2rem;color:rgba(255,255,255,.7);letter-spacing:2px;}
+.to-bar-bg{margin-top:.75rem;height:5px;width:180px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden;}
+.to-bar{height:100%;background:#fff;border-radius:3px;transition:width 1s linear;}
 
-/* TELAS */
-.pista-card,.name-card,.final-card,.already-card{max-width:480px;width:100%;padding:2rem;border-radius:4px;position:relative;}
-.card-title{font-family:'Special Elite',serif;font-size:.75rem;color:var(--gold);letter-spacing:3px;margin-bottom:1.5rem;border-bottom:2px solid var(--border);padding-bottom:.75rem;font-weight:bold;}
-.big-title{font-family:'Oswald',sans-serif;font-size:clamp(2rem,7vw,3.5rem);font-weight:700;color:var(--ink);line-height:1.05;}
-.big-title .gold{color:var(--gold);}
-.badge-bonus{margin-top:.75rem;font-family:'Special Elite',serif;font-size:.8rem;color:var(--green);border:2px solid var(--green);display:inline-block;padding:5px 16px;border-radius:3px;letter-spacing:1px;font-weight:bold;}
-.field-label{font-family:'Oswald',sans-serif;font-size:.85rem;color:var(--ink);letter-spacing:2px;display:block;margin-bottom:.5rem;font-weight:600;}
-.field-input{width:100%;padding:.85rem 1rem;background:#fff;border:2px solid var(--border);border-radius:4px;color:var(--ink);font-size:1rem;outline:none;transition:border .2s;font-weight:bold;font-family:'Courier Prime',monospace;}
-.field-input:focus{border-color:var(--gold);}
-.field-input.valid{border-color:var(--green);}
-.field-error{font-size:.75rem;color:var(--red);margin-top:.3rem;font-weight:bold;}
-.field-hint{font-size:.75rem;color:var(--ink-light);margin-top:.3rem;font-family:'Courier Prime',monospace;}
-.field-group{margin-bottom:1.25rem;}
-
-/* PISTA BTNS */
-.pista-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;}
-
-/* RANK BTNS */
+/* FINAL */
 .rank-badge{display:inline-block;border-radius:4px;padding:1rem 2rem;margin:1.5rem 0;border:3px solid var(--gold);}
 .rank-icon{font-size:2.5rem;margin-bottom:.3rem;}
 .rank-name{font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:3px;color:var(--gold);font-weight:700;}
-
-/* RESULTADO STATS */
-.result-stats{border-radius:4px;padding:1.5rem;text-align:left;margin-bottom:1.5rem;max-width:500px;width:100%;}
-.stat-row{display:flex;justify-content:space-between;align-items:center;padding:.7rem 0;border-bottom:2px solid var(--border);}
-.stat-label{font-family:'Oswald',sans-serif;font-size:.9rem;color:var(--ink-mid);font-weight:600;letter-spacing:1px;}
-.stat-val{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:700;}
-
-/* SAVING */
-#saving-screen.active{display:flex;}
-.saving-icon{font-size:3rem;margin-bottom:1rem;}
-.saving-txt{font-family:'Oswald',sans-serif;font-size:1.2rem;color:var(--gold);font-weight:700;letter-spacing:2px;}
-
-/* GAME CONTAINER */
-#game-container{max-width:680px;margin:0 auto;padding:1.5rem;}
-
-/* FOOTER INFO */
-.footer-info{font-family:'Special Elite',serif;font-size:.75rem;color:var(--ink-light);letter-spacing:2px;font-weight:bold;margin-top:1rem;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:.65rem 0;border-bottom:2px solid var(--border);}
+.stat-lbl{font-family:'Oswald',sans-serif;font-size:.88rem;color:var(--ink-mid);font-weight:600;letter-spacing:1px;}
+.stat-val{font-family:'Oswald',sans-serif;font-size:.95rem;font-weight:700;}
+.result-card{border-radius:4px;padding:1.5rem;text-align:left;max-width:480px;width:100%;}
 
 /* ALREADY */
-.already-msg{font-size:.95rem;color:var(--ink-mid);line-height:1.8;font-weight:bold;}
+.already-card{max-width:420px;padding:1.5rem;border-radius:4px;font-size:.95rem;color:var(--ink-mid);line-height:1.8;font-weight:bold;}
 
-/* COUNTDOWN */
-#countdown-screen.active{display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem;min-height:100vh;}
-@keyframes countPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.8}100%{transform:scale(1);opacity:1}}
-@keyframes detectiveBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
-@keyframes magnify{0%,100%{transform:rotate(-15deg) scale(1)}50%{transform:rotate(15deg) scale(1.1)}}
-@keyframes footstep{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-@keyframes fadeSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-@keyframes scanLine{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}  }
-.countdown-detective{font-size:clamp(80px,20vw,140px);animation:detectiveBob 1.5s ease-in-out infinite;display:inline-block;filter:drop-shadow(0 8px 24px rgba(0,0,0,0.3));margin-bottom:1rem;line-height:1;}
-.countdown-magnify{font-size:clamp(40px,10vw,70px);animation:magnify 1.2s ease-in-out infinite;display:inline-block;position:absolute;top:-10px;right:-20px;}
-.countdown-wrap{position:relative;display:inline-block;}
-.countdown-title{font-family:'Oswald',sans-serif;font-size:clamp(1.1rem,3.5vw,1.6rem);font-weight:700;color:var(--ink);letter-spacing:3px;margin-bottom:.5rem;animation:fadeSlideUp .5s ease;}
-.countdown-sub{font-family:'Special Elite',serif;font-size:clamp(.8rem,2vw,1rem);color:var(--ink-mid);letter-spacing:2px;margin-bottom:1.5rem;animation:fadeSlideUp .5s ease .1s both;}
-.countdown-num{font-family:'Oswald',sans-serif;font-size:clamp(4rem,15vw,8rem);font-weight:900;color:var(--gold);animation:countPulse 1s ease-in-out;line-height:1;margin-bottom:.5rem;text-shadow:0 4px 20px rgba(184,134,11,.3);}
-body.theme-nubank .countdown-num{color:#00d164;text-shadow:0 4px 20px rgba(0,209,100,.4);}
-body.theme-dark .countdown-num{color:#e8c84a;}
-body.theme-contrast .countdown-num{color:#fff;}
-.countdown-dots{display:flex;gap:8px;justify-content:center;margin-top:.5rem;}
-.countdown-dot{width:10px;height:10px;border-radius:50%;background:var(--border);}
-.countdown-dot.active{background:var(--gold);}
-body.theme-nubank .countdown-dot.active{background:#00d164;}
-.countdown-bar-bg{width:200px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:1rem auto 0;}
-.countdown-bar-fill{height:100%;background:var(--gold);border-radius:3px;transition:width 1s linear;}
-body.theme-nubank .countdown-bar-fill{background:#00d164;}
-body.theme-dark .countdown-bar-fill{background:#e8c84a;}
-body.theme-contrast .countdown-bar-fill{background:#fff;}
-.footsteps{font-size:1.5rem;animation:footstep 1s ease-in-out infinite;letter-spacing:4px;margin-top:.5rem;}
-
-/* ─── TEMAS ─── */
-/* TEMA: ESCURO (padrão noir) */
-body.theme-dark{
-  background:#1a1208;
-  --gold:#e8c84a;--gold-light:#f0d060;--red:#ff6644;--green:#44cc77;
-  --blue:#66aaff;--ink:#e8dfc0;--ink-mid:#c0a878;--ink-light:#8a7a5a;
-  --paper:#2a1f0a;--border:#5c4a1e;
-}
-body.theme-dark .paper{background:#2a1f0a;border-color:#5c4a1e;box-shadow:0 3px 16px rgba(0,0,0,0.5);}
-body.theme-dark .opt-btn{background:#1e1608;color:#e8dfc0;border-color:#5c4a1e;}
-body.theme-dark .opt-btn:hover:not(:disabled){border-color:var(--gold);}
-body.theme-dark .field-input{background:#1e1608;color:#e8dfc0;border-color:#5c4a1e;}
-body.theme-dark #hud{background:#1a1208;border-bottom-color:var(--gold);}
-body.theme-dark .hud-bar-bg,.theme-dark .timer-bar-bg,.theme-dark .progress-bar-bg{background:#3a2d14;}
-
-/* TEMA: ALTO CONTRASTE (daltonismo) */
-body.theme-contrast{
-  background:#000;
-  --gold:#ffffff;--gold-light:#eeeeee;--red:#ffffff;--green:#ffffff;
-  --blue:#ffffff;--ink:#ffffff;--ink-mid:#cccccc;--ink-light:#aaaaaa;
-  --paper:#111111;--border:#ffffff;
-}
-body.theme-contrast .paper{background:#111;border:3px solid #fff;box-shadow:none;}
-body.theme-contrast .opt-btn{background:#111;color:#fff;border:3px solid #666;}
-body.theme-contrast .opt-btn:hover:not(:disabled){border-color:#fff;background:#222;}
-body.theme-contrast .opt-btn.selected{background:#333;border-color:#fff;border-width:4px;}
-body.theme-contrast .opt-btn.correct{background:#000;border-color:#fff;color:#fff;text-decoration:underline;}
-body.theme-contrast .opt-btn.wrong{background:#333;border-color:#fff;color:#ccc;text-decoration:line-through;}
-body.theme-contrast .field-input{background:#111;color:#fff;border:3px solid #fff;}
-body.theme-contrast #hud{background:#000;border-bottom:4px solid #fff;}
-body.theme-contrast .btn-gold{background:#fff;color:#000;border-color:#fff;}
-body.theme-contrast .btn-gold:hover{background:#ddd;}
-body.theme-contrast .btn-green{background:#fff;color:#000;border-color:#fff;}
-body.theme-contrast .btn-outline{border-color:#fff;color:#fff;}
-body.theme-contrast .feedback.correct{background:#222;border:3px solid #fff;}
-body.theme-contrast .feedback.wrong{background:#222;border:3px dashed #fff;}
-body.theme-contrast .feedback.correct .feedback-title::before{content:"✓ ";}
-body.theme-contrast .feedback.wrong .feedback-title::before{content:"✗ ";}
-body.theme-contrast #timeout-overlay{background:rgba(0,0,0,0.97);border:4px solid #fff;}
-body.theme-contrast .timer-bar-fill,.theme-contrast .progress-bar-fill,.theme-contrast .hud-bar-fill{background:#fff !important;}
-body.theme-contrast .hud-bar-bg,.theme-contrast .timer-bar-bg,.theme-contrast .progress-bar-bg{background:#333;border-color:#666;}
-body.theme-contrast .stamp{border-color:#fff;color:#fff;}
-body.theme-contrast .card-title{border-bottom-color:#fff;}
-body.theme-contrast .stat-row{border-bottom-color:#555;}
-body.theme-contrast .stat-val{color:#fff !important;}
-body.theme-contrast .rank-badge{border-color:#fff !important;}
-body.theme-contrast .rank-name{color:#fff !important;}
-
-/* TEMA: NUBANK (roxo + verde, daltonismo-friendly) */
-body.theme-nubank{
-  background:#1a0a2e;
-  --gold:#00d164;--gold-light:#00e872;--red:#ff6b35;--green:#00d164;
-  --blue:#a78bfa;--ink:#f0e6ff;--ink-mid:#c4a8f0;--ink-light:#8b6abf;
-  --paper:#2d1057;--border:#6b21a8;
-}
-body.theme-nubank .paper{background:#2d1057;border-color:#6b21a8;box-shadow:0 3px 16px rgba(130,10,209,0.3);}
-body.theme-nubank .opt-btn{background:#1e0a3c;color:#f0e6ff;border-color:#6b21a8;}
-body.theme-nubank .opt-btn:hover:not(:disabled){border-color:#00d164;box-shadow:0 2px 8px rgba(0,209,100,.3);}
-body.theme-nubank .opt-btn.selected{background:#3b0f7a;border-color:#00d164;border-width:3px;}
-body.theme-nubank .opt-btn.correct{background:#003d1e;border-color:#00d164;color:#00d164;}
-body.theme-nubank .opt-btn.wrong{background:#3d1000;border-color:#ff6b35;color:#ff6b35;}
-body.theme-nubank .field-input{background:#1e0a3c;color:#f0e6ff;border-color:#6b21a8;}
-body.theme-nubank .field-input:focus{border-color:#00d164;}
-body.theme-nubank .field-input.valid{border-color:#00d164;}
-body.theme-nubank #hud{background:#1a0a2e;border-bottom:3px solid #820AD1;}
-body.theme-nubank .hud-bar-bg,.theme-nubank .timer-bar-bg,.theme-nubank .progress-bar-bg{background:#3b0f7a;border-color:#6b21a8;}
-body.theme-nubank .hud-bar-fill{background:#00d164 !important;}
-body.theme-nubank .progress-bar-fill{background:#820AD1 !important;}
-body.theme-nubank .btn-gold{background:#820AD1;color:#fff;border-color:#820AD1;}
-body.theme-nubank .btn-gold:hover{background:#9b12f5;}
-body.theme-nubank .btn-green{background:#00d164;color:#000;border-color:#00d164;}
-body.theme-nubank .btn-green:hover{background:#00e872;}
-body.theme-nubank .btn-outline{border-color:#00d164;color:#00d164;}
-body.theme-nubank .btn-outline:hover{background:rgba(0,209,100,.1);}
-body.theme-nubank .feedback.correct{background:#003d1e;border:2px solid #00d164;}
-body.theme-nubank .feedback.correct .feedback-title{color:#00d164;}
-body.theme-nubank .feedback.wrong{background:#3d1000;border:2px solid #ff6b35;}
-body.theme-nubank .feedback.wrong .feedback-title{color:#ff6b35;}
-body.theme-nubank #timeout-overlay{background:rgba(26,10,46,0.97);border:3px solid #820AD1;}
-body.theme-nubank .stamp{border-color:#00d164;color:#00d164;}
-body.theme-nubank .card-title{color:#00d164;border-bottom-color:#6b21a8;}
-body.theme-nubank .q-case{color:#00d164;}
-body.theme-nubank .rank-badge{border-color:#820AD1 !important;}
-body.theme-nubank .rank-name{color:#00d164 !important;}
-body.theme-nubank .stat-val{color:#00d164 !important;}
-body.theme-nubank .hud-val{color:#00d164;}
-body.theme-nubank .hud-val.green{color:#00d164;}
-body.theme-nubank .hud-avatar{background:#820AD1;}
-body.theme-nubank .hud-group{color:#00d164;}
-body.theme-nubank .big-title .gold{color:#820AD1;}
-body.theme-nubank .badge-bonus{color:#00d164;border-color:#00d164;}
-body.theme-nubank .theme-label{color:#c4a8f0;}
-body.theme-nubank .footer-info{color:#8b6abf;}
-body.theme-nubank .progress-top span:last-child{color:#00d164;}
-body.theme-nubank .confirm-hint{color:#8b6abf;}
-body.theme-nubank .field-hint{color:#8b6abf;}
-body.theme-nubank .field-label{color:#f0e6ff;}
-body.theme-nubank .timeout-answer{background:rgba(130,10,209,.2);border-color:rgba(130,10,209,.6);}
-
-/* SELETOR DE TEMA */
-.theme-selector{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.25rem;}
-.theme-btn{font-family:'Oswald',sans-serif;font-size:.8rem;font-weight:600;padding:10px 18px;border-radius:4px;cursor:pointer;letter-spacing:1px;transition:all .15s;border:2px solid;display:flex;align-items:center;gap:.5rem;}
-.theme-btn.light{background:#f5f0e8;color:#1a1208;border-color:#c8b878;}
-.theme-btn.light:hover,.theme-btn.light.active{background:#fff8ee;border-color:#b8860b;box-shadow:0 2px 8px rgba(184,134,11,.3);}
-.theme-btn.dark{background:#2a1f0a;color:#e8dfc0;border-color:#5c4a1e;}
-.theme-btn.dark:hover,.theme-btn.dark.active{background:#1a1208;border-color:#e8c84a;box-shadow:0 2px 8px rgba(232,200,74,.3);}
-.theme-btn.contrast{background:#000;color:#fff;border-color:#fff;}
-.theme-btn.contrast:hover,.theme-btn.contrast.active{background:#111;box-shadow:0 2px 8px rgba(255,255,255,.4);}
-.theme-btn.nubank{background:#1a0a2e;color:#00d164;border-color:#820AD1;}
-.theme-btn.nubank:hover,.theme-btn.nubank.active{background:#2d1057;border-color:#00d164;box-shadow:0 2px 8px rgba(0,209,100,.35);}
-.theme-btn.active{transform:scale(1.05);}
-.theme-label{font-family:'Special Elite',serif;font-size:.72rem;color:var(--ink-light);letter-spacing:2px;text-align:center;margin-bottom:.5rem;font-weight:bold;}
+/* SAVING */
+.saving-icon{font-size:3rem;margin-bottom:1rem;}
+.saving-txt{font-family:'Oswald',sans-serif;font-size:1.2rem;color:var(--gold);font-weight:700;letter-spacing:2px;}
 </style>
 </head>
 <body>
 
 <!-- TIMEOUT OVERLAY -->
-<div id="timeout-overlay">
-  <div class="timeout-icon">⏰</div>
-  <div class="timeout-title">PISTA NÃO VALIDADA!</div>
-  <div class="timeout-sub">Tempo esgotado! A resposta correta era:</div>
-  <div class="timeout-answer" id="timeout-answer"></div>
-  <div class="timeout-cd" id="timeout-cd">CONTINUANDO EM 5s...</div>
-  <div class="timeout-bar-bg"><div class="timeout-bar-fill" id="timeout-bar" style="width:100%"></div></div>
+<div id="to-overlay">
+  <div class="to-icon">⏰</div>
+  <div class="to-title">PISTA NÃO VALIDADA!</div>
+  <div class="to-sub">Tempo esgotado! A resposta correta era:</div>
+  <div class="to-answer" id="to-answer"></div>
+  <div class="to-cd" id="to-cd">CONTINUANDO EM 5s...</div>
+  <div class="to-bar-bg"><div class="to-bar" id="to-bar" style="width:100%"></div></div>
 </div>
-
-<div id="app">
-
-
 
 <!-- TELA NOME -->
-<div class="screen active" id="name-screen">
-  <div style="text-align:center;margin-bottom:1rem;">
-    <div style="font-family:'Special Elite',serif;font-size:.8rem;letter-spacing:5px;color:var(--gold);font-weight:bold;margin-bottom:.5rem;">— DOSSIER DE IDENTIFICAÇÃO —</div>
-    <div class="big-title">QUALITY<br><span class="gold flicker">INVESTIGATOR</span></div>
-    <div style="font-family:'Courier Prime',monospace;font-size:.85rem;color:var(--ink-light);letter-spacing:3px;margin-top:.5rem;font-weight:bold;">— PACK QUALITY · INVOPS BRASIL —</div>
-  </div>
-  <!-- SELETOR DE TEMA -->
+<div class="screen on" id="s-name">
   <div style="margin-bottom:1rem;">
-    <div class="theme-label">🎨 ESCOLHA O VISUAL</div>
-    <div class="theme-selector">
-      <button class="theme-btn light active" id="theme-light" onclick="setTheme('light')">☀️ CLARO</button>
-      <button class="theme-btn dark" id="theme-dark" onclick="setTheme('dark')">🌙 ESCURO</button>
-      <button class="theme-btn contrast" id="theme-contrast" onclick="setTheme('contrast')">◑ ALTO CONTRASTE</button>
-      <button class="theme-btn nubank" id="theme-nubank" onclick="setTheme('nubank')">💜 NUBANK</button>
+    <div style="font-family:'Special Elite',serif;font-size:.8rem;letter-spacing:5px;color:var(--gold);font-weight:bold;margin-bottom:.5rem;">— DOSSIER DE IDENTIFICAÇÃO —</div>
+    <div class="big-title">QUALITY<br><span class="big-gold flicker">INVESTIGATOR</span></div>
+    <div class="pack-sub">— PACK QUALITY · INVOPS BRASIL —</div>
+  </div>
+  <!-- TEMA -->
+  <div style="margin-bottom:1rem;">
+    <div class="th-label">🎨 ESCOLHA O VISUAL</div>
+    <div class="theme-row">
+      <button class="th-btn th-light sel" id="tb-light" onclick="setTheme('light')">☀️ CLARO</button>
+      <button class="th-btn th-dark" id="tb-dark" onclick="setTheme('dark')">🌙 ESCURO</button>
+      <button class="th-btn th-nubank" id="tb-nubank" onclick="setTheme('nubank')">💜 NUBANK</button>
+      <button class="th-btn th-contrast" id="tb-contrast" onclick="setTheme('contrast')">◑ CONTRASTE</button>
     </div>
   </div>
-  <div class="paper name-card" id="name-card">
+  <!-- CARD -->
+  <div class="paper name-card fadein">
     <div class="stamp">CONFIDENCIAL</div>
     <div class="card-title">IDENTIFIQUE-SE ANTES DE PROSSEGUIR</div>
-    <div class="field-group">
+    <div style="margin-bottom:1.5rem;">
       <label class="field-label">▸ E-MAIL DO ANALISTA</label>
-      <input class="field-input" id="email-input" type="email" placeholder="seu.email@nubank.com.br" oninput="validateEmail()" onkeydown="if(event.key==='Enter')tryStart()"/>
-      <div class="field-error" id="email-error" style="display:none;">⚠ E-mail inválido</div>
+      <input class="field-input" id="email-in" type="email" placeholder="seu.email@nubank.com.br"
+        oninput="onEmail()" onkeydown="if(event.key==='Enter')tryStart()"/>
+      <div class="field-err" id="email-err">⚠ E-mail inválido</div>
     </div>
-
-    <button class="btn btn-gold btn-full" onclick="tryStart()">◉ ENTRAR NO CASO</button>
-    <div class="field-error" id="start-error" style="display:none;margin-top:.5rem;">⚠ Preencha e-mail e grupo!</div>
+    <button class="btn btn-gold btn-full" id="start-btn" onclick="tryStart()">◉ ENTRAR NO CASO</button>
+    <div class="field-err" id="start-err" style="margin-top:.5rem;">⚠ Informe um e-mail válido!</div>
   </div>
-  <div class="footer-info">15 PERGUNTAS · ⏱ 30s POR PERGUNTA</div>
-</div>
-
-<!-- TELA COUNTDOWN -->
-<div class="screen" id="countdown-screen">
-  <div class="countdown-wrap">
-    <div class="countdown-detective" id="cd-detective">🕵️</div>
-    <div class="countdown-magnify">🔍</div>
-  </div>
-  <div class="countdown-title" id="cd-title">PREPARE-SE!</div>
-  <div class="countdown-sub" id="cd-sub">Sua investigação está prestes a começar...</div>
-  <div class="countdown-num" id="cd-num">5</div>
-  <div class="footsteps" id="cd-feet">👣</div>
-  <div class="countdown-bar-bg">
-    <div class="countdown-bar-fill" id="cd-bar" style="width:100%"></div>
-  </div>
-  <div class="countdown-dots">
-    <div class="countdown-dot active" id="cd-dot-0"></div>
-    <div class="countdown-dot" id="cd-dot-1"></div>
-    <div class="countdown-dot" id="cd-dot-2"></div>
-    <div class="countdown-dot" id="cd-dot-3"></div>
-    <div class="countdown-dot" id="cd-dot-4"></div>
-  </div>
+  <div class="footer-hint">15 PERGUNTAS · ⏱ 30s POR PERGUNTA</div>
 </div>
 
 <!-- TELA JÁ JOGOU -->
-<div class="screen" id="already-screen">
+<div class="screen" id="s-already">
   <div style="font-size:3rem;margin-bottom:1rem;">🔒</div>
   <div style="font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;color:var(--red);margin-bottom:1rem;">CASO JÁ INVESTIGADO!</div>
   <div class="paper already-card">
-    <p class="already-msg">O e-mail <strong id="already-email"></strong> já participou desta investigação.<br>Cada analista pode jogar apenas uma vez.<br><br><span style="font-size:.85rem;color:var(--ink-light);">Se acredita que é um erro, fale com o Pack Quality.</span></p>
+    O e-mail <strong id="already-em"></strong> já participou desta investigação.<br>Cada analista pode jogar apenas uma vez.<br><br>
+    <span style="font-size:.85rem;color:var(--ink-light);">Se acredita que é um erro, fale com o Pack Quality.</span>
   </div>
 </div>
 
+<!-- TELA COUNTDOWN -->
+<div class="screen" id="s-cd">
+  <div class="cd-detective" id="cd-icon">🕵️</div>
+  <div class="cd-title" id="cd-title">PREPARE-SE!</div>
+  <div class="cd-sub" id="cd-sub">Sua investigação está prestes a começar...</div>
+  <div class="cd-num" id="cd-num">5</div>
+  <div class="cd-bar-bg"><div class="cd-bar" id="cd-bar" style="width:100%"></div></div>
+</div>
+
 <!-- TELA JOGO -->
-<div class="screen" id="game-screen">
+<div id="s-game">
   <div id="hud">
-    <div style="display:flex;align-items:center;gap:.5rem;">
-      <div class="hud-avatar" id="hud-avatar">?</div>
-      <div>
-        <div class="hud-name" id="hud-name"></div>
-      </div>
-    </div>
+    <div class="hud-av" id="hud-av">?</div>
+    <div class="hud-name" id="hud-name"></div>
     <div class="hud-sep">|</div>
-    <div><div class="hud-label">XP</div><div class="hud-val" id="hud-xp">0</div></div>
-    <div class="hud-bar-wrap"><div class="hud-bar-bg"><div class="hud-bar-fill" id="hud-bar" style="width:0%"></div></div></div>
+    <div><div class="hud-lbl">XP</div><div class="hud-val" id="hud-xp">0</div></div>
+    <div class="hud-bar-bg"><div class="hud-bar" id="hud-bar" style="width:0%"></div></div>
     <div class="hud-sep">|</div>
-    <div><div class="hud-label">VIDAS</div><div style="display:flex;gap:3px;" id="hud-lives"></div></div>
+    <div><div class="hud-lbl">VIDAS</div><div style="display:flex;gap:2px;" id="hud-lives"></div></div>
     <div class="hud-sep">|</div>
-    <div><div class="hud-label">ACERTOS</div><div class="hud-val green" id="hud-correct">0/0</div></div>
+    <div><div class="hud-lbl">ACERTOS</div><div class="hud-val g" id="hud-acc">0/0</div></div>
   </div>
-  <div id="game-container">
-    <div class="progress-wrap">
-      <div class="progress-top">
-        <span id="q-counter">PERGUNTA 1 DE 15</span>
-        <span style="color:var(--gold);" id="q-pct">0% CONCLUÍDO</span>
-      </div>
-      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar" style="width:0%"></div></div>
-    </div>
-    <div class="timer-wrap" id="timer-wrap">
-      <div class="timer-top">
-        <span class="timer-label">⏱ TEMPO</span>
-        <span class="timer-num" id="timer-num">30</span>
+  <div id="game-wrap">
+    <div class="prog-row"><span id="q-num">PERGUNTA 1 DE 15</span><span id="q-pct">0%</span></div>
+    <div class="prog-bg"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    <div id="timer-wrap">
+      <div class="timer-row">
+        <span class="timer-lbl">⏱ TEMPO</span>
+        <span class="timer-num" id="t-num">30</span>
         <span class="timer-sec">SEG</span>
       </div>
-      <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar" style="width:100%;background:var(--green);"></div></div>
+      <div class="timer-bg"><div class="timer-fill" id="t-bar" style="width:100%;background:var(--green);"></div></div>
     </div>
-    <div class="paper q-card">
-      <div class="q-case" id="q-case">// PISTA 1</div>
+    <div class="paper q-paper">
+      <div class="q-label" id="q-lbl">// PISTA 1</div>
       <div class="q-text" id="q-text"></div>
     </div>
     <div class="opts" id="opts"></div>
-    <div class="confirm-wrap" id="confirm-wrap">
-      <button class="btn btn-gray btn-full" id="confirm-btn" onclick="handleConfirm()" disabled>✓ CONFIRMAR RESPOSTA</button>
-      <div class="confirm-hint" id="confirm-hint">Selecione uma opção antes de confirmar</div>
+    <div class="confirm-wrap" id="conf-wrap">
+      <button class="btn btn-gray btn-full" id="conf-btn" onclick="confirm_answer()">✓ CONFIRMAR RESPOSTA</button>
+      <div class="confirm-hint" id="conf-hint">Selecione uma opção antes de confirmar</div>
     </div>
-    <div class="feedback fadein" id="feedback" style="display:none;"></div>
+    <div id="fb-wrap" style="display:none;"></div>
     <div id="next-wrap" style="display:none;margin-top:.5rem;">
-      <button class="btn btn-gold btn-full btn-lg" id="next-btn" onclick="nextQuestion()">PRÓXIMA PISTA →</button>
+      <button class="btn btn-full btn-lg btn-gold" id="next-btn" onclick="nextQ()">PRÓXIMA PISTA →</button>
     </div>
   </div>
 </div>
 
 <!-- SALVANDO -->
-<div class="screen" id="saving-screen">
+<div class="screen" id="s-save">
   <div class="saving-icon">💾</div>
   <div class="saving-txt">SALVANDO RESULTADO...</div>
 </div>
 
 <!-- FINAL -->
-<div class="screen" id="final-screen" style="text-align:center;">
-  <div style="font-size:4rem;margin-bottom:1rem;display:inline-block;animation:bounce 1s ease infinite;">🏆</div>
+<div class="screen" id="s-final" style="text-align:center;">
+  <div style="font-size:4rem;margin-bottom:1rem;" class="bounce">🏆</div>
   <div style="font-family:'Special Elite',serif;font-size:.8rem;color:var(--gold);letter-spacing:4px;font-weight:bold;margin-bottom:.5rem;">— INVESTIGAÇÃO CONCLUÍDA —</div>
   <div style="font-family:'Oswald',sans-serif;font-size:2rem;font-weight:700;color:var(--ink);margin-bottom:.25rem;">CASO ENCERRADO!</div>
-  <div style="font-family:'Courier Prime',monospace;font-size:.9rem;color:var(--ink-mid);font-weight:bold;" id="final-sub"></div>
-  <div class="paper rank-badge" id="rank-badge">
-    <div class="rank-icon" id="rank-icon"></div>
-    <div class="rank-name" id="rank-name"></div>
+  <div style="font-size:.9rem;color:var(--ink-mid);font-weight:bold;" id="fin-sub"></div>
+  <div class="paper rank-badge">
+    <div class="rank-icon" id="fin-icon"></div>
+    <div class="rank-name" id="fin-rank"></div>
   </div>
-  <div class="paper result-stats" id="result-stats"></div>
-  <div style="font-family:'Courier Prime',monospace;font-size:.85rem;color:var(--ink-mid);line-height:1.9;margin-bottom:1.5rem;font-style:italic;font-weight:bold;">"Qualidade não é punição — é parceria."</div>
+  <div class="paper result-card" id="fin-stats"></div>
+  <div style="font-size:.85rem;color:var(--ink-mid);line-height:1.9;margin:1.5rem 0;font-style:italic;font-weight:bold;">"Qualidade não é punição — é parceria."</div>
 </div>
 
-</div><!-- /app -->
-
 <script>
-// ─── CONFIG ───
-const BIN_ID = '6a2c0badda38895dfeb4fb50';
-const MASTER_KEY = '$2a$10$wjfXgrsC/PZ.R/HwB5.5aO7t5PCFQ8v4ppgcedXPOFovWfc72T5Na';
-const BIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+// ── JSONBIN ──
+const BIN_ID='6a2c0badda38895dfeb4fb50';
+const MKEY='$2a$10$wjfXgrsC/PZ.R/HwB5.5aO7t5PCFQ8v4ppgcedXPOFovWfc72T5Na';
+const BURL='https://api.jsonbin.io/v3/b/'+BIN_ID;
 
-// ─── TEMA ───
-function setTheme(theme){
-  document.body.classList.remove('theme-dark','theme-contrast','theme-nubank');
-  if(theme==='dark') document.body.classList.add('theme-dark');
-  else if(theme==='contrast') document.body.classList.add('theme-contrast');
-  else if(theme==='nubank') document.body.classList.add('theme-nubank');
-  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('theme-'+theme).classList.add('active');
-  localStorage.setItem('qi_theme', theme);
+// ── TEMA ──
+function setTheme(t){
+  document.body.className = t==='light' ? '' : t;
+  document.querySelectorAll('.th-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('tb-'+t).classList.add('sel');
+  localStorage.setItem('qi_theme',t);
 }
-// Restaurar tema salvo
 (function(){
-  const t = localStorage.getItem('qi_theme') || 'light';
-  if(t!=='light'){
-    document.body.classList.add('theme-'+t);
-    setTimeout(()=>{
-      const btn = document.getElementById('theme-'+t);
-      if(btn){
-        document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-      }
-    }, 100);
-  }
+  const t=localStorage.getItem('qi_theme')||'light';
+  setTheme(t);
 })();
 
-// ─── ESTADO ───
-let state = {
-  email: '', group: '',
-  questions: [], qIdx: 0, selected: null, confirmed: false, timedOut: false,
-  xp: 0, lives: 3, correct: 0, total: 0,
-  startTime: null, timerInterval: null, timeLeft: 30,
-};
+// ── PERGUNTAS ──
+const QS=[
+  {q:"Por que o registro do MO é obrigatório mesmo quando a decisão de bloqueio está correta?",opts:["A — O resultado final é suficiente; documentar o processo é opcional para IC2 e IC3","B — Garante rastreabilidade, aprendizado e embasamento para toda a operação","C — Só é exigido em casos com prejuízo financeiro confirmado ao cliente","D — O MO é responsabilidade do IC4 validar, não do analista que fechou o caso"],c:1,fb:"O MO é obrigatório sempre. Sem ele o caso é NOK mesmo com decisão certa — o scorecard avalia o processo, não só o resultado.",fw:"O scorecard avalia o processo completo. Independente do nível ou valor, o MO é responsabilidade do analista que fechou o caso."},
+  {q:"O que é o Modus Operandi (MO) de um caso de fraude?",opts:["A — O sistema interno que registra as monitorias mensais do pack","B — O protocolo obrigatório de escalação para o IC4 em casos de alto risco","C — O padrão de comportamento fraudulento que explica como o crime foi executado","D — A métrica individual que compõe o score de performance mensal do analista"],c:2,fb:"MO = padrão comportamental da fraude. Documentá-lo permite entender tendências e melhorar os modelos de detecção.",fw:"MO é Modus Operandi — o padrão de comportamento fraudulento. Não é sistema de monitorias, protocolo de escalação nem métrica de performance."},
+  {q:"Você investigou um caso, tomou a decisão certa de bloquear, mas não registrou a comunicação ao cliente. O que acontece no scorecard?",opts:["A — Fica OK, pois a decisão correta já garante a aprovação do critério completo","B — O Quality avalia o contexto e pode marcar como OK com observação no histórico","C — Fica NOK — registrar a comunicação é critério obrigatório, independente da decisão","D — O resultado varia por distrito; em alguns casos a comunicação pode ser dispensada"],c:2,fb:"Decisão certa + processo incompleto = NOK. Registrar a comunicação protege o analista e o cliente. Não há exceção por distrito.",fw:"Mesmo com decisão certa, a falta de registro gera NOK. O scorecard não tem exceção por distrito — é critério universal do processo."},
+  {q:"Além da decisão final, o que mais o scorecard do Pack Quality avalia?",opts:["A — O volume de casos resolvidos e o tempo médio de fechamento no mês","B — O nível de dificuldade do caso e a complexidade da fraude investigada","C — A qualidade do processo completo: documentação, MO registrado e comunicação ao cliente","D — O histórico de contestações anteriores e a taxa de reversão do analista"],c:2,fb:"O scorecard avalia o processo inteiro — decisão, MO documentado e comunicação. Cada etapa é um critério independente.",fw:"O scorecard vai muito além da decisão. Ele avalia documentação, MO e comunicação — não volume, dificuldade ou histórico de contestações."},
+  {q:"Um analista recebeu um NOK e discorda. Qual é o PRIMEIRO passo correto antes de abrir contestação?",opts:["A — Acionar o líder do distrito para intermediar a discussão com o Quality","B — Reunir a evidência técnica que mostra que o critério foi atendido no caso","C — Enviar mensagem no Slack diretamente para o analista de Quality responsável","D — Registrar a discordância em formulário interno antes de qualquer outra ação"],c:1,fb:"Primeiro reúna a evidência técnica, depois abra no Jira Quality Requests. Contestar com evidência é um direito que nunca prejudica a performance.",fw:"O caminho correto é evidência primeiro, Jira depois. Líder, Slack e formulário interno não são os canais adequados para contestação."},
+  {q:"O que uma contestação julgada PROCEDENTE revela sobre o Pack Quality?",opts:["A — Que o analista questionou com razão, mas o NOK ainda permanece no histórico","B — Que o Quality cometeu um erro de avaliação — dado que alimenta calibração e melhoria","C — Que o caso precisa ser reavaliado por um IC4 do distrito antes da decisão final","D — Que o scorecard do analista é automaticamente revisado para o mês corrente"],c:1,fb:"Contestação procedente = Quality errou. Isso é valioso — o NOK é removido e o dado alimenta a calibração dos critérios.",fw:"Contestação procedente significa que o Quality errou e o NOK é removido. Não existe histórico permanente de NOK após contestação procedente."},
+  {q:"Qual é o canal OFICIAL para abrir uma contestação de monitoria no Pack Quality?",opts:["A — Mensagem direta no Slack para o analista de Quality do distrito responsável","B — E-mail com o caso detalhado enviado ao líder do Pack Quality","C — Portal Quality Requests via Jira Service Management","D — Formulário no Google Forms encaminhado por e-mail ao Pack"],c:2,fb:"Jira Quality Requests é o canal oficial. Garante rastreabilidade, prazo de resposta e histórico estruturado para análises mensais.",fw:"Slack, e-mail e Google Forms são canais informais que perdem rastreabilidade e prazo. O canal oficial é o Jira Quality Requests."},
+  {q:"Por que analistas têm receio de contestar um feedback mesmo quando discordam?",opts:["A — O processo exige pagamento de taxa administrativa para cada contestação aberta","B — Por medo de ser mal visto ou sofrer consequências — um receio real, mas completamente infundado","C — O Quality historicamente reverte menos de 5% das contestações, desestimulando a abertura","D — Contestar exige aprovação prévia do gestor direto antes de ser protocolado no Jira"],c:1,fb:"O medo existe, mas é infundado. Contestar com evidência é um direito e jamais gera consequências negativas.",fw:"Não existe taxa, aprovação prévia ou baixa taxa de reversão que justifique não contestar. O receio de represálias é completamente infundado."},
+  {q:"Uma contestação aberta sem evidência técnica tende a ser julgada como:",opts:["A — Procedente, pois o analista sempre tem benefício da dúvida pelo princípio da boa-fé","B — Arquivada automaticamente após 5 dias úteis sem complementação de informações","C — Improcedente — sem evidência concreta não há como refutar o critério apontado","D — Direcionada ao M2 para decisão final, independente da evidência apresentada"],c:2,fb:"Sem evidência técnica, a contestação tende a ser improcedente. A evidência concreta é o que faz a diferença no resultado.",fw:"Não há benefício da dúvida automático nem arquivamento por prazo. Sem evidência técnica concreta, o resultado tende a ser improcedente."},
+  {q:"O Quality identificou padrão de erro idêntico em vários analistas do mesmo distrito. Qual é o próximo passo?",opts:["A — Registrar o alerta e aumentar o peso do critério no scorecard do mês seguinte","B — Propor uma calibração para alinhar o critério com o distrito e evitar novos erros","C — Reportar o padrão exclusivamente aos líderes, sem envolver os analistas afetados","D — Aguardar ao menos 3 meses para confirmar se é tendência antes de tomar qualquer ação"],c:1,fb:"Padrão identificado = calibração proposta. O Pack usa os dados para alinhar o critério com o distrito. O objetivo é melhorar, não punir.",fw:"O Quality não aumenta pesos, exclui analistas do processo nem aguarda meses. Padrão identificado = calibração proposta imediatamente."},
+  {q:"O que é um Apontamento Externo no contexto do Pack Quality?",opts:["A — Um erro identificado por auditoria externa contratada pelo compliance do Nubank","B — Uma contestação aberta por analista de outro distrito sobre seu próprio caso avaliado","C — Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence","D — Uma monitoria realizada sem aviso prévio como parte do processo de calibração surpresa"],c:2,fb:"Apontamentos Externos vêm de Reputational, Regulatory, FLC ou InvOps Intelligence — fora da monitoria regular do Pack.",fw:"Não é auditoria externa, contestação de outro distrito nem monitoria surpresa. São erros de fontes internas específicas fora da monitoria regular."},
+  {q:"Qual é o prazo para contestar uma monitoria no Pack Quality?",opts:["A — Até o último dia útil do mesmo mês em que a monitoria foi realizada","B — Até 7 dias úteis contados a partir da data de recebimento do feedback","C — Até o 3º dia útil do mês seguinte à data em que a monitoria foi realizada","D — Não há prazo definido — o analista pode contestar a qualquer momento"],c:2,fb:"O prazo é até o 3º dia útil do mês seguinte à data da monitoria. Fique atento ao calendário para não perder o prazo!",fw:"O prazo não é o último dia do mês, nem 7 dias úteis, nem ilimitado. É até o 3º dia útil do mês seguinte à data da monitoria."},
+  {q:"O que é um Apontamento no contexto do Pack Quality?",opts:["A — Painel com as metas mensais de monitorias do pack por distrito","B — Sinalização formal de um erro identificado na monitoria de um caso","C — Fila semanal de tickets pendentes de avaliação no Jira do pack","D — Revisão periódica dos scorecards realizada ao final de cada mês"],c:1,fb:"Apontamento é a sinalização formal de um erro identificado na monitoria. É o dado que gera o NOK e pode ser contestado pelo analista.",fw:"Apontamento não é painel de metas, fila de tickets nem revisão mensal. É a sinalização formal de um erro identificado na monitoria."},
+  {q:"Qual é a diferença fundamental entre o Pack Quality ser PARCEIRO e ser AUDITOR?",opts:["A — Parceiro e auditor exercem funções equivalentes com nomenclaturas distintas","B — O auditor detém autoridade formal para suspender ou reverter decisões dos analistas","C — Parceiro trabalha junto para melhorar continuamente; auditor apenas fiscaliza e sanciona","D — Parceiro é a denominação informal do cargo; auditor é o título oficial na estrutura"],c:2,fb:"Parceiro trabalha junto, calibra critérios e evolui com a operação. Auditor só fiscaliza. O Pack Quality é parceiro.",fw:"Não é questão de nomenclatura, autoridade ou título. Parceiro = evolui junto. Auditor = só fiscaliza. O Pack Quality é parceiro."},
+  {q:"Qual é a missão central do Pack Quality InvOps Brasil?",opts:["A — Assegurar que a meta de NOKs mensais seja cumprida em todos os distritos","B — Substituir os líderes de distrito nas decisões de performance dos analistas","C — Executar monitorias mensais e entregar relatórios de erros para a liderança","D — Garantir qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua"],c:3,fb:"O Pack Quality é parceiro estratégico — não auditor punitivo. Tudo converge para uma operação mais justa e eficiente.",fw:"Meta de NOKs, substituir líderes ou só fazer relatórios não definem o Pack Quality. A missão é ser parceiro na melhoria contínua."},
+];
 
-// ─── PERGUNTAS ───
-const ALL_QUESTIONS = [
-  {
-    q:"Por que o registro do MO é obrigatório mesmo quando a decisão de bloqueio está correta?",
-    opts:[
-      "A — O resultado final é suficiente; documentar o processo é opcional para IC2 e IC3",
-      "B — Garante rastreabilidade, aprendizado e embasamento para toda a operação",
-      "C — Só é exigido em casos com prejuízo financeiro confirmado ao cliente",
-      "D — O MO é responsabilidade do IC4 validar, não do analista que fechou o caso"
-    ],correct:1,
-    fb:"O MO é obrigatório sempre. Sem ele o caso é NOK mesmo com decisão certa — o scorecard avalia o processo, não só o resultado.",
-    fbW:"O scorecard avalia o processo completo. Independente do nível ou valor, o MO é responsabilidade do analista que fechou o caso."
-  },
-  {
-    q:"O que é o Modus Operandi (MO) de um caso de fraude?",
-    opts:[
-      "A — O sistema interno que registra as monitorias mensais do pack",
-      "B — O protocolo obrigatório de escalação para o IC4 em casos de alto risco",
-      "C — O padrão de comportamento fraudulento que explica como o crime foi executado",
-      "D — A métrica individual que compõe o score de performance mensal do analista"
-    ],correct:2,
-    fb:"MO = padrão comportamental da fraude. Documentá-lo permite entender tendências e melhorar os modelos de detecção.",
-    fbW:"MO é Modus Operandi — o padrão de comportamento fraudulento. Não é sistema de monitorias, protocolo de escalação nem métrica de performance."
-  },
-  {
-    q:"Você investigou um caso, tomou a decisão certa de bloquear, mas não registrou a comunicação ao cliente. O que acontece no scorecard?",
-    opts:[
-      "A — Fica OK, pois a decisão correta já garante a aprovação do critério completo",
-      "B — O Quality avalia o contexto e pode marcar como OK com observação no histórico",
-      "C — Fica NOK — registrar a comunicação é critério obrigatório, independente da decisão",
-      "D — O resultado varia por distrito; em alguns casos a comunicação pode ser dispensada"
-    ],correct:2,
-    fb:"Decisão certa + processo incompleto = NOK. Registrar a comunicação protege o analista e o cliente. Não há exceção por distrito.",
-    fbW:"Mesmo com decisão certa, a falta de registro gera NOK. O scorecard não tem exceção por distrito — é critério universal do processo."
-  },
-  {
-    q:"Além da decisão final, o que mais o scorecard do Pack Quality avalia?",
-    opts:[
-      "A — O volume de casos resolvidos e o tempo médio de fechamento no mês",
-      "B — O nível de dificuldade do caso e a complexidade da fraude investigada",
-      "C — A qualidade do processo completo: documentação, MO registrado e comunicação ao cliente",
-      "D — O histórico de contestações anteriores e a taxa de reversão do analista"
-    ],correct:2,
-    fb:"O scorecard avalia o processo inteiro — decisão, MO documentado e comunicação. Cada etapa é um critério independente.",
-    fbW:"O scorecard vai muito além da decisão. Ele avalia documentação, MO e comunicação — não volume, dificuldade ou histórico de contestações."
-  },
-  {
-    q:"Um analista recebeu um NOK e discorda. Qual é o PRIMEIRO passo correto antes de abrir contestação?",
-    opts:[
-      "A — Acionar o líder do distrito para intermediar a discussão com o Quality",
-      "B — Reunir a evidência técnica que mostra que o critério foi atendido no caso",
-      "C — Enviar mensagem no Slack diretamente para o analista de Quality responsável",
-      "D — Registrar a discordância em formulário interno antes de qualquer outra ação"
-    ],correct:1,
-    fb:"Primeiro reúna a evidência técnica, depois abra no Jira Quality Requests. Contestar com evidência é um direito que nunca prejudica a performance.",
-    fbW:"O caminho correto é evidência primeiro, Jira depois. Líder, Slack e formulário interno não são os canais adequados para contestação."
-  },
-  {
-    q:"O que uma contestação julgada PROCEDENTE revela sobre o Pack Quality?",
-    opts:[
-      "A — Que o analista questionou com razão, mas o NOK ainda permanece no histórico",
-      "B — Que o Quality cometeu um erro de avaliação — dado que alimenta calibração e melhoria",
-      "C — Que o caso precisa ser reavaliado por um IC4 do distrito antes da decisão final",
-      "D — Que o scorecard do analista é automaticamente revisado para o mês corrente"
-    ],correct:1,
-    fb:"Contestação procedente = Quality errou. Isso é valioso — o NOK é removido e o dado alimenta a calibração dos critérios.",
-    fbW:"Contestação procedente significa que o Quality errou e o NOK é removido. Não existe histórico permanente de NOK após contestação procedente."
-  },
-  {
-    q:"Qual é o canal OFICIAL para abrir uma contestação de monitoria no Pack Quality?",
-    opts:[
-      "A — Mensagem direta no Slack para o analista de Quality do distrito responsável",
-      "B — E-mail com o caso detalhado enviado ao líder do Pack Quality",
-      "C — Portal Quality Requests via Jira Service Management",
-      "D — Formulário no Google Forms encaminhado por e-mail ao Pack"
-    ],correct:2,
-    fb:"Jira Quality Requests é o canal oficial. Garante rastreabilidade, prazo de resposta e histórico estruturado para análises mensais.",
-    fbW:"Slack, e-mail e Google Forms são canais informais que perdem rastreabilidade e prazo. O canal oficial é o Jira Quality Requests."
-  },
-  {
-    q:"Por que analistas têm receio de contestar um feedback mesmo quando discordam?",
-    opts:[
-      "A — O processo exige pagamento de taxa administrativa para cada contestação aberta",
-      "B — Por medo de ser mal visto ou sofrer consequências — um receio real, mas completamente infundado",
-      "C — O Quality historicamente reverte menos de 5% das contestações, o que desestimula a abertura",
-      "D — Contestar exige aprovação prévia do gestor direto antes de ser protocolado"
-    ],correct:1,
-    fb:"O medo existe, mas é infundado. Contestar com evidência é um direito e jamais gera consequências negativas.",
-    fbW:"Não existe taxa, aprovação prévia ou baixa taxa de reversão que justifique não contestar. O receio de represálias é infundado."
-  },
-  {
-    q:"Uma contestação aberta sem evidência técnica tende a ser julgada como:",
-    opts:[
-      "A — Procedente, pois o analista sempre tem benefício da dúvida pelo princípio da boa-fé",
-      "B — Arquivada automaticamente após 5 dias úteis sem complementação de informações",
-      "C — Improcedente — sem evidência concreta não há como refutar o critério apontado",
-      "D — Direcionada ao M2 para decisão final, independente da evidência apresentada"
-    ],correct:2,
-    fb:"Sem evidência técnica, a contestação tende a ser improcedente. A evidência concreta é o que faz a diferença no resultado.",
-    fbW:"Não há benefício da dúvida automático nem arquivamento por prazo. Sem evidência técnica concreta, o resultado tende a ser improcedente."
-  },
-  {
-    q:"O Quality identificou padrão de erro idêntico em vários analistas do mesmo distrito. Qual é o próximo passo?",
-    opts:[
-      "A — Registrar o alerta e aumentar o peso do critério no scorecard do mês seguinte",
-      "B — Propor uma calibração para alinhar o critério com o distrito e evitar novos erros",
-      "C — Reportar o padrão exclusivamente aos líderes, sem envolver os analistas afetados",
-      "D — Aguardar ao menos 3 meses para confirmar se é tendência antes de tomar qualquer ação"
-    ],correct:1,
-    fb:"Padrão identificado = calibração proposta. O Pack usa os dados para alinhar o critério com o distrito. O objetivo é melhorar, não punir.",
-    fbW:"O Quality não aumenta pesos, exclui analistas do processo nem aguarda meses. Padrão identificado = calibração proposta imediatamente."
-  },
-  {
-    q:"O que é um Apontamento Externo no contexto do Pack Quality?",
-    opts:[
-      "A — Um erro identificado por auditoria externa contratada pelo compliance do Nubank",
-      "B — Uma contestação aberta por analista de outro distrito sobre seu próprio caso avaliado",
-      "C — Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence",
-      "D — Uma monitoria realizada sem aviso prévio como parte do processo de calibração surpresa"
-    ],correct:2,
-    fb:"Apontamentos Externos vêm de Reputational, Regulatory, FLC ou InvOps Intelligence — fora da monitoria regular do Pack.",
-    fbW:"Não é auditoria externa, contestação de outro distrito nem monitoria surpresa. São erros de fontes internas específicas fora da monitoria regular."
-  },
-  {
-    q:"Qual é o prazo para contestar uma monitoria no Pack Quality?",
-    opts:[
-      "A — Até o último dia útil do mesmo mês em que a monitoria foi realizada",
-      "B — Até 7 dias úteis contados a partir da data de recebimento do feedback",
-      "C — Até o 3º dia útil do mês seguinte à data em que a monitoria foi realizada",
-      "D — Não há prazo definido — o analista pode contestar a qualquer momento"
-    ],correct:2,
-    fb:"O prazo é até o 3º dia útil do mês seguinte à data da monitoria. Fique atento ao calendário para não perder o prazo!",
-    fbW:"O prazo não é o último dia do mês, nem 7 dias úteis, nem ilimitado. É até o 3º dia útil do mês seguinte à data da monitoria."
-  },
-  {
-    q:"O que é um Apontamento no contexto do Pack Quality?",
-    opts:[
-      "A — Painel com as metas mensais de monitorias do pack por distrito",
-      "B — Sinalização formal de um erro identificado na monitoria de um caso",
-      "C — Fila semanal de tickets pendentes de avaliação no Jira do pack",
-      "D — Revisão periódica dos scorecards realizada ao final de cada mês"
-    ],correct:1,
-    fb:"Apontamento é a sinalização formal de um erro identificado na monitoria. É o dado que gera o NOK e pode ser contestado pelo analista.",
-    fbW:"Apontamento não é painel de metas, fila de tickets nem revisão mensal. É a sinalização formal de um erro identificado na monitoria."
-  },
-  {
-    q:"Qual é a diferença fundamental entre o Pack Quality ser PARCEIRO e ser AUDITOR?",
-    opts:[
-      "A — Parceiro e auditor exercem funções equivalentes com nomenclaturas distintas",
-      "B — O auditor detém autoridade formal para suspender ou reverter decisões dos analistas",
-      "C — Parceiro trabalha junto para melhorar continuamente; auditor apenas fiscaliza e sanciona",
-      "D — Parceiro é a denominação informal do cargo; auditor é o título oficial na estrutura"
-    ],correct:2,
-    fb:"Parceiro trabalha junto, calibra critérios e evolui com a operação. Auditor só fiscaliza. O Pack Quality é parceiro.",
-    fbW:"Não é questão de nomenclatura, autoridade ou título. Parceiro = evolui junto. Auditor = só fiscaliza. O Pack Quality é parceiro."
-  },
-  {
-    q:"Qual é a missão central do Pack Quality InvOps Brasil?",
-    opts:[
-      "A — Assegurar que a meta de NOKs mensais seja cumprida em todos os distritos",
-      "B — Substituir os líderes de distrito nas decisões de performance dos analistas",
-      "C — Executar monitorias mensais e entregar relatórios de erros para a liderança",
-      "D — Garantir qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua"
-    ],correct:3,
-    fb:"O Pack Quality é parceiro estratégico — não auditor punitivo. Tudo converge para uma operação mais justa e eficiente.",
-    fbW:"Meta de NOKs, substituir líderes ou só fazer relatórios não definem o Pack Quality. A missão é ser parceiro na melhoria contínua."
-  },
-]];
+function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
 
-function shuffle(arr){ return [...arr].sort(()=>Math.random()-.5); }
+// ── ESTADO ──
+let G={email:'',qs:[],idx:0,sel:null,conf:false,tout:false,xp:0,lives:3,correct:0,total:0,t0:null,tLeft:30,tInt:null};
 
-// ─── NAVEGAÇÃO ───
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>{
-    s.classList.remove('active');
-    s.style.display='none';
+// ── UTILS ──
+function isEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+function go(id){
+  ['s-name','s-already','s-cd','s-game','s-save','s-final'].forEach(s=>{
+    const el=document.getElementById(s);
+    if(el){el.classList.remove('on');el.style.display='none';}
   });
-  const el = document.getElementById(id);
-  el.classList.add('active');
-  el.style.display = (id==='game-screen') ? 'block' : 'flex';
+  const el=document.getElementById(id);
+  if(!el)return;
+  if(id==='s-game'){el.style.display='block';}
+  else{el.style.display='flex';el.classList.add('on');}
   window.scrollTo(0,0);
 }
 
-// ─── VALIDAÇÃO ───
-function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
-function validateEmail(){
-  const v = document.getElementById('email-input').value;
-  const err = document.getElementById('email-error');
-  const inp = document.getElementById('email-input');
-  if(v && !isValidEmail(v)){ err.style.display='block'; inp.classList.remove('valid'); }
-  else if(v){ err.style.display='none'; inp.classList.add('valid'); }
-  else{ err.style.display='none'; inp.classList.remove('valid'); }
+// ── NOME ──
+function onEmail(){
+  const v=document.getElementById('email-in').value;
+  const inp=document.getElementById('email-in');
+  const err=document.getElementById('email-err');
+  if(v&&!isEmail(v)){err.style.display='block';inp.classList.remove('ok');}
+  else if(v){err.style.display='none';inp.classList.add('ok');}
+  else{err.style.display='none';inp.classList.remove('ok');}
 }
-
-
-// ─── INICIAR ───
 function tryStart(){
-  const email = document.getElementById('email-input').value.trim();
-  const err = document.getElementById('start-error');
-  if(!email || !isValidEmail(email)){ err.style.display='block'; return; }
-  err.style.display='none';
-  // Verifica se já jogou
-  const key = 'qi_v3_' + email.toLowerCase();
+  const email=document.getElementById('email-in').value.trim();
+  const serr=document.getElementById('start-err');
+  if(!email||!isEmail(email)){serr.style.display='block';return;}
+  serr.style.display='none';
+  const key='qi_v4_'+email.toLowerCase();
   if(localStorage.getItem(key)){
-    document.getElementById('already-email').textContent = email;
-    showScreen('already-screen');
-    return;
+    document.getElementById('already-em').textContent=email;
+    go('s-already');return;
   }
-  state.email = email;
-  state.group = 'Geral';
-  state.hasPista = false;
-  state.questions = shuffle(ALL_QUESTIONS);
-  state.xp = state.hasPista ? 10 : 0;
-  state.lives = 3; state.correct = 0; state.total = 0;
-  state.qIdx = 0; state.startTime = Date.now();
-  startGame();
+  G.email=email;
+  G.qs=shuffle(QS);
+  G.idx=0;G.sel=null;G.conf=false;G.tout=false;
+  G.xp=0;G.lives=3;G.correct=0;G.total=0;
+  G.t0=Date.now();
+  go('s-cd');
+  runCD();
 }
 
-// ─── JOGO ───
-function startGame(){
-  showScreen('countdown-screen');
-  runCountdown();
-}
-
-function runCountdown(){
-  const msgs = [
-    ['PREPARE-SE!', 'Sua investigação está prestes a começar...', '🕵️', 5],
-    ['FOCO!', 'Revise o que você sabe sobre Quality...', '🔍', 4],
-    ['QUASE LÁ!', 'O Pack Quality está observando...', '📋', 3],
-    ['ATENÇÃO!', 'As pistas não vão se revelar sozinhas...', '🗂️', 2],
-    ['VÁ!', 'A investigação começa agora!', '⚡', 1],
+// ── COUNTDOWN ──
+function runCD(){
+  const steps=[
+    ['🕵️','PREPARE-SE!','Sua investigação está prestes a começar...',5],
+    ['🔍','FOCO!','Revise o que você sabe sobre Quality...',4],
+    ['📋','QUASE LÁ!','O Pack Quality está observando...',3],
+    ['🗂️','ATENÇÃO!','As pistas não vão se revelar sozinhas...',2],
+    ['⚡','VÁ!','A investigação começa agora!',1],
   ];
-  let idx = 0;
-
+  let i=0;
   function tick(){
-    if(idx >= msgs.length){
-      showScreen('game-screen');
-      updateHUD();
-      renderQuestion();
-      return;
-    }
-    const [title, sub, icon, num] = msgs[idx];
-    document.getElementById('cd-num').textContent = num;
-    document.getElementById('cd-num').style.animation = 'none';
-    void document.getElementById('cd-num').offsetWidth;
-    document.getElementById('cd-num').style.animation = 'countPulse 1s ease-in-out';
-    document.getElementById('cd-title').textContent = title;
-    document.getElementById('cd-sub').textContent = sub;
-    document.getElementById('cd-detective').textContent = icon;
-    document.getElementById('cd-bar').style.width = (num/5*100) + '%';
-    for(let i=0;i<5;i++){
-      document.getElementById('cd-dot-'+i).classList.toggle('active', i <= idx);
-    }
-    document.getElementById('cd-feet').textContent = idx%2===0 ? '👣' : '🔎';
-    idx++;
-    setTimeout(tick, 1000);
+    if(i>=steps.length){startGame();return;}
+    const [icon,title,sub,num]=steps[i];
+    document.getElementById('cd-icon').textContent=icon;
+    document.getElementById('cd-title').textContent=title;
+    document.getElementById('cd-sub').textContent=sub;
+    const n=document.getElementById('cd-num');
+    n.textContent=num;
+    n.style.animation='none';
+    void n.offsetWidth;
+    n.style.animation='countPop .6s ease';
+    document.getElementById('cd-bar').style.width=(num/5*100)+'%';
+    i++;
+    setTimeout(tick,1000);
   }
   tick();
 }
 
-function updateHUD(){
-  const e = state.email;
-  document.getElementById('hud-avatar').textContent = e ? e[0].toUpperCase() : '?';
-  document.getElementById('hud-name').textContent = e;
-  document.getElementById('hud-xp').textContent = state.xp;
-  document.getElementById('hud-bar').style.width = Math.min(100, state.xp/500*100) + '%';
-  document.getElementById('hud-correct').textContent = state.correct + '/' + state.total;
-  const lives = document.getElementById('hud-lives');
-  lives.innerHTML = '';
-  for(let i=0;i<3;i++){
-    const s = document.createElement('span');
-    s.className = 'heart ' + (i < state.lives ? 'full' : 'lost');
-    s.textContent = '♥';
-    lives.appendChild(s);
-  }
+// ── JOGO ──
+function startGame(){
+  go('s-game');
+  updHUD();
+  renderQ();
 }
 
-function renderQuestion(){
-  const q = state.questions[state.qIdx];
-  state.selected = null;
-  state.confirmed = false;
-  state.timedOut = false;
+function updHUD(){
+  document.getElementById('hud-av').textContent=G.email?G.email[0].toUpperCase():'?';
+  document.getElementById('hud-name').textContent=G.email;
+  document.getElementById('hud-xp').textContent=G.xp;
+  document.getElementById('hud-bar').style.width=Math.min(100,G.xp/500*100)+'%';
+  document.getElementById('hud-acc').textContent=G.correct+'/'+G.total;
+  const lv=document.getElementById('hud-lives');lv.innerHTML='';
+  for(let i=0;i<3;i++){const s=document.createElement('span');s.className='heart';s.style.color=i<G.lives?'var(--red)':'#ccc';s.textContent='♥';lv.appendChild(s);}
+}
 
-  // Progresso
-  const pct = Math.round((state.qIdx / state.questions.length) * 100);
-  document.getElementById('q-counter').textContent = 'PERGUNTA ' + (state.qIdx+1) + ' DE ' + state.questions.length;
-  document.getElementById('q-pct').textContent = pct + '% CONCLUÍDO';
-  document.getElementById('progress-bar').style.width = pct + '%';
-
-  // Pergunta
-  document.getElementById('q-case').textContent = '// PISTA ' + (state.qIdx+1);
-  document.getElementById('q-text').textContent = q.q;
-
-  // Opções
-  const opts = document.getElementById('opts');
-  opts.innerHTML = '';
-  q.opts.forEach((o, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'opt-btn';
-    btn.textContent = o;
-    btn.onclick = () => selectOpt(i);
-    opts.appendChild(btn);
+function renderQ(){
+  const q=G.qs[G.idx];
+  G.sel=null;G.conf=false;G.tout=false;
+  const pct=Math.round(G.idx/G.qs.length*100);
+  document.getElementById('q-num').textContent='PERGUNTA '+(G.idx+1)+' DE '+G.qs.length;
+  document.getElementById('q-pct').textContent=pct+'% CONCLUÍDO';
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('q-lbl').textContent='// PISTA '+(G.idx+1);
+  document.getElementById('q-text').textContent=q.q;
+  const opts=document.getElementById('opts');opts.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';b.textContent=o;
+    b.onclick=()=>selOpt(i);
+    opts.appendChild(b);
   });
-
-  // Confirmar
-  const confirmBtn = document.getElementById('confirm-btn');
-  confirmBtn.className = 'btn btn-gray btn-full';
-  confirmBtn.disabled = true;
-  document.getElementById('confirm-hint').style.display = 'block';
-  document.getElementById('confirm-wrap').style.display = 'block';
-
-  // Feedback e next
-  document.getElementById('feedback').style.display = 'none';
-  document.getElementById('next-wrap').style.display = 'none';
-
-  // Timer
-  document.getElementById('timer-wrap').style.display = 'block';
+  const cb=document.getElementById('conf-btn');
+  cb.className='btn btn-gray btn-full';cb.disabled=true;
+  document.getElementById('conf-hint').style.display='block';
+  document.getElementById('conf-wrap').style.display='block';
+  document.getElementById('fb-wrap').style.display='none';
+  document.getElementById('next-wrap').style.display='none';
+  document.getElementById('timer-wrap').style.display='block';
   startTimer();
 }
 
-function selectOpt(i){
-  if(state.confirmed || state.timedOut) return;
-  state.selected = i;
-  document.querySelectorAll('.opt-btn').forEach((b, j) => {
-    b.classList.toggle('selected', j === i);
+function selOpt(i){
+  if(G.conf||G.tout)return;
+  G.sel=i;
+  document.querySelectorAll('.opt').forEach((b,j)=>b.classList.toggle('sel',j===i));
+  const cb=document.getElementById('conf-btn');
+  cb.className='btn btn-gold btn-full';cb.disabled=false;
+  document.getElementById('conf-hint').style.display='none';
+}
+
+function confirm_answer(){
+  if(G.sel===null||G.conf)return;
+  stopTimer();G.conf=true;
+  const q=G.qs[G.idx];const ok=G.sel===q.c;
+  G.total++;
+  document.querySelectorAll('.opt').forEach((b,i)=>{
+    b.disabled=true;b.classList.remove('sel');
+    if(i===q.c)b.classList.add('ok');
+    else if(i===G.sel&&!ok)b.classList.add('no');
   });
-  const btn = document.getElementById('confirm-btn');
-  btn.className = 'btn btn-gold btn-full';
-  btn.disabled = false;
-  document.getElementById('confirm-hint').style.display = 'none';
+  if(ok){const pts=25+Math.floor((G.tLeft/30)*15);G.xp+=pts;G.correct++;}
+  else{G.lives=Math.max(0,G.lives-1);}
+  updHUD();
+  const fw=document.getElementById('fb-wrap');
+  fw.style.display='block';
+  fw.innerHTML='<div class="fb '+(ok?'ok':'no')+'"><div class="fb-title">'+(ok?'✓ PISTA CONFIRMADA!':'✗ PISTA FALSA')+'</div><div class="fb-text">'+(ok?q.fb:q.fw)+'</div></div>';
+  document.getElementById('conf-wrap').style.display='none';
+  document.getElementById('timer-wrap').style.display='none';
+  const isLast=G.idx>=G.qs.length-1;
+  const nb=document.getElementById('next-btn');
+  nb.textContent=isLast?'🏆 VER RESULTADO FINAL':'PRÓXIMA PISTA →';
+  nb.className='btn btn-full btn-lg '+(isLast?'btn-green':'btn-gold');
+  document.getElementById('next-wrap').style.display='block';
 }
 
-function handleConfirm(){
-  if(state.selected === null || state.confirmed) return;
-  stopTimer();
-  state.confirmed = true;
-  const q = state.questions[state.qIdx];
-  const ok = state.selected === q.correct;
-  state.total++;
-
-  // Estiliza opções
-  document.querySelectorAll('.opt-btn').forEach((b, i) => {
-    b.disabled = true;
-    b.classList.remove('selected');
-    if(i === q.correct) b.classList.add('correct');
-    else if(i === state.selected && !ok) b.classList.add('wrong');
-  });
-
-  if(ok){
-    const pts = 25 + Math.floor((state.timeLeft / 30) * 15);
-    state.xp += pts;
-    state.correct++;
-    showFeedback(true, q.fb);
-  } else {
-    state.lives = Math.max(0, state.lives - 1);
-    showFeedback(false, q.fbW);
-  }
-
-  document.getElementById('confirm-wrap').style.display = 'none';
-  document.getElementById('timer-wrap').style.display = 'none';
-  updateHUD();
-  showNext();
+function nextQ(){
+  if(G.idx>=G.qs.length-1){finishGame();return;}
+  G.idx++;renderQ();window.scrollTo(0,0);
 }
 
-function showFeedback(ok, text){
-  const fb = document.getElementById('feedback');
-  fb.className = 'feedback fadein ' + (ok ? 'correct' : 'wrong');
-  fb.style.display = 'block';
-  fb.innerHTML = '<div class="feedback-title">' + (ok ? '✓ PISTA CONFIRMADA!' : '✗ PISTA FALSA') + '</div><div class="feedback-text">' + text + '</div>';
-}
-
-function showNext(){
-  const isLast = state.qIdx >= state.questions.length - 1;
-  const btn = document.getElementById('next-btn');
-  btn.textContent = isLast ? '🏆 VER RESULTADO FINAL' : 'PRÓXIMA PISTA →';
-  btn.className = 'btn btn-full btn-lg ' + (isLast ? 'btn-green' : 'btn-gold');
-  document.getElementById('next-wrap').style.display = 'block';
-}
-
-function nextQuestion(){
-  const isLast = state.qIdx >= state.questions.length - 1;
-  if(isLast){ finishGame(); return; }
-  state.qIdx++;
-  renderQuestion();
-  window.scrollTo(0,0);
-}
-
-// ─── TIMER ───
+// ── TIMER ──
 function startTimer(){
-  state.timeLeft = 30;
-  updateTimerUI(30);
-  clearInterval(state.timerInterval);
-  state.timerInterval = setInterval(()=>{
-    state.timeLeft--;
-    updateTimerUI(state.timeLeft);
-    if(state.timeLeft <= 0){ clearInterval(state.timerInterval); handleTimeout(); }
-  }, 1000);
+  G.tLeft=30;updTimer(30);
+  clearInterval(G.tInt);
+  G.tInt=setInterval(()=>{
+    G.tLeft--;updTimer(G.tLeft);
+    if(G.tLeft<=0){clearInterval(G.tInt);handleTimeout();}
+  },1000);
 }
-
-function stopTimer(){ clearInterval(state.timerInterval); }
-
-function updateTimerUI(t){
-  const num = document.getElementById('timer-num');
-  const bar = document.getElementById('timer-bar');
-  num.textContent = String(t).padStart(2,'0');
-  const color = t > 20 ? 'var(--green)' : t > 10 ? '#cc7700' : 'var(--red)';
-  num.style.color = color;
-  num.style.animation = t <= 10 ? 'timerPulse .5s ease-in-out infinite' : 'none';
-  bar.style.width = (t/30*100) + '%';
-  bar.style.background = color;
+function stopTimer(){clearInterval(G.tInt);}
+function updTimer(t){
+  const color=t>20?'var(--green)':t>10?'#cc7700':'var(--red)';
+  const n=document.getElementById('t-num');
+  n.textContent=String(t).padStart(2,'0');n.style.color=color;
+  n.style.animation=t<=10?'pulse .5s ease-in-out infinite':'none';
+  document.getElementById('t-bar').style.width=(t/30*100)+'%';
+  document.getElementById('t-bar').style.background=color;
 }
-
 function handleTimeout(){
-  if(state.confirmed) return;
-  stopTimer();
-  state.timedOut = true;
-  state.lives = Math.max(0, state.lives - 1);
-  state.total++;
-  updateHUD();
-  const q = state.questions[state.qIdx];
-
-  // Overlay timeout
-  document.getElementById('timeout-answer').textContent = q.opts[q.correct];
-  const overlay = document.getElementById('timeout-overlay');
-  overlay.classList.add('active');
-  let cd = 5;
-  document.getElementById('timeout-cd').textContent = 'CONTINUANDO EM ' + cd + 's...';
-  document.getElementById('timeout-bar').style.width = '100%';
-
-  const iv = setInterval(()=>{
+  if(G.conf)return;
+  stopTimer();G.tout=true;G.lives=Math.max(0,G.lives-1);G.total++;updHUD();
+  const q=G.qs[G.idx];
+  document.getElementById('to-answer').textContent=q.opts[q.c];
+  const ov=document.getElementById('to-overlay');ov.classList.add('on');
+  let cd=5;
+  document.getElementById('to-cd').textContent='CONTINUANDO EM '+cd+'s...';
+  document.getElementById('to-bar').style.width='100%';
+  const iv=setInterval(()=>{
     cd--;
-    document.getElementById('timeout-cd').textContent = 'CONTINUANDO EM ' + cd + 's...';
-    document.getElementById('timeout-bar').style.width = (cd/5*100) + '%';
-    if(cd <= 0){
-      clearInterval(iv);
-      overlay.classList.remove('active');
-      const isLast = state.qIdx >= state.questions.length - 1;
-      if(isLast) finishGame();
-      else{ state.qIdx++; renderQuestion(); window.scrollTo(0,0); }
+    document.getElementById('to-cd').textContent='CONTINUANDO EM '+cd+'s...';
+    document.getElementById('to-bar').style.width=(cd/5*100)+'%';
+    if(cd<=0){
+      clearInterval(iv);ov.classList.remove('on');
+      if(G.idx>=G.qs.length-1)finishGame();
+      else{G.idx++;renderQ();window.scrollTo(0,0);}
     }
-  }, 1000);
+  },1000);
 }
 
-// ─── FINISH ───
+// ── FINISH ──
 async function finishGame(){
-  showScreen('saving-screen');
-  const elapsed = Math.round((Date.now() - state.startTime) / 1000);
-  const pct = state.total > 0 ? Math.round(state.correct/state.total*100) : 0;
-  localStorage.setItem('qi_v3_' + state.email.toLowerCase(), '1');
-  try {
-    const cur = await fetch(BIN_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}});
-    const data = await cur.json();
-    const list = data.record?.resultados || [];
-    list.push({email:state.email,group:state.group,xp:state.xp,correct:state.correct,total:state.total,pct,timeSeconds:elapsed,completedAt:new Date().toISOString()});
-    await fetch(BIN_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify({resultados:list})});
-  } catch(e){ console.warn('Erro ao salvar:', e); }
-  showFinalScreen(elapsed, pct);
+  go('s-save');
+  const elapsed=Math.round((Date.now()-G.t0)/1000);
+  const pct=G.total>0?Math.round(G.correct/G.total*100):0;
+  localStorage.setItem('qi_v4_'+G.email.toLowerCase(),'1');
+  try{
+    const r=await fetch(BURL+'/latest',{headers:{'X-Master-Key':MKEY}});
+    const d=await r.json();
+    const list=d.record?.resultados||[];
+    list.push({email:G.email,group:'Geral',xp:G.xp,correct:G.correct,total:G.total,pct,timeSeconds:elapsed,completedAt:new Date().toISOString()});
+    await fetch(BURL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MKEY},body:JSON.stringify({resultados:list})});
+  }catch(e){console.warn('Erro ao salvar:',e);}
+  showFinal(elapsed,pct);
 }
 
-function showFinalScreen(elapsed, pct){
-  const rank = pct>=90?'DETETIVE LENDÁRIO':pct>=75?'INVESTIGADOR SÊNIOR':pct>=60?'ANALISTA CERTIFICADO':'INVESTIGADOR JÚNIOR';
-  const badge = pct>=90?'🥇':pct>=75?'🥈':pct>=60?'🥉':'📋';
-  const mins = Math.floor(elapsed/60), secs = elapsed%60;
-
-  document.getElementById('final-sub').textContent = state.email;
-  document.getElementById('rank-icon').textContent = badge;
-  document.getElementById('rank-name').textContent = rank;
-
-  const stats = [
-    ['XP Total', state.xp + ' XP', 'var(--gold)'],
-    ['Acertos', state.correct + ' / ' + state.total, 'var(--green)'],
-    ['Aproveitamento', pct + '%', 'var(--blue)'],
-    ['Tempo', mins + 'm ' + String(secs).padStart(2,'0') + 's', 'var(--ink)'],
-    ['Bônus Pista', state.hasPista ? '+10 XP ✓' : 'Não trouxe', state.hasPista ? 'var(--green)' : 'var(--ink-light)'],
-  ];
-
-  document.getElementById('result-stats').innerHTML = stats.map(([l,v,c])=>
-    '<div class="stat-row"><span class="stat-label">'+l+'</span><span class="stat-val" style="color:'+c+'">'+v+'</span></div>'
-  ).join('');
-
-  showScreen('final-screen');
+function showFinal(elapsed,pct){
+  const rank=pct>=90?'DETETIVE LENDÁRIO':pct>=75?'INVESTIGADOR SÊNIOR':pct>=60?'ANALISTA CERTIFICADO':'INVESTIGADOR JÚNIOR';
+  const badge=pct>=90?'🥇':pct>=75?'🥈':pct>=60?'🥉':'📋';
+  const m=Math.floor(elapsed/60),s=elapsed%60;
+  document.getElementById('fin-sub').textContent=G.email;
+  document.getElementById('fin-icon').textContent=badge;
+  document.getElementById('fin-rank').textContent=rank;
+  const rows=[['XP Total',G.xp+' XP','var(--gold)'],['Acertos',G.correct+' / '+G.total,'var(--green)'],['Aproveitamento',pct+'%','var(--blue)'],['Tempo',m+'m '+String(s).padStart(2,'0')+'s','var(--ink)']];
+  document.getElementById('fin-stats').innerHTML=rows.map(([l,v,c])=>'<div class="stat-row"><span class="stat-lbl">'+l+'</span><span class="stat-val" style="color:'+c+'">'+v+'</span></div>').join('');
+  go('s-final');
 }
 </script>
 </body>
