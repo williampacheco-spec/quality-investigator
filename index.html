@@ -213,27 +213,20 @@ body.dark .stamp-seal{color:#44cc77;border-color:#44cc77;}
 .saving-txt{font-family:'Oswald',sans-serif;font-size:1.2rem;color:var(--gold);font-weight:700;letter-spacing:2px;}
 
 /* ── INTRO ANIMADA ── */
-@keyframes floatUpDown{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-12px) rotate(5deg)}66%{transform:translateY(-6px) rotate(-3deg)}}
-@keyframes heroFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-16px) scale(1.05)}}
-@keyframes titleGlow{0%,100%{text-shadow:0 0 20px rgba(184,134,11,.3)}50%{text-shadow:0 0 40px rgba(184,134,11,.7),0 0 80px rgba(184,134,11,.3)}}
-@keyframes cardEntrance{from{opacity:0;transform:translateY(40px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes badgePulse{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.02)}}
-@keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(200vh)}}
+@keyframes feFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-14px) rotate(4deg)}}
+@keyframes heroBob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-18px) scale(1.06)}}
+@keyframes goldGlow{0%,100%{text-shadow:0 0 16px rgba(184,134,11,.3)}50%{text-shadow:0 0 40px rgba(184,134,11,.8),0 0 80px rgba(184,134,11,.3)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
-.float-el{position:fixed;z-index:0;animation:floatUpDown 4s ease-in-out infinite;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15));pointer-events:none;user-select:none;}
-body.dark .float-el{filter:drop-shadow(0 4px 12px rgba(232,200,74,.3));}
-body.nubank .float-el{filter:drop-shadow(0 4px 12px rgba(0,209,100,.3));}
-
-.hero-detective{font-size:clamp(70px,18vw,110px);animation:heroFloat 3s ease-in-out infinite;line-height:1;filter:drop-shadow(0 8px 24px rgba(0,0,0,.2));margin-bottom:.25rem;}
-body.dark .hero-detective{filter:drop-shadow(0 8px 30px rgba(232,200,74,.4));}
-body.nubank .hero-detective{filter:drop-shadow(0 8px 30px rgba(130,10,209,.5));}
-
-.intro-badge{font-family:'Special Elite',serif;font-size:.72rem;color:var(--gold);letter-spacing:4px;font-weight:bold;animation:badgePulse 2s ease-in-out infinite;border:1px solid var(--gold);padding:4px 16px;border-radius:2px;}
-.intro-title{font-family:'Oswald',sans-serif;font-size:clamp(2.2rem,8vw,4rem);font-weight:900;color:var(--ink);line-height:1.05;}
-.intro-gold{color:var(--gold);animation:titleGlow 2.5s ease-in-out infinite;display:inline-block;}
-.intro-tagline{font-family:'Special Elite',serif;font-size:clamp(.75rem,2vw,.95rem);color:var(--ink-mid);letter-spacing:2px;min-height:1.4rem;}
-.cursor-blink{animation:blink .7s step-end infinite;}
+#hero-det{animation:heroBob 3s ease-in-out infinite;filter:drop-shadow(0 8px 20px rgba(0,0,0,.2));}
+body.dark #hero-det{filter:drop-shadow(0 8px 28px rgba(232,200,74,.4));}
+body.nubank #hero-det{filter:drop-shadow(0 8px 28px rgba(130,10,209,.5));}
+#intro-gold{animation:goldGlow 2.5s ease-in-out infinite;display:inline-block;}
+body.dark #intro-gold{animation:none;text-shadow:0 0 30px rgba(232,200,74,.6);}
+body.nubank #intro-gold{animation:none;text-shadow:0 0 30px rgba(0,209,100,.6);}
+.fe{position:absolute;animation:feFloat 4s ease-in-out infinite;pointer-events:none;user-select:none;display:inline-block;}
+.cursor{animation:blink .7s step-end infinite;color:var(--gold);}
 </style>
 </head>
 <body>
@@ -452,7 +445,8 @@ function go(id){
   });
   const el=document.getElementById(id);
   if(!el)return;
-  if(id==='s-game'){el.style.display='block';}
+  if(id==='s-game') el.style.display='block';
+  else if(id==='s-name') el.style.display='block';
   else{el.style.display='flex';el.classList.add('on');}
   window.scrollTo(0,0);
 }
@@ -767,70 +761,694 @@ function showFinal(elapsed,pct){
 }
 
 // ── INTRO ANIMADA ──
-(function initIntro(){
+(function(){
+  // Sequência de entrada dos elementos
+  function fadeIn(id, delay, extra){
+    setTimeout(()=>{
+      const el=document.getElementById(id);
+      if(!el)return;
+      el.style.transition='opacity .6s ease, transform .6s ease';
+      el.style.transform='translateY(0)';
+      el.style.opacity='1';
+      if(extra)extra(el);
+    }, delay);
+  }
+  fadeIn('intro-badge', 300);
+  fadeIn('intro-title', 600);
+  fadeIn('intro-card', 1000);
+  fadeIn('intro-footer', 1200);
+
   // Typewriter
-  const phrases=['Investigando padrões de fraude...','Calibrando critérios de qualidade...','Analisando contestações procedentes...','Protegendo a operação com dados...','Parceria entre Quality e operação.'];
-  let pi=0,ci=0,deleting=false,wait=0;
-  const el=document.getElementById('intro-tagline');
+  const phrases=[
+    'Investigando padrões de fraude...',
+    'Calibrando critérios de qualidade...',
+    'Analisando contestações procedentes...',
+    'Protegendo a operação com dados...',
+    'Parceria entre Quality e operação.',
+  ];
+  let pi=0,ci=0,del=false;
+  const el=document.getElementById('intro-tag');
   if(!el)return;
   function type(){
-    if(wait>0){wait--;setTimeout(type,80);return;}
     const phrase=phrases[pi];
-    if(!deleting){
+    if(!del){
       ci++;
-      el.innerHTML=phrase.slice(0,ci)+'<span class="cursor-blink">|</span>';
-      if(ci>=phrase.length){deleting=false;wait=20;
-        setTimeout(()=>{deleting=true;setTimeout(type,80);},1800);return;}
+      el.innerHTML=phrase.slice(0,ci)+'<span class="cursor">|</span>';
+      if(ci>=phrase.length){
+        setTimeout(()=>{del=true;type();},2000);return;
+      }
       setTimeout(type,55);
     }else{
       ci--;
-      el.innerHTML=phrase.slice(0,ci)+'<span class="cursor-blink">|</span>';
-      if(ci<=0){deleting=false;pi=(pi+1)%phrases.length;setTimeout(type,300);return;}
-      setTimeout(type,30);
+      el.innerHTML=phrase.slice(0,ci)+'<span class="cursor">|</span>';
+      if(ci<=0){del=false;pi=(pi+1)%phrases.length;setTimeout(type,400);return;}
+      setTimeout(type,28);
     }
   }
-  setTimeout(type,800);
+  setTimeout(type,900);
 
   // Canvas partículas
   const cv=document.getElementById('intro-canvas');
   if(!cv)return;
   const ctx=cv.getContext('2d');
-  function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
+  function resize(){cv.width=cv.offsetWidth;cv.height=cv.offsetHeight;}
   resize();window.addEventListener('resize',resize);
-
-  const particles=Array.from({length:50},()=>({
-    x:Math.random()*window.innerWidth,
-    y:Math.random()*window.innerHeight,
-    r:Math.random()*2+.5,
-    vx:(Math.random()-.5)*.4,
-    vy:(Math.random()-.5)*.4,
-    o:Math.random()*.4+.1,
+  const pts=Array.from({length:55},()=>({
+    x:Math.random()*cv.width, y:Math.random()*cv.height,
+    r:Math.random()*1.8+.4,
+    vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.35,
+    o:Math.random()*.35+.08,
   }));
-
-  let animId;
-  function drawParticles(){
+  function draw(){
     ctx.clearRect(0,0,cv.width,cv.height);
-    const isDark=document.body.classList.contains('dark');
-    const isNubank=document.body.classList.contains('nubank');
-    const color=isNubank?'0,209,100':isDark?'232,200,74':'184,134,11';
-    particles.forEach(p=>{
+    const b=document.body;
+    const rgb=b.classList.contains('nubank')?'0,209,100':b.classList.contains('dark')?'232,200,74':'184,134,11';
+    pts.forEach(p=>{
       p.x+=p.vx;p.y+=p.vy;
       if(p.x<0)p.x=cv.width;if(p.x>cv.width)p.x=0;
       if(p.y<0)p.y=cv.height;if(p.y>cv.height)p.y=0;
       ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${color},${p.o})`;ctx.fill();
+      ctx.fillStyle='rgba('+rgb+','+p.o+')';ctx.fill();
     });
-    animId=requestAnimationFrame(drawParticles);
+    requestAnimationFrame(draw);
   }
-  drawParticles();
+  draw();
+})();
 
-  // Para animação quando sair da tela
-  const obs=new MutationObserver(()=>{
-    if(!document.getElementById('s-name').classList.contains('on')){
-      cancelAnimationFrame(animId);
-    }
+</script>
+</body>
+</html><!-- TELA NOME ANIMADA -->
+<div id="s-name" style="display:block;position:relative;min-height:100vh;overflow:hidden;">
+
+  <!-- BG canvas partículas -->
+  <canvas id="intro-canvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+
+  <!-- EMOJIS FLUTUANTES -->
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;">
+    <span class="fe" style="top:6%;left:4%;font-size:2.4rem;animation-delay:0s;">🔍</span>
+    <span class="fe" style="top:12%;right:6%;font-size:2rem;animation-delay:.8s;">🕵️</span>
+    <span class="fe" style="top:68%;left:3%;font-size:1.6rem;animation-delay:1.3s;">📋</span>
+    <span class="fe" style="top:72%;right:4%;font-size:2.2rem;animation-delay:.4s;">🔎</span>
+    <span class="fe" style="top:38%;left:2%;font-size:1.4rem;animation-delay:1.9s;">🗂️</span>
+    <span class="fe" style="top:52%;right:2%;font-size:1.8rem;animation-delay:1s;">📌</span>
+    <span class="fe" style="top:85%;left:12%;font-size:1.5rem;animation-delay:1.6s;">🧩</span>
+    <span class="fe" style="top:4%;left:45%;font-size:1.3rem;animation-delay:2.2s;">⚡</span>
+    <span class="fe" style="top:80%;right:15%;font-size:1.4rem;animation-delay:.3s;">🕯️</span>
+    <span class="fe" style="top:22%;left:8%;font-size:1.2rem;animation-delay:2.5s;">🗃️</span>
+    <span class="fe" style="top:90%;right:35%;font-size:1.3rem;animation-delay:1.1s;">🔐</span>
+  </div>
+
+  <!-- CONTEÚDO CENTRAL -->
+  <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem;text-align:center;gap:.7rem;">
+
+    <!-- DETETIVE HERO -->
+    <div id="hero-det" style="font-size:clamp(72px,18vw,110px);line-height:1;margin-bottom:.2rem;">🕵️</div>
+
+    <!-- BADGE -->
+    <div id="intro-badge" style="font-family:'Special Elite',serif;font-size:.72rem;color:var(--gold);letter-spacing:4px;font-weight:bold;border:1px solid var(--gold);padding:4px 16px;border-radius:2px;opacity:0;">— PACK QUALITY · INVOPS BRASIL —</div>
+
+    <!-- TÍTULO -->
+    <div style="font-family:'Oswald',sans-serif;font-size:clamp(2.2rem,8vw,4rem);font-weight:900;color:var(--ink);line-height:1.05;opacity:0;" id="intro-title">QUALITY<br><span id="intro-gold" style="color:var(--gold);">INVESTIGATOR</span></div>
+
+    <!-- TAGLINE TYPEWRITER -->
+    <div style="font-family:'Special Elite',serif;font-size:clamp(.75rem,2vw,.92rem);color:var(--ink-mid);letter-spacing:2px;min-height:1.5rem;" id="intro-tag"></div>
+
+    <!-- TEMA -->
+    <div style="margin:.2rem 0;">
+      <div class="th-label">🎨 ESCOLHA O VISUAL</div>
+      <div class="theme-row">
+        <button class="th-btn th-light sel" id="tb-light" onclick="setTheme('light')">☀️ CLARO</button>
+        <button class="th-btn th-dark" id="tb-dark" onclick="setTheme('dark')">🌙 ESCURO</button>
+        <button class="th-btn th-nubank" id="tb-nubank" onclick="setTheme('nubank')">💜 NUBANK</button>
+      </div>
+    </div>
+
+    <!-- CARD -->
+    <div class="paper name-card" id="intro-card" style="opacity:0;">
+      <div class="stamp-confidential">CONFIDENCIAL</div>
+      <div class="card-title">IDENTIFIQUE-SE ANTES DE PROSSEGUIR</div>
+      <div style="margin-bottom:1.5rem;">
+        <label class="field-label">▸ E-MAIL DO ANALISTA</label>
+        <input class="field-input" id="email-in" type="email" placeholder="seu.email@nubank.com.br" oninput="onEmail()" onkeydown="if(event.key==='Enter')tryStart()"/>
+        <div class="field-err" id="email-err">⚠ E-mail inválido</div>
+      </div>
+      <button class="btn btn-gold btn-full" onclick="tryStart()">◉ ENTRAR NO CASO</button>
+      <div class="field-err" id="start-err" style="margin-top:.5rem;">⚠ Informe um e-mail válido!</div>
+    </div>
+
+    <div class="footer-hint" style="opacity:0;" id="intro-footer">15 PERGUNTAS · ⏱ 30s POR PERGUNTA</div>
+  </div>
+</div>
+
+<!-- JÁ JOGOU -->
+<div class="screen" id="s-already">
+  <div style="font-size:3rem;margin-bottom:1rem;">🔒</div>
+  <div style="font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;color:var(--red);margin-bottom:1rem;">CASO JÁ INVESTIGADO!</div>
+  <div class="paper already-card">O e-mail <strong id="already-em"></strong> já participou desta investigação.<br>Cada analista pode jogar apenas uma vez.<br><br><span style="font-size:.85rem;color:var(--ink-light);">Se acredita que é um erro, fale com o Pack Quality.</span></div>
+</div>
+
+<!-- COUNTDOWN -->
+<div class="screen" id="s-cd">
+  <div class="cd-detective" id="cd-icon">🕵️</div>
+  <div class="cd-title" id="cd-title">PREPARE-SE!</div>
+  <div class="cd-sub" id="cd-sub">Sua investigação está prestes a começar...</div>
+  <div class="cd-num" id="cd-num">5</div>
+  <div class="cd-bar-bg"><div class="cd-bar" id="cd-bar" style="width:100%"></div></div>
+</div>
+
+<!-- JOGO -->
+<div id="s-game">
+  <div id="hud">
+    <div class="hud-av" id="hud-av">?</div>
+    <div class="hud-name" id="hud-name"></div>
+    <div class="hud-sep">|</div>
+    <div><div class="hud-lbl">XP</div><div class="hud-val" id="hud-xp">0</div></div>
+    <div class="hud-bar-bg"><div class="hud-bar" id="hud-bar" style="width:0%"></div></div>
+    <div class="hud-sep">|</div>
+    <div><div class="hud-lbl">ACERTOS</div><div class="hud-val g" id="hud-acc">0/0</div></div>
+    <div class="combo-badge" id="combo-badge">🔥 COMBO</div>
+  </div>
+  <div id="game-wrap">
+    <div class="prog-row"><span id="q-num">PERGUNTA 1 DE 15</span><span id="q-pct">0%</span></div>
+    <div class="prog-bg"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    <div id="timer-wrap">
+      <div class="timer-row">
+        <span class="timer-lbl">⏱ TEMPO</span>
+        <span class="timer-num" id="t-num">30</span>
+        <span class="timer-sec">SEG</span>
+      </div>
+      <div class="timer-bg"><div class="timer-fill" id="t-bar" style="width:100%;background:var(--green);"></div></div>
+    </div>
+    <div id="tip-wrap">
+      <div class="tip-lbl">💡 SABIA QUE?</div>
+      <div class="tip-txt" id="tip-txt"></div>
+    </div>
+    <div class="paper q-paper">
+      <div class="q-label" id="q-lbl">// PISTA 1</div>
+      <div class="q-text" id="q-text"></div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div class="confirm-wrap" id="conf-wrap">
+      <button class="btn btn-gray btn-full" id="conf-btn" onclick="confirmAnswer()">✓ CONFIRMAR RESPOSTA</button>
+      <div class="confirm-hint" id="conf-hint">Selecione uma opção antes de confirmar</div>
+    </div>
+    <div id="fb-wrap" style="display:none;"></div>
+    <div id="next-wrap" style="display:none;margin-top:.5rem;">
+      <button class="btn btn-full btn-lg btn-gold" id="next-btn" onclick="nextQ()">PRÓXIMA PISTA →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SALVANDO -->
+<div class="screen" id="s-save">
+  <div class="saving-icon">💾</div>
+  <div class="saving-txt">SALVANDO RESULTADO...</div>
+</div>
+
+<!-- FINAL -->
+<div class="screen" id="s-final" style="text-align:center;">
+  <div style="font-size:4rem;margin-bottom:1rem;" class="bounce">🏆</div>
+  <div style="font-family:'Special Elite',serif;font-size:.8rem;color:var(--gold);letter-spacing:4px;font-weight:bold;margin-bottom:.5rem;">— INVESTIGAÇÃO CONCLUÍDA —</div>
+  <div style="font-family:'Oswald',sans-serif;font-size:2rem;font-weight:700;color:var(--ink);margin-bottom:.25rem;">CASO ENCERRADO!</div>
+  <div style="font-size:.9rem;color:var(--ink-mid);font-weight:bold;margin-bottom:.5rem;" id="fin-sub"></div>
+  <div class="paper rank-badge"><div class="rank-icon" id="fin-icon"></div><div class="rank-name" id="fin-rank"></div></div>
+  <!-- MENSAGEM PERSONALIZADA -->
+  <div class="personal-msg" id="fin-msg"><div class="personal-msg-title">🕵️ ANÁLISE DO DETETIVE QUALITER</div><div class="personal-msg-text" id="fin-msg-txt"></div></div>
+  <!-- BADGES DE TEMA -->
+  <div style="font-family:'Oswald',sans-serif;font-size:.8rem;color:var(--ink-mid);letter-spacing:2px;margin-bottom:.5rem;font-weight:600;">SEUS TEMAS</div>
+  <div class="badges-wrap" id="fin-badges"></div>
+  <!-- STATS -->
+  <div class="paper result-card" id="fin-stats"></div>
+  <div style="font-size:.85rem;color:var(--ink-mid);line-height:1.9;margin:1.5rem 0;font-style:italic;font-weight:bold;">"Qualidade não é punição — é parceria."</div>
+</div>
+
+<script>
+const BIN_ID='6a2c0badda38895dfeb4fb50';
+const MKEY='$2a$10$wjfXgrsC/PZ.R/HwB5.5aO7t5PCFQ8v4ppgcedXPOFovWfc72T5Na';
+const BURL='https://api.jsonbin.io/v3/b/'+BIN_ID;
+
+// ── TEMA ──
+function setTheme(t){
+  document.body.className=t==='light'?'':t;
+  document.querySelectorAll('.th-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('tb-'+t).classList.add('sel');
+  localStorage.setItem('qi_theme',t);
+}
+(function(){setTheme(localStorage.getItem('qi_theme')||'light');})();
+
+// ── DICAS ──
+const TIPS=[
+  "O Pack Quality realiza monitorias mensais em todos os 5 distritos: Mule Account, Identity Fraud, Victims Prevention, Gamers e Transactional.",
+  "Contestações procedentes são dados valiosos — elas mostram onde o Quality precisa calibrar seus critérios de avaliação.",
+  "O notebook no Databricks com IA categoriza automaticamente os temas de erro mais frequentes por distrito.",
+  "Na pesquisa Quality Engagement, 97 de 211 analistas responderam — uma adesão de 46% com NPS Geral +55.",
+  "O prazo para contestar uma monitoria é até o 3º dia útil do mês seguinte à data da monitoria.",
+  "Apontamentos Externos vêm de fontes como Reputational, Regulatory e InvOps Intelligence — fora da monitoria regular.",
+  "76% das respostas abertas da pesquisa NPS pediram revisão dos critérios do scorecard.",
+  "Q13 (clareza nos retornos de contestação) teve 22% de detratores — o maior índice da pesquisa.",
+  "O Pack Quality tem 9 iniciativas de melhoria mapeadas com projeção de NPS +65 a +72 na Fase 2.",
+  "Registrar o MO durante a análise (não depois) é o hábito que separa um processo OK de um NOK.",
+  "O canal oficial de contestação é o Jira Quality Requests — garante rastreabilidade e SLA de resposta.",
+  "Calibrações entre Quality e distritos (Roda de Conversa) reduzem contestações e fortalecem a parceria.",
+];
+
+// ── CATEGORIAS DE PERGUNTAS ──
+const CATS={
+  0:'MO e Processo',1:'MO e Processo',2:'Scorecard',3:'Scorecard',
+  4:'Contestação',5:'Contestação',6:'Contestação',7:'Contestação',
+  8:'Contestação',9:'Parceria',10:'Apontamentos',11:'Contestação',
+  12:'Apontamentos',13:'Parceria',14:'Missão'
+};
+
+// ── PERGUNTAS ──
+const QS=[
+  {q:"Por que o registro do MO é obrigatório mesmo quando a decisão de bloqueio está correta?",opts:["A — O resultado final é suficiente; documentar o processo é opcional para IC2 e IC3","B — Garante rastreabilidade, aprendizado e embasamento para toda a operação","C — Só é exigido em casos com prejuízo financeiro confirmado ao cliente","D — O MO é responsabilidade do IC4 validar, não do analista que fechou o caso"],c:1,fb:"O MO é obrigatório sempre. Sem ele o caso é NOK mesmo com decisão certa — o scorecard avalia o processo, não só o resultado.",fw:"O scorecard avalia o processo completo. Independente do nível ou valor, o MO é responsabilidade do analista que fechou o caso."},
+  {q:"O que é o Modus Operandi (MO) de um caso de fraude?",opts:["A — O sistema interno que registra as monitorias mensais do pack","B — O protocolo obrigatório de escalação para o IC4 em casos de alto risco","C — O padrão de comportamento fraudulento que explica como o crime foi executado","D — A métrica individual que compõe o score de performance mensal do analista"],c:2,fb:"MO = padrão comportamental da fraude. Documentá-lo permite entender tendências e melhorar os modelos de detecção.",fw:"MO é Modus Operandi — o padrão de comportamento fraudulento. Não é sistema de monitorias, protocolo de escalação nem métrica de performance."},
+  {q:"Você investigou um caso, tomou a decisão certa de bloquear, mas não registrou a comunicação ao cliente. O que acontece no scorecard?",opts:["A — Fica OK, pois a decisão correta já garante a aprovação do critério completo","B — O Quality avalia o contexto e pode marcar como OK com observação no histórico","C — Fica NOK — registrar a comunicação é critério obrigatório, independente da decisão","D — O resultado varia por distrito; em alguns casos a comunicação pode ser dispensada"],c:2,fb:"Decisão certa + processo incompleto = NOK. Registrar a comunicação protege o analista e o cliente. Não há exceção por distrito.",fw:"Mesmo com decisão certa, a falta de registro gera NOK. O scorecard não tem exceção por distrito — é critério universal do processo."},
+  {q:"Além da decisão final, o que mais o scorecard do Pack Quality avalia?",opts:["A — O volume de casos resolvidos e o tempo médio de fechamento no mês","B — O nível de dificuldade do caso e a complexidade da fraude investigada","C — A qualidade do processo completo: documentação, MO registrado e comunicação ao cliente","D — O histórico de contestações anteriores e a taxa de reversão do analista"],c:2,fb:"O scorecard avalia o processo inteiro — decisão, MO documentado e comunicação. Cada etapa é um critério independente.",fw:"O scorecard vai muito além da decisão. Ele avalia documentação, MO e comunicação — não volume, dificuldade ou histórico de contestações."},
+  {q:"Um analista recebeu um NOK e discorda. Qual é o PRIMEIRO passo correto antes de abrir contestação?",opts:["A — Acionar o líder do distrito para intermediar a discussão com o Quality","B — Reunir a evidência técnica que mostra que o critério foi atendido no caso","C — Enviar mensagem no Slack diretamente para o analista de Quality responsável","D — Registrar a discordância em formulário interno antes de qualquer outra ação"],c:1,fb:"Primeiro reúna a evidência técnica, depois abra no Jira Quality Requests. Contestar com evidência é um direito que nunca prejudica a performance.",fw:"O caminho correto é evidência primeiro, Jira depois. Líder, Slack e formulário interno não são os canais adequados para contestação."},
+  {q:"O que uma contestação julgada PROCEDENTE revela sobre o Pack Quality?",opts:["A — Que o analista questionou com razão, mas o NOK ainda permanece no histórico","B — Que o Quality cometeu um erro de avaliação — dado que alimenta calibração e melhoria","C — Que o caso precisa ser reavaliado por um IC4 do distrito antes da decisão final","D — Que o scorecard do analista é automaticamente revisado para o mês corrente"],c:1,fb:"Contestação procedente = Quality errou. Isso é valioso — o NOK é removido e o dado alimenta a calibração dos critérios.",fw:"Contestação procedente significa que o Quality errou e o NOK é removido. Não existe histórico permanente de NOK após contestação procedente."},
+  {q:"Qual é o canal OFICIAL para abrir uma contestação de monitoria no Pack Quality?",opts:["A — Mensagem direta no Slack para o analista de Quality do distrito responsável","B — E-mail com o caso detalhado enviado ao líder do Pack Quality","C — Portal Quality Requests via Jira Service Management","D — Formulário no Google Forms encaminhado por e-mail ao Pack"],c:2,fb:"Jira Quality Requests é o canal oficial. Garante rastreabilidade, prazo de resposta e histórico estruturado para análises mensais.",fw:"Slack, e-mail e Google Forms são canais informais que perdem rastreabilidade e prazo. O canal oficial é o Jira Quality Requests."},
+  {q:"Por que analistas têm receio de contestar um feedback mesmo quando discordam?",opts:["A — O processo exige pagamento de taxa administrativa para cada contestação aberta","B — Por medo de ser mal visto ou sofrer consequências — um receio real, mas completamente infundado","C — O Quality historicamente reverte menos de 5% das contestações, desestimulando a abertura","D — Contestar exige aprovação prévia do gestor direto antes de ser protocolado no Jira"],c:1,fb:"O medo existe, mas é infundado. Contestar com evidência é um direito e jamais gera consequências negativas.",fw:"Não existe taxa, aprovação prévia ou baixa taxa de reversão que justifique não contestar. O receio de represálias é completamente infundado."},
+  {q:"Uma contestação aberta sem evidência técnica tende a ser julgada como:",opts:["A — Procedente, pois o analista sempre tem benefício da dúvida pelo princípio da boa-fé","B — Arquivada automaticamente após 5 dias úteis sem complementação de informações","C — Improcedente — sem evidência concreta não há como refutar o critério apontado","D — Direcionada ao M2 para decisão final, independente da evidência apresentada"],c:2,fb:"Sem evidência técnica, a contestação tende a ser improcedente. A evidência concreta é o que faz a diferença no resultado.",fw:"Não há benefício da dúvida automático nem arquivamento por prazo. Sem evidência técnica concreta, o resultado tende a ser improcedente."},
+  {q:"O Quality identificou padrão de erro idêntico em vários analistas do mesmo distrito. Qual é o próximo passo?",opts:["A — Registrar o alerta e aumentar o peso do critério no scorecard do mês seguinte","B — Propor uma calibração para alinhar o critério com o distrito e evitar novos erros","C — Reportar o padrão exclusivamente aos líderes, sem envolver os analistas afetados","D — Aguardar ao menos 3 meses para confirmar se é tendência antes de tomar qualquer ação"],c:1,fb:"Padrão identificado = calibração proposta. O Pack usa os dados para alinhar o critério com o distrito. O objetivo é melhorar, não punir.",fw:"O Quality não aumenta pesos, exclui analistas do processo nem aguarda meses. Padrão identificado = calibração proposta imediatamente."},
+  {q:"O que é um Apontamento Externo no contexto do Pack Quality?",opts:["A — Um erro identificado por auditoria externa contratada pelo compliance do Nubank","B — Uma contestação aberta por analista de outro distrito sobre seu próprio caso avaliado","C — Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence","D — Uma monitoria realizada sem aviso prévio como parte do processo de calibração surpresa"],c:2,fb:"Apontamentos Externos vêm de Reputational, Regulatory, FLC ou InvOps Intelligence — fora da monitoria regular do Pack.",fw:"Não é auditoria externa, contestação de outro distrito nem monitoria surpresa. São erros de fontes internas específicas fora da monitoria regular."},
+  {q:"Qual é o prazo para contestar uma monitoria no Pack Quality?",opts:["A — Até o último dia útil do mesmo mês em que a monitoria foi realizada","B — Até 7 dias úteis contados a partir da data de recebimento do feedback","C — Até o 3º dia útil do mês seguinte à data em que a monitoria foi realizada","D — Não há prazo definido — o analista pode contestar a qualquer momento"],c:2,fb:"O prazo é até o 3º dia útil do mês seguinte à data da monitoria. Fique atento ao calendário para não perder o prazo!",fw:"O prazo não é o último dia do mês, nem 7 dias úteis, nem ilimitado. É até o 3º dia útil do mês seguinte à data da monitoria."},
+  {q:"O que é um Apontamento no contexto do Pack Quality?",opts:["A — Painel com as metas mensais de monitorias do pack por distrito","B — Sinalização formal de um erro identificado na monitoria de um caso","C — Fila semanal de tickets pendentes de avaliação no Jira do pack","D — Revisão periódica dos scorecards realizada ao final de cada mês"],c:1,fb:"Apontamento é a sinalização formal de um erro identificado na monitoria. É o dado que gera o NOK e pode ser contestado pelo analista.",fw:"Apontamento não é painel de metas, fila de tickets nem revisão mensal. É a sinalização formal de um erro identificado na monitoria."},
+  {q:"Qual é a diferença fundamental entre o Pack Quality ser PARCEIRO e ser AUDITOR?",opts:["A — Parceiro e auditor exercem funções equivalentes com nomenclaturas distintas","B — O auditor detém autoridade formal para suspender ou reverter decisões dos analistas","C — Parceiro trabalha junto para melhorar continuamente; auditor apenas fiscaliza e sanciona","D — Parceiro é a denominação informal do cargo; auditor é o título oficial na estrutura"],c:2,fb:"Parceiro trabalha junto, calibra critérios e evolui com a operação. Auditor só fiscaliza. O Pack Quality é parceiro.",fw:"Não é questão de nomenclatura, autoridade ou título. Parceiro = evolui junto. Auditor = só fiscaliza. O Pack Quality é parceiro."},
+  {q:"Qual é a missão central do Pack Quality InvOps Brasil?",opts:["A — Assegurar que a meta de NOKs mensais seja cumprida em todos os distritos","B — Substituir os líderes de distrito nas decisões de performance dos analistas","C — Executar monitorias mensais e entregar relatórios de erros para a liderança","D — Garantir qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua"],c:3,fb:"O Pack Quality é parceiro estratégico — não auditor punitivo. Tudo converge para uma operação mais justa e eficiente.",fw:"Meta de NOKs, substituir líderes ou só fazer relatórios não definem o Pack Quality. A missão é ser parceiro na melhoria contínua."},
+];
+
+function shuffle(a){return [...a].sort(()=>Math.random()-.5);}
+
+// ── ESTADO ──
+let G={
+  email:'',qs:[],idx:0,sel:null,conf:false,tout:false,
+  xp:0,lives:3,correct:0,total:0,t0:null,tLeft:30,tInt:null,
+  combo:0,maxCombo:0,
+  catResults:{}, // {catName: {correct, total}}
+  tipIdx:0,
+};
+
+// ── UTILS ──
+function isEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+function go(id){
+  ['s-name','s-already','s-cd','s-game','s-save','s-final'].forEach(s=>{
+    const el=document.getElementById(s);
+    if(!el)return;
+    el.classList.remove('on');
+    el.style.display='none';
   });
-  obs.observe(document.getElementById('s-name'),{attributes:true,attributeFilter:['class','style']});
+  const el=document.getElementById(id);
+  if(!el)return;
+  if(id==='s-game') el.style.display='block';
+  else if(id==='s-name') el.style.display='block';
+  else{el.style.display='flex';el.classList.add('on');}
+  window.scrollTo(0,0);
+}
+
+// ── NOME ──
+function onEmail(){
+  const v=document.getElementById('email-in').value;
+  const inp=document.getElementById('email-in');
+  const err=document.getElementById('email-err');
+  if(v&&!isEmail(v)){err.style.display='block';inp.classList.remove('ok');}
+  else if(v){err.style.display='none';inp.classList.add('ok');}
+  else{err.style.display='none';inp.classList.remove('ok');}
+}
+function tryStart(){
+  const email=document.getElementById('email-in').value.trim();
+  const serr=document.getElementById('start-err');
+  if(!email||!isEmail(email)){serr.style.display='block';return;}
+  serr.style.display='none';
+  const key='qi_v4_'+email.toLowerCase();
+  if(localStorage.getItem(key)){
+    document.getElementById('already-em').textContent=email;
+    go('s-already');return;
+  }
+  G.email=email;
+  G.qs=shuffle(QS);
+  G.idx=0;G.sel=null;G.conf=false;G.tout=false;
+  G.xp=0;G.lives=3;G.correct=0;G.total=0;
+  G.combo=0;G.maxCombo=0;G.catResults={};
+  G.t0=Date.now();G.tipIdx=0;
+  go('s-cd');
+  runCD();
+}
+
+// ── COUNTDOWN ──
+function runCD(){
+  const steps=[
+    ['🕵️','PREPARE-SE!','Sua investigação está prestes a começar...',5],
+    ['🔍','FOCO!','Revise o que você sabe sobre Quality...',4],
+    ['📋','QUASE LÁ!','O Pack Quality está observando...',3],
+    ['🗂️','ATENÇÃO!','As pistas não vão se revelar sozinhas...',2],
+    ['⚡','VÁ!','A investigação começa agora!',1],
+  ];
+  let i=0;
+  function tick(){
+    if(i>=steps.length){startGame();return;}
+    const [icon,title,sub,num]=steps[i];
+    document.getElementById('cd-icon').textContent=icon;
+    document.getElementById('cd-title').textContent=title;
+    document.getElementById('cd-sub').textContent=sub;
+    const n=document.getElementById('cd-num');
+    n.textContent=num;n.style.animation='none';
+    void n.offsetWidth;n.style.animation='countPop .6s ease';
+    document.getElementById('cd-bar').style.width=(num/5*100)+'%';
+    i++;setTimeout(tick,1000);
+  }
+  tick();
+}
+
+// ── JOGO ──
+function startGame(){
+  go('s-game');updHUD();renderQ();
+}
+
+function updHUD(){
+  document.getElementById('hud-av').textContent=G.email?G.email[0].toUpperCase():'?';
+  document.getElementById('hud-name').textContent=G.email;
+  document.getElementById('hud-xp').textContent=G.xp;
+  document.getElementById('hud-bar').style.width=Math.min(100,G.xp/500*100)+'%';
+  document.getElementById('hud-acc').textContent=G.correct+'/'+G.total;
+
+  const cb=document.getElementById('combo-badge');
+  if(G.combo>=3){cb.style.display='block';cb.textContent='🔥 COMBO x'+G.combo;}
+  else cb.style.display='none';
+}
+
+function renderQ(){
+  const q=G.qs[G.idx];
+  G.sel=null;G.conf=false;G.tout=false;
+  const pct=Math.round(G.idx/G.qs.length*100);
+  document.getElementById('q-num').textContent='PERGUNTA '+(G.idx+1)+' DE '+G.qs.length;
+  document.getElementById('q-pct').textContent=pct+'% CONCLUÍDO';
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('q-lbl').textContent='// PISTA '+(G.idx+1);
+  document.getElementById('q-text').textContent=q.q;
+
+  // Dica a cada 5 perguntas
+  const tipWrap=document.getElementById('tip-wrap');
+  if(G.idx>0&&G.idx%5===0){
+    document.getElementById('tip-txt').textContent=TIPS[G.tipIdx%TIPS.length];
+    G.tipIdx++;tipWrap.style.display='block';
+  }else tipWrap.style.display='none';
+
+  const opts=document.getElementById('opts');opts.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';b.textContent=o;
+    b.onclick=()=>selOpt(i);opts.appendChild(b);
+  });
+  const cb=document.getElementById('conf-btn');
+  cb.className='btn btn-gray btn-full';cb.disabled=true;
+  document.getElementById('conf-hint').style.display='block';
+  document.getElementById('conf-wrap').style.display='block';
+  document.getElementById('fb-wrap').style.display='none';
+  document.getElementById('next-wrap').style.display='none';
+  document.getElementById('timer-wrap').style.display='block';
+  startTimer();
+}
+
+function selOpt(i){
+  if(G.conf||G.tout)return;
+  G.sel=i;
+  document.querySelectorAll('.opt').forEach((b,j)=>b.classList.toggle('sel',j===i));
+  const cb=document.getElementById('conf-btn');
+  cb.className='btn btn-gold btn-full';cb.disabled=false;
+  document.getElementById('conf-hint').style.display='none';
+}
+
+function confirmAnswer(){
+  if(G.sel===null||G.conf)return;
+  stopTimer();G.conf=true;
+  const q=G.qs[G.idx];
+  // Encontra índice original desta questão
+  const origIdx=QS.findIndex(x=>x.q===q.q);
+  const cat=CATS[origIdx]||'Geral';
+  const ok=G.sel===q.c;
+  G.total++;
+  if(!G.catResults[cat])G.catResults[cat]={correct:0,total:0};
+  G.catResults[cat].total++;
+
+  document.querySelectorAll('.opt').forEach((b,i)=>{
+    b.disabled=true;b.classList.remove('sel');
+    if(i===q.c)b.classList.add('ok');
+    else if(i===G.sel&&!ok)b.classList.add('no');
+  });
+
+  if(ok){
+    const pts=25+Math.floor((G.tLeft/30)*15);
+    G.xp+=pts;G.correct++;G.combo++;
+    G.catResults[cat].correct++;
+    if(G.combo>G.maxCombo)G.maxCombo=G.combo;
+    // COMBO
+    if(G.combo>=3)showCombo(G.combo,pts);
+    // STAMP a cada sequência de 5 corretas
+    if(G.combo>0&&G.combo%5===0)showStamp();
+  }else{G.combo=0;
+  }
+  updHUD();
+
+  const fw=document.getElementById('fb-wrap');
+  fw.style.display='block';
+  fw.innerHTML='<div class="fb '+(ok?'ok':'no')+'"><div class="fb-title">'+(ok?'✓ PISTA CONFIRMADA!':'✗ PISTA FALSA')+'</div><div class="fb-text">'+(ok?q.fb:q.fw)+'</div></div>';
+  document.getElementById('conf-wrap').style.display='none';
+  document.getElementById('timer-wrap').style.display='none';
+
+  const isLast=G.idx>=G.qs.length-1;
+  const nb=document.getElementById('next-btn');
+  nb.textContent=isLast?'🏆 VER RESULTADO FINAL':'PRÓXIMA PISTA →';
+  nb.className='btn btn-full btn-lg '+(isLast?'btn-green':'btn-gold');
+  document.getElementById('next-wrap').style.display='block';
+}
+
+function nextQ(){
+  if(G.idx>=G.qs.length-1){finishGame();return;}
+  G.idx++;renderQ();window.scrollTo(0,0);
+}
+
+// ── COMBO ──
+function showCombo(n,pts){
+  const ov=document.getElementById('combo-overlay');
+  const emojis=n>=10?'🔥🔥🔥':n>=7?'🔥🔥':n>=5?'🔥⚡':'🔥';
+  document.getElementById('combo-txt').textContent=emojis+' COMBO x'+n+'!';
+  document.getElementById('combo-sub').textContent='+'+pts+' XP BÔNUS';
+  ov.style.display='none';void ov.offsetWidth;
+  ov.style.display='block';ov.className='show';
+  setTimeout(()=>{ov.style.display='none';ov.className='';},1800);
+}
+
+// ── STAMP ──
+function showStamp(){
+  const ov=document.getElementById('stamp-overlay');
+  ov.classList.add('on');
+  setTimeout(()=>ov.classList.remove('on'),2200);
+}
+
+// ── TIMER ──
+function startTimer(){
+  G.tLeft=30;updTimer(30);clearInterval(G.tInt);
+  G.tInt=setInterval(()=>{
+    G.tLeft--;updTimer(G.tLeft);
+    if(G.tLeft<=0){clearInterval(G.tInt);handleTimeout();}
+  },1000);
+}
+function stopTimer(){clearInterval(G.tInt);}
+function updTimer(t){
+  const color=t>20?'var(--green)':t>10?'#cc7700':'var(--red)';
+  const n=document.getElementById('t-num');
+  n.textContent=String(t).padStart(2,'0');n.style.color=color;
+  n.style.animation=t<=10?'pulse .5s ease-in-out infinite':'none';
+  document.getElementById('t-bar').style.width=(t/30*100)+'%';
+  document.getElementById('t-bar').style.background=color;
+}
+function handleTimeout(){
+  if(G.conf)return;
+  stopTimer();G.tout=true;G.total++;G.combo=0;updHUD();
+  const q=G.qs[G.idx];
+  document.getElementById('to-answer').textContent=q.opts[q.c];
+  const ov=document.getElementById('to-overlay');ov.classList.add('on');
+  let cd=5;
+  document.getElementById('to-cd').textContent='CONTINUANDO EM '+cd+'s...';
+  document.getElementById('to-bar').style.width='100%';
+  const iv=setInterval(()=>{
+    cd--;
+    document.getElementById('to-cd').textContent='CONTINUANDO EM '+cd+'s...';
+    document.getElementById('to-bar').style.width=(cd/5*100)+'%';
+    if(cd<=0){
+      clearInterval(iv);ov.classList.remove('on');
+      if(G.idx>=G.qs.length-1)finishGame();
+      else{G.idx++;renderQ();window.scrollTo(0,0);}
+    }
+  },1000);
+}
+
+// ── FINISH ──
+async function finishGame(){
+  go('s-save');
+  const elapsed=Math.round((Date.now()-G.t0)/1000);
+  const pct=G.total>0?Math.round(G.correct/G.total*100):0;
+  localStorage.setItem('qi_v4_'+G.email.toLowerCase(),'1');
+  try{
+    const r=await fetch(BURL+'/latest',{headers:{'X-Master-Key':MKEY}});
+    const d=await r.json();
+    const list=d.record?.resultados||[];
+    list.push({
+      email:G.email,group:'Geral',xp:G.xp,
+      correct:G.correct,total:G.total,pct,
+      timeSeconds:elapsed,maxCombo:G.maxCombo,
+      catResults:G.catResults,
+      completedAt:new Date().toISOString()
+    });
+    await fetch(BURL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MKEY},body:JSON.stringify({resultados:list})});
+  }catch(e){console.warn('Erro ao salvar:',e);}
+  showFinal(elapsed,pct);
+}
+
+// ── MENSAGEM PERSONALIZADA ──
+function getPersonalMsg(pct,catResults,maxCombo){
+  const cats=Object.entries(catResults);
+  const worst=cats.sort((a,b)=>(a[1].correct/a[1].total)-(b[1].correct/b[1].total))[0];
+  const best=cats.sort((a,b)=>(b[1].correct/b[1].total)-(a[1].correct/a[1].total))[0];
+  if(pct===100)return'Investigação perfeita! Você acertou absolutamente tudo — o Det. Qualiter não poderia estar mais orgulhoso. Você está pronto para qualquer missão.';
+  if(pct>=80){
+    const msg=best?`Você brilhou especialmente em "${best[0]}". `:'';
+    const msg2=worst&&worst[1].correct<worst[1].total?`Vale reforçar "${worst[0]}" para chegar à perfeição.`:'';
+    return`Excelente investigação! ${msg}${msg2}`;
+  }
+  if(pct>=60){
+    const msg=worst?`O maior ponto de atenção foi "${worst[0]}" — vale revisar este tema com o Pack Quality.`:'';
+    return`Boa investigação! Você está no caminho certo. ${msg}`;
+  }
+  const msg=worst?`Foque especialmente em "${worst[0]}" — este foi o tema com mais dificuldade desta vez.`:'';
+  return`A investigação teve percalços, mas cada erro é uma pista para melhorar. ${msg} O Pack Quality está aqui para ajudar!`;
+}
+
+// ── BADGES ──
+function getBadges(catResults){
+  const badges=[];
+  Object.entries(catResults).forEach(([cat,{correct,total}])=>{
+    const pct=Math.round(correct/total*100);
+    if(pct>=80)badges.push({cat,pct,type:'expert'});
+    else if(pct<50)badges.push({cat,pct,type:'reforco'});
+  });
+  return badges;
+}
+
+function showFinal(elapsed,pct){
+  const rank=pct>=90?'DETETIVE LENDÁRIO':pct>=75?'INVESTIGADOR SÊNIOR':pct>=60?'ANALISTA CERTIFICADO':'INVESTIGADOR JÚNIOR';
+  const badge=pct>=90?'🥇':pct>=75?'🥈':pct>=60?'🥉':'📋';
+  const m=Math.floor(elapsed/60),s=elapsed%60;
+  document.getElementById('fin-sub').textContent=G.email;
+  document.getElementById('fin-icon').textContent=badge;
+  document.getElementById('fin-rank').textContent=rank;
+
+  // Mensagem personalizada
+  document.getElementById('fin-msg-txt').textContent=getPersonalMsg(pct,G.catResults,G.maxCombo);
+
+  // Badges
+  const badges=getBadges(G.catResults);
+  const bw=document.getElementById('fin-badges');
+  if(badges.length>0){
+    bw.innerHTML=badges.map(b=>
+      b.type==='expert'
+        ?`<span class="badge-item badge-expert">🏅 Expert em ${b.cat}</span>`
+        :`<span class="badge-item badge-reforco">📚 Reforçar: ${b.cat}</span>`
+    ).join('');
+    bw.previousElementSibling.style.display='block';
+  }else{
+    bw.innerHTML='<span class="badge-item badge-expert">✨ Desempenho equilibrado em todos os temas!</span>';
+  }
+
+  // Stats
+  const rows=[
+    ['XP Total',G.xp+' XP','var(--gold)'],
+    ['Acertos',G.correct+' / '+G.total,'var(--green)'],
+    ['Aproveitamento',pct+'%','var(--blue)'],
+    ['Tempo',m+'m '+String(s).padStart(2,'0')+'s','var(--ink)'],
+    ['Maior Combo','🔥 x'+G.maxCombo,'var(--red)'],
+  ];
+  document.getElementById('fin-stats').innerHTML=rows.map(([l,v,c])=>
+    '<div class="stat-row"><span class="stat-lbl">'+l+'</span><span class="stat-val" style="color:'+c+'">'+v+'</span></div>'
+  ).join('');
+  go('s-final');
+}
+
+// ── INTRO ANIMADA ──
+(function(){
+  // Sequência de entrada dos elementos
+  function fadeIn(id, delay, extra){
+    setTimeout(()=>{
+      const el=document.getElementById(id);
+      if(!el)return;
+      el.style.transition='opacity .6s ease, transform .6s ease';
+      el.style.transform='translateY(0)';
+      el.style.opacity='1';
+      if(extra)extra(el);
+    }, delay);
+  }
+  fadeIn('intro-badge', 300);
+  fadeIn('intro-title', 600);
+  fadeIn('intro-card', 1000);
+  fadeIn('intro-footer', 1200);
+
+  // Typewriter
+  const phrases=[
+    'Investigando padrões de fraude...',
+    'Calibrando critérios de qualidade...',
+    'Analisando contestações procedentes...',
+    'Protegendo a operação com dados...',
+    'Parceria entre Quality e operação.',
+  ];
+  let pi=0,ci=0,del=false;
+  const el=document.getElementById('intro-tag');
+  if(!el)return;
+  function type(){
+    const phrase=phrases[pi];
+    if(!del){
+      ci++;
+      el.innerHTML=phrase.slice(0,ci)+'<span class="cursor">|</span>';
+      if(ci>=phrase.length){
+        setTimeout(()=>{del=true;type();},2000);return;
+      }
+      setTimeout(type,55);
+    }else{
+      ci--;
+      el.innerHTML=phrase.slice(0,ci)+'<span class="cursor">|</span>';
+      if(ci<=0){del=false;pi=(pi+1)%phrases.length;setTimeout(type,400);return;}
+      setTimeout(type,28);
+    }
+  }
+  setTimeout(type,900);
+
+  // Canvas partículas
+  const cv=document.getElementById('intro-canvas');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
+  function resize(){cv.width=cv.offsetWidth;cv.height=cv.offsetHeight;}
+  resize();window.addEventListener('resize',resize);
+  const pts=Array.from({length:55},()=>({
+    x:Math.random()*cv.width, y:Math.random()*cv.height,
+    r:Math.random()*1.8+.4,
+    vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.35,
+    o:Math.random()*.35+.08,
+  }));
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const b=document.body;
+    const rgb=b.classList.contains('nubank')?'0,209,100':b.classList.contains('dark')?'232,200,74':'184,134,11';
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=cv.width;if(p.x>cv.width)p.x=0;
+      if(p.y<0)p.y=cv.height;if(p.y>cv.height)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba('+rgb+','+p.o+')';ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
 })();
 
 </script>
