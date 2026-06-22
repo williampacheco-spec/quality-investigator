@@ -160,6 +160,34 @@ body{background:#f5f0e8;color:#1a1208;font-family:'Courier Prime',monospace;min-
 /* ALREADY */
 .already-msg{font-size:.95rem;color:var(--ink-mid);line-height:1.8;font-weight:bold;}
 
+/* COUNTDOWN */
+#countdown-screen.active{display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem;min-height:100vh;}
+@keyframes countPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.8}100%{transform:scale(1);opacity:1}}
+@keyframes detectiveBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+@keyframes magnify{0%,100%{transform:rotate(-15deg) scale(1)}50%{transform:rotate(15deg) scale(1.1)}}
+@keyframes footstep{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scanLine{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}  }
+.countdown-detective{font-size:clamp(80px,20vw,140px);animation:detectiveBob 1.5s ease-in-out infinite;display:inline-block;filter:drop-shadow(0 8px 24px rgba(0,0,0,0.3));margin-bottom:1rem;line-height:1;}
+.countdown-magnify{font-size:clamp(40px,10vw,70px);animation:magnify 1.2s ease-in-out infinite;display:inline-block;position:absolute;top:-10px;right:-20px;}
+.countdown-wrap{position:relative;display:inline-block;}
+.countdown-title{font-family:'Oswald',sans-serif;font-size:clamp(1.1rem,3.5vw,1.6rem);font-weight:700;color:var(--ink);letter-spacing:3px;margin-bottom:.5rem;animation:fadeSlideUp .5s ease;}
+.countdown-sub{font-family:'Special Elite',serif;font-size:clamp(.8rem,2vw,1rem);color:var(--ink-mid);letter-spacing:2px;margin-bottom:1.5rem;animation:fadeSlideUp .5s ease .1s both;}
+.countdown-num{font-family:'Oswald',sans-serif;font-size:clamp(4rem,15vw,8rem);font-weight:900;color:var(--gold);animation:countPulse 1s ease-in-out;line-height:1;margin-bottom:.5rem;text-shadow:0 4px 20px rgba(184,134,11,.3);}
+body.theme-nubank .countdown-num{color:#00d164;text-shadow:0 4px 20px rgba(0,209,100,.4);}
+body.theme-dark .countdown-num{color:#e8c84a;}
+body.theme-contrast .countdown-num{color:#fff;}
+.countdown-dots{display:flex;gap:8px;justify-content:center;margin-top:.5rem;}
+.countdown-dot{width:10px;height:10px;border-radius:50%;background:var(--border);}
+.countdown-dot.active{background:var(--gold);}
+body.theme-nubank .countdown-dot.active{background:#00d164;}
+.countdown-bar-bg{width:200px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:1rem auto 0;}
+.countdown-bar-fill{height:100%;background:var(--gold);border-radius:3px;transition:width 1s linear;}
+body.theme-nubank .countdown-bar-fill{background:#00d164;}
+body.theme-dark .countdown-bar-fill{background:#e8c84a;}
+body.theme-contrast .countdown-bar-fill{background:#fff;}
+.footsteps{font-size:1.5rem;animation:footstep 1s ease-in-out infinite;letter-spacing:4px;margin-top:.5rem;}
+
 /* ─── TEMAS ─── */
 /* TEMA: ESCURO (padrão noir) */
 body.theme-dark{
@@ -341,15 +369,33 @@ body.theme-nubank .timeout-answer{background:rgba(130,10,209,.2);border-color:rg
       <input class="field-input" id="email-input" type="email" placeholder="seu.email@nubank.com.br" oninput="validateEmail()" onkeydown="if(event.key==='Enter')tryStart()"/>
       <div class="field-error" id="email-error" style="display:none;">⚠ E-mail inválido</div>
     </div>
-    <div class="field-group">
-      <label class="field-label">▸ NOME DO SEU GRUPO</label>
-      <input class="field-input" id="group-input" type="text" placeholder="Ex: Grupo Alpha, Time 3..." maxlength="30" oninput="validateGroup()" onkeydown="if(event.key==='Enter')tryStart()"/>
-      <div class="field-hint">Digite o nome do seu grupo livremente</div>
-    </div>
+
     <button class="btn btn-gold btn-full" onclick="tryStart()">◉ ENTRAR NO CASO</button>
     <div class="field-error" id="start-error" style="display:none;margin-top:.5rem;">⚠ Preencha e-mail e grupo!</div>
   </div>
   <div class="footer-info">15 PERGUNTAS · ⏱ 30s POR PERGUNTA</div>
+</div>
+
+<!-- TELA COUNTDOWN -->
+<div class="screen" id="countdown-screen">
+  <div class="countdown-wrap">
+    <div class="countdown-detective" id="cd-detective">🕵️</div>
+    <div class="countdown-magnify">🔍</div>
+  </div>
+  <div class="countdown-title" id="cd-title">PREPARE-SE!</div>
+  <div class="countdown-sub" id="cd-sub">Sua investigação está prestes a começar...</div>
+  <div class="countdown-num" id="cd-num">5</div>
+  <div class="footsteps" id="cd-feet">👣</div>
+  <div class="countdown-bar-bg">
+    <div class="countdown-bar-fill" id="cd-bar" style="width:100%"></div>
+  </div>
+  <div class="countdown-dots">
+    <div class="countdown-dot active" id="cd-dot-0"></div>
+    <div class="countdown-dot" id="cd-dot-1"></div>
+    <div class="countdown-dot" id="cd-dot-2"></div>
+    <div class="countdown-dot" id="cd-dot-3"></div>
+    <div class="countdown-dot" id="cd-dot-4"></div>
+  </div>
 </div>
 
 <!-- TELA JÁ JOGOU -->
@@ -368,7 +414,6 @@ body.theme-nubank .timeout-answer{background:rgba(130,10,209,.2);border-color:rg
       <div class="hud-avatar" id="hud-avatar">?</div>
       <div>
         <div class="hud-name" id="hud-name"></div>
-        <div class="hud-group" id="hud-group"></div>
       </div>
     </div>
     <div class="hud-sep">|</div>
@@ -487,7 +532,7 @@ const ALL_QUESTIONS = [
   {q:"O que é um Apontamento Externo no contexto do Pack Quality?",opts:["A — Um erro identificado por auditor externo contratado pelo Nubank","B — Uma contestação feita por analista de outro distrito sobre seu próprio caso","C — Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence","D — Uma monitoria surpresa realizada sem aviso prévio ao analista"],correct:2,fb:"Apontamentos Externos vêm de Reputational, Regulatory, FLC ou InvOps Intelligence — fora da monitoria regular.",fbW:"Não é auditor externo nem monitoria surpresa. São erros identificados por fontes internas específicas fora da monitoria regular."},
   {q:"Você fez a análise correta mas não registrou o raciocínio investigativo no sistema. Como evitar NOK?",opts:["A — Pedir para o líder registrar depois, pois o analista já fez a parte investigativa","B — Registrar o raciocínio DURANTE a análise, não depois — é parte do processo avaliado","C — O raciocínio investigativo não precisa ser registrado, só a decisão final","D — Contestar preventivamente antes da monitoria para garantir OK"],correct:1,fb:"Registrar o raciocínio durante a análise é o hábito certo. O Quality avalia o processo completo.",fbW:"Não existe contestação preventiva nem registro pelo líder. O raciocínio deve ser registrado durante a análise, pelo próprio analista."},
   {q:"Qual é a diferença fundamental entre o Pack Quality ser PARCEIRO e ser AUDITOR?",opts:["A — Nenhuma diferença prática; os dois papéis fazem o mesmo trabalho","B — Auditor tem mais autoridade para bloquear decisões dos analistas","C — Parceiro trabalha junto para melhorar; auditor apenas fiscaliza e aplica sanções","D — Parceiro é o nome informal e auditor é o nome oficial do cargo"],correct:2,fb:"Parceiro trabalha junto, calibra critérios e melhora com a operação. Auditor só fiscaliza. O Pack Quality é parceiro.",fbW:"Não é questão de autoridade ou nomenclatura. Parceiro = trabalha junto para melhorar. Auditor = só fiscaliza."},
-  {q:"Qual ferramenta do Pack Quality analisa padrões de erro por tema usando Inteligência Artificial?",opts:["A — O SPOT, acessado durante as monitorias individuais de cada caso","B — O QuickSight com dashboards de SLA e volume de atendimento","C — O Google Forms utilizado nas pesquisas de satisfação internas","D — Notebook no Databricks com categorização por IA (GPT-4o via LiteLLM)"],correct:3,fb:"O notebook no Databricks com IA categoriza erros por tema e distrito — análise que antes era manual e demorava horas.",fbW:"SPOT, QuickSight e Google Forms têm outros papéis. A ferramenta de análise de padrões é o notebook no Databricks com GPT-4o."},
+  {q:"Qual é o prazo para contestar uma monitoria?",opts:["A — Até o último dia do mês da monitoria","B — Até 7 dias úteis após a data da monitoria","C — Até o 3º dia útil do mês seguinte à data da monitoria","D — Não há prazo definido para contestação"],correct:2,fb:"O prazo correto é até o 3º dia útil do mês seguinte à data da monitoria. Fique atento ao calendário para não perder o prazo!",fbW:"Cuidado! O prazo não é o último dia do mês, nem 7 dias úteis. É até o 3º dia útil do mês seguinte à data da monitoria."},
   {q:"Qual é a missão central do Pack Quality InvOps Brasil?",opts:["A — Garantir que a meta de NOKs mensais seja atingida em todos os distritos","B — Substituir os líderes de distrito nas decisões de performance individual","C — Apenas realizar monitorias mensais e entregar relatórios de erro","D — Garantir qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua"],correct:3,fb:"O Pack Quality é parceiro estratégico — não auditor punitivo. Tudo converge para uma operação mais justa e eficiente.",fbW:"Meta de NOKs, substituir líderes ou só fazer relatórios não definem o Pack Quality. A missão é ser parceiro na melhoria contínua."},
 ];
 
@@ -517,17 +562,13 @@ function validateEmail(){
   else if(v){ err.style.display='none'; inp.classList.add('valid'); }
   else{ err.style.display='none'; inp.classList.remove('valid'); }
 }
-function validateGroup(){
-  const v = document.getElementById('group-input').value.trim();
-  document.getElementById('group-input').classList.toggle('valid', v.length>0);
-}
+
 
 // ─── INICIAR ───
 function tryStart(){
   const email = document.getElementById('email-input').value.trim();
-  const group = document.getElementById('group-input').value.trim();
   const err = document.getElementById('start-error');
-  if(!email || !isValidEmail(email) || !group){ err.style.display='block'; return; }
+  if(!email || !isValidEmail(email)){ err.style.display='block'; return; }
   err.style.display='none';
   // Verifica se já jogou
   const key = 'qi_v3_' + email.toLowerCase();
@@ -537,7 +578,7 @@ function tryStart(){
     return;
   }
   state.email = email;
-  state.group = group;
+  state.group = 'Geral';
   state.questions = shuffle(ALL_QUESTIONS);
   state.xp = state.hasPista ? 10 : 0;
   state.lives = 3; state.correct = 0; state.total = 0;
@@ -547,16 +588,51 @@ function tryStart(){
 
 // ─── JOGO ───
 function startGame(){
-  showScreen('game-screen');
-  updateHUD();
-  renderQuestion();
+  showScreen('countdown-screen');
+  runCountdown();
+}
+
+function runCountdown(){
+  let t = 5;
+  const msgs = [
+    ['PREPARE-SE!', 'Sua investigação está prestes a começar...'],
+    ['FOCO!', 'Revise o que você sabe sobre Quality...'],
+    ['QUASE LÁ!', 'O Pack Quality está observando...'],
+    ['ATENÇÃO!', 'As pistas não vão se revelar sozinhas...'],
+    ['VÁ!', 'A investigação começa agora!'],
+  ];
+  const detectives = ['🕵️','🔍','📋','🗂️','⚡'];
+
+  function tick(){
+    const idx = 5 - t;
+    document.getElementById('cd-num').textContent = t;
+    document.getElementById('cd-num').style.animation = 'none';
+    setTimeout(()=>{ document.getElementById('cd-num').style.animation = 'countPulse 1s ease-in-out'; }, 10);
+    document.getElementById('cd-title').textContent = msgs[idx][0];
+    document.getElementById('cd-sub').textContent = msgs[idx][1];
+    document.getElementById('cd-detective').textContent = detectives[idx];
+    document.getElementById('cd-bar').style.width = (t/5*100) + '%';
+    // Dots
+    for(let i=0;i<5;i++){
+      document.getElementById('cd-dot-'+i).classList.toggle('active', i <= idx);
+    }
+    // Alterna pés
+    document.getElementById('cd-feet').textContent = idx%2===0 ? '👣' : '🔎';
+    t--;
+    if(t >= 0) setTimeout(tick, 1000);
+    else{
+      showScreen('game-screen');
+      updateHUD();
+      renderQuestion();
+    }
+  }
+  tick();
 }
 
 function updateHUD(){
   const e = state.email;
   document.getElementById('hud-avatar').textContent = e ? e[0].toUpperCase() : '?';
   document.getElementById('hud-name').textContent = e;
-  document.getElementById('hud-group').textContent = state.group;
   document.getElementById('hud-xp').textContent = state.xp;
   document.getElementById('hud-bar').style.width = Math.min(100, state.xp/500*100) + '%';
   document.getElementById('hud-correct').textContent = state.correct + '/' + state.total;
@@ -757,7 +833,7 @@ function showFinalScreen(elapsed, pct){
   const badge = pct>=90?'🥇':pct>=75?'🥈':pct>=60?'🥉':'📋';
   const mins = Math.floor(elapsed/60), secs = elapsed%60;
 
-  document.getElementById('final-sub').textContent = state.email + ' · ' + state.group;
+  document.getElementById('final-sub').textContent = state.email;
   document.getElementById('rank-icon').textContent = badge;
   document.getElementById('rank-name').textContent = rank;
 
@@ -767,7 +843,6 @@ function showFinalScreen(elapsed, pct){
     ['Aproveitamento', pct + '%', 'var(--blue)'],
     ['Tempo', mins + 'm ' + String(secs).padStart(2,'0') + 's', 'var(--ink)'],
     ['Bônus Pista', state.hasPista ? '+10 XP ✓' : 'Não trouxe', state.hasPista ? 'var(--green)' : 'var(--ink-light)'],
-    ['Grupo', state.group, 'var(--gold)'],
   ];
 
   document.getElementById('result-stats').innerHTML = stats.map(([l,v,c])=>
