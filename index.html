@@ -316,50 +316,24 @@ body.theme-nubank .timeout-answer{background:rgba(130,10,209,.2);border-color:rg
 
 <div id="app">
 
-<!-- TELA PISTA -->
-<div class="screen active" id="pista-screen">
-  <div style="font-family:'Special Elite',serif;font-size:.8rem;color:var(--gold);letter-spacing:4px;font-weight:bold;margin-bottom:1rem;">— ANTES DE COMEÇAR —</div>
-  <div class="paper pista-card">
-    <div class="stamp">CONFIDENCIAL</div>
 
-    <!-- SELETOR DE TEMA -->
-    <div style="margin-bottom:1.25rem;">
-      <div class="theme-label">🎨 ESCOLHA O VISUAL</div>
-      <div class="theme-selector">
-        <button class="theme-btn light active" id="theme-light" onclick="setTheme('light')">
-          ☀️ CLARO
-        </button>
-        <button class="theme-btn dark" id="theme-dark" onclick="setTheme('dark')">
-          🌙 ESCURO
-        </button>
-        <button class="theme-btn contrast" id="theme-contrast" onclick="setTheme('contrast')">
-          ◑ ALTO CONTRASTE
-        </button>
-        <button class="theme-btn nubank" id="theme-nubank" onclick="setTheme('nubank')">
-          💜 NUBANK
-        </button>
-      </div>
-    </div>
-
-    <div style="border-top:1px solid var(--border);margin-bottom:1.25rem;"></div>
-
-    <div style="font-size:2.5rem;margin-bottom:1rem;text-align:center;">🔍</div>
-    <div style="font-family:'Oswald',sans-serif;font-size:1.3rem;color:var(--ink);font-weight:700;margin-bottom:1rem;line-height:1.4;text-align:center;">Você trouxe sua pista para essa investigação?</div>
-    <div style="font-size:.9rem;color:var(--ink-mid);line-height:1.8;margin-bottom:1.5rem;text-align:center;">Analistas preparados recebem bônus de <strong style="color:var(--gold)">+10 XP</strong>.</div>
-    <div class="pista-btns">
-      <button class="btn btn-green btn-lg" onclick="handlePista(true)">✓ SIM, TROUXE!</button>
-      <button class="btn btn-outline btn-lg" onclick="handlePista(false)">✗ NÃO TROUXE</button>
-    </div>
-  </div>
-</div>
 
 <!-- TELA NOME -->
-<div class="screen" id="name-screen">
-  <div style="text-align:center;margin-bottom:1.5rem;">
+<div class="screen active" id="name-screen">
+  <div style="text-align:center;margin-bottom:1rem;">
     <div style="font-family:'Special Elite',serif;font-size:.8rem;letter-spacing:5px;color:var(--gold);font-weight:bold;margin-bottom:.5rem;">— DOSSIER DE IDENTIFICAÇÃO —</div>
     <div class="big-title">QUALITY<br><span class="gold flicker">INVESTIGATOR</span></div>
     <div style="font-family:'Courier Prime',monospace;font-size:.85rem;color:var(--ink-light);letter-spacing:3px;margin-top:.5rem;font-weight:bold;">— PACK QUALITY · INVOPS BRASIL —</div>
-    <div id="bonus-badge" style="display:none;" class="badge-bonus">🔍 +10 XP DE BÔNUS ATIVADO</div>
+  </div>
+  <!-- SELETOR DE TEMA -->
+  <div style="margin-bottom:1rem;">
+    <div class="theme-label">🎨 ESCOLHA O VISUAL</div>
+    <div class="theme-selector">
+      <button class="theme-btn light active" id="theme-light" onclick="setTheme('light')">☀️ CLARO</button>
+      <button class="theme-btn dark" id="theme-dark" onclick="setTheme('dark')">🌙 ESCURO</button>
+      <button class="theme-btn contrast" id="theme-contrast" onclick="setTheme('contrast')">◑ ALTO CONTRASTE</button>
+      <button class="theme-btn nubank" id="theme-nubank" onclick="setTheme('nubank')">💜 NUBANK</button>
+    </div>
   </div>
   <div class="paper name-card" id="name-card">
     <div class="stamp">CONFIDENCIAL</div>
@@ -511,7 +485,7 @@ function setTheme(theme){
 
 // ─── ESTADO ───
 let state = {
-  hasPista: false, email: '', group: '',
+  email: '', group: '',
   questions: [], qIdx: 0, selected: null, confirmed: false, timedOut: false,
   xp: 0, lives: 3, correct: 0, total: 0,
   startTime: null, timerInterval: null, timeLeft: 30,
@@ -519,22 +493,172 @@ let state = {
 
 // ─── PERGUNTAS ───
 const ALL_QUESTIONS = [
-  {q:"Por que o registro do MO (Modus Operandi) é obrigatório mesmo quando a decisão está correta?",opts:["A — Não é obrigatório se a decisão estiver certa, o resultado já basta","B — Garante rastreabilidade e aprendizado para toda a operação, independente da decisão","C — É exigido apenas para casos com valor acima de R$10.000","D — Só o IC4 precisa documentar o MO, analistas IC2 e IC3 são isentos"],correct:1,fb:"O MO é obrigatório sempre — sem ele o caso é NOK mesmo com decisão certa. O processo completo importa tanto quanto o resultado.",fbW:"Independente de valor ou nível, o MO é obrigatório. O scorecard avalia o processo, não só o resultado final."},
-  {q:"O que é o Modus Operandi (MO) de um caso de fraude?",opts:["A — O nome do sistema interno de monitorias do Nubank","B — O protocolo de escalação obrigatória para o IC4 em casos graves","C — O padrão de comportamento fraudulento que explica como o crime foi cometido","D — A métrica que define o score de performance mensal do analista"],correct:2,fb:"MO = padrão comportamental da fraude. Documentá-lo permite que o Pack Quality entenda tendências e melhore os modelos de detecção.",fbW:"MO é Modus Operandi — o padrão de comportamento da fraude. Não é sistema, protocolo ou métrica de performance."},
-  {q:"Além da decisão final, o que mais o scorecard do Pack Quality avalia?",opts:["A — Apenas a decisão final importa; o processo é secundário","B — O tempo que o analista levou para fechar o caso","C — A qualidade do processo investigativo completo: documentação, MO e comunicação","D — O número de casos resolvidos no mês"],correct:2,fb:"O scorecard avalia o processo inteiro — decisão, documentação do MO e comunicação ao cliente. Cada etapa é um critério independente.",fbW:"O scorecard vai muito além da decisão. Ele avalia documentação, MO, comunicação — o processo completo."},
-  {q:"Você investigou um caso, tomou a decisão certa de bloquear, mas esqueceu de registrar a comunicação ao cliente. O que acontece?",opts:["A — Fica OK, pois a decisão estava correta e o resultado é o que conta","B — O Quality considera o contexto e marca como OK com ressalva","C — Fica NOK — o registro da comunicação é critério obrigatório independente da decisão","D — Depende do distrito; em alguns a comunicação é opcional"],correct:2,fb:"Decisão certa + processo incompleto = NOK. O registro da comunicação protege o analista e o cliente. Não há exceção por distrito.",fbW:"Mesmo com decisão certa, falta de registro da comunicação gera NOK. Não existe exceção por distrito — é critério universal."},
-  {q:"Um analista recebeu um feedback NOK e discorda completamente. Qual é o PRIMEIRO passo correto?",opts:["A — Falar diretamente com o analista de Quality no Slack para resolver informalmente","B — Reunir a evidência técnica que mostra que o critério foi atendido, depois abrir contestação no Jira","C — Escalar imediatamente para o líder do distrito resolver","D — Aceitar o NOK pois contestar pode prejudicar a performance"],correct:1,fb:"Primeiro reúna a evidência, depois abra a contestação no Jira Quality Requests. Contestar com evidência é um direito — nunca prejudica a performance.",fbW:"O caminho correto: evidência primeiro, Jira depois. Slack e escalonamento não são os canais certos. Contestar jamais prejudica a performance."},
-  {q:"O que uma contestação julgada PROCEDENTE significa para o Pack Quality?",opts:["A — Que o analista ganhou o argumento mas o NOK permanece no histórico","B — Que o Quality errou na avaliação — dado que alimenta calibração e melhoria","C — Que o caso volta para reavaliação por um IC4 do distrito","D — Que o scorecard do analista é automaticamente zerado"],correct:1,fb:"Contestação procedente = Quality errou. Isso é valioso! O Pack usa esse dado para calibrar critérios e melhorar. O NOK é removido.",fbW:"Contestação procedente significa que o Quality errou — e o NOK é removido. Não existe 'NOK permanente após contestação procedente'."},
-  {q:"Por que muitos analistas têm receio de contestar um feedback mesmo quando discordam?",opts:["A — Porque o processo de contestação é pago e tem custo para o analista","B — Por medo de parecer problemático ou sofrer consequências — mas esse medo é completamente infundado","C — Porque o Quality raramente reverte apontamentos, então não vale tentar","D — Porque a contestação exige aprovação prévia do gestor direto"],correct:1,fb:"O medo existe mas é infundado. Contestar com evidência é um direito e nunca gera consequências negativas.",fbW:"Não existe custo, raridade de reversão ou aprovação prévia. O medo de represálias é infundado — contestar é um direito."},
-  {q:"Uma contestação aberta sem nenhuma evidência técnica tende a ser julgada como:",opts:["A — Procedente, pois o analista tem sempre o benefício da dúvida","B — Automaticamente arquivada após 5 dias sem resposta","C — Improcedente — sem evidência não há como contradizer o critério apontado","D — Escalada para o M2 decidir independente da evidência"],correct:2,fb:"Sem evidência técnica, a contestação tende a ser improcedente. A evidência é o que faz a diferença.",fbW:"O benefício da dúvida não existe em contestações. Sem evidência técnica concreta, o resultado tende a ser improcedente."},
-  {q:"Qual é o canal OFICIAL para abrir uma contestação de monitoria?",opts:["A — Slack direto para o analista de Quality responsável pelo distrito","B — E-mail para o líder do Pack Quality com o caso detalhado","C — Portal Quality Requests via Jira Service Management","D — Formulário no Google Forms enviado por e-mail para o Pack"],correct:2,fb:"Jira Quality Requests é o canal oficial. Garante rastreabilidade, prazo de resposta e histórico para análises mensais.",fbW:"Slack, e-mail e Google Forms são canais informais. O canal oficial é o Jira Quality Requests."},
-  {q:"O Quality identificou um padrão de erro idêntico em vários analistas do mesmo distrito. Qual é o próximo passo?",opts:["A — Aumentar o percentual de NOKs desse distrito no próximo mês como alerta","B — Usar os dados para propor uma calibração e alinhar o critério com o distrito","C — Reportar o padrão apenas aos líderes, sem envolver os analistas","D — Aguardar 3 meses para confirmar se é tendência antes de agir"],correct:1,fb:"Padrão de erro = oportunidade de aprendizado. O Pack propõe calibração para alinhar o critério. A ideia é melhorar, não punir.",fbW:"O Quality não aumenta NOKs nem aguarda meses. Padrão identificado = calibração proposta. Parceria para melhorar."},
-  {q:"O que é um Apontamento Externo no contexto do Pack Quality?",opts:["A — Um erro identificado por auditor externo contratado pelo Nubank","B — Uma contestação feita por analista de outro distrito sobre seu próprio caso","C — Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence","D — Uma monitoria surpresa realizada sem aviso prévio ao analista"],correct:2,fb:"Apontamentos Externos vêm de Reputational, Regulatory, FLC ou InvOps Intelligence — fora da monitoria regular.",fbW:"Não é auditor externo nem monitoria surpresa. São erros identificados por fontes internas específicas fora da monitoria regular."},
-  {q:"Você fez a análise correta mas não registrou o raciocínio investigativo no sistema. Como evitar NOK?",opts:["A — Pedir para o líder registrar depois, pois o analista já fez a parte investigativa","B — Registrar o raciocínio DURANTE a análise, não depois — é parte do processo avaliado","C — O raciocínio investigativo não precisa ser registrado, só a decisão final","D — Contestar preventivamente antes da monitoria para garantir OK"],correct:1,fb:"Registrar o raciocínio durante a análise é o hábito certo. O Quality avalia o processo completo.",fbW:"Não existe contestação preventiva nem registro pelo líder. O raciocínio deve ser registrado durante a análise, pelo próprio analista."},
-  {q:"Qual é a diferença fundamental entre o Pack Quality ser PARCEIRO e ser AUDITOR?",opts:["A — Nenhuma diferença prática; os dois papéis fazem o mesmo trabalho","B — Auditor tem mais autoridade para bloquear decisões dos analistas","C — Parceiro trabalha junto para melhorar; auditor apenas fiscaliza e aplica sanções","D — Parceiro é o nome informal e auditor é o nome oficial do cargo"],correct:2,fb:"Parceiro trabalha junto, calibra critérios e melhora com a operação. Auditor só fiscaliza. O Pack Quality é parceiro.",fbW:"Não é questão de autoridade ou nomenclatura. Parceiro = trabalha junto para melhorar. Auditor = só fiscaliza."},
-  {q:"Qual é o prazo para contestar uma monitoria?",opts:["A — Até o último dia do mês da monitoria","B — Até 7 dias úteis após a data da monitoria","C — Até o 3º dia útil do mês seguinte à data da monitoria","D — Não há prazo definido para contestação"],correct:2,fb:"O prazo correto é até o 3º dia útil do mês seguinte à data da monitoria. Fique atento ao calendário para não perder o prazo!",fbW:"Cuidado! O prazo não é o último dia do mês, nem 7 dias úteis. É até o 3º dia útil do mês seguinte à data da monitoria."},
-  {q:"Qual é a missão central do Pack Quality InvOps Brasil?",opts:["A — Garantir que a meta de NOKs mensais seja atingida em todos os distritos","B — Substituir os líderes de distrito nas decisões de performance individual","C — Apenas realizar monitorias mensais e entregar relatórios de erro","D — Garantir qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua"],correct:3,fb:"O Pack Quality é parceiro estratégico — não auditor punitivo. Tudo converge para uma operação mais justa e eficiente.",fbW:"Meta de NOKs, substituir líderes ou só fazer relatórios não definem o Pack Quality. A missão é ser parceiro na melhoria contínua."},
-];
+  {
+    q:"Por que o registro do MO é obrigatório mesmo quando a decisão de bloqueio está correta?",
+    opts:[
+      "A — O resultado final é suficiente; documentar o processo é opcional para IC2 e IC3",
+      "B — Garante rastreabilidade, aprendizado e embasamento para toda a operação",
+      "C — Só é exigido em casos com prejuízo financeiro confirmado ao cliente",
+      "D — O MO é responsabilidade do IC4 validar, não do analista que fechou o caso"
+    ],correct:1,
+    fb:"O MO é obrigatório sempre. Sem ele o caso é NOK mesmo com decisão certa — o scorecard avalia o processo, não só o resultado.",
+    fbW:"O scorecard avalia o processo completo. Independente do nível ou valor, o MO é responsabilidade do analista que fechou o caso."
+  },
+  {
+    q:"O que é o Modus Operandi (MO) de um caso de fraude?",
+    opts:[
+      "A — O sistema interno que registra as monitorias mensais do pack",
+      "B — O protocolo obrigatório de escalação para o IC4 em casos de alto risco",
+      "C — O padrão de comportamento fraudulento que explica como o crime foi executado",
+      "D — A métrica individual que compõe o score de performance mensal do analista"
+    ],correct:2,
+    fb:"MO = padrão comportamental da fraude. Documentá-lo permite entender tendências e melhorar os modelos de detecção.",
+    fbW:"MO é Modus Operandi — o padrão de comportamento fraudulento. Não é sistema de monitorias, protocolo de escalação nem métrica de performance."
+  },
+  {
+    q:"Você investigou um caso, tomou a decisão certa de bloquear, mas não registrou a comunicação ao cliente. O que acontece no scorecard?",
+    opts:[
+      "A — Fica OK, pois a decisão correta já garante a aprovação do critério completo",
+      "B — O Quality avalia o contexto e pode marcar como OK com observação no histórico",
+      "C — Fica NOK — registrar a comunicação é critério obrigatório, independente da decisão",
+      "D — O resultado varia por distrito; em alguns casos a comunicação pode ser dispensada"
+    ],correct:2,
+    fb:"Decisão certa + processo incompleto = NOK. Registrar a comunicação protege o analista e o cliente. Não há exceção por distrito.",
+    fbW:"Mesmo com decisão certa, a falta de registro gera NOK. O scorecard não tem exceção por distrito — é critério universal do processo."
+  },
+  {
+    q:"Além da decisão final, o que mais o scorecard do Pack Quality avalia?",
+    opts:[
+      "A — O volume de casos resolvidos e o tempo médio de fechamento no mês",
+      "B — O nível de dificuldade do caso e a complexidade da fraude investigada",
+      "C — A qualidade do processo completo: documentação, MO registrado e comunicação ao cliente",
+      "D — O histórico de contestações anteriores e a taxa de reversão do analista"
+    ],correct:2,
+    fb:"O scorecard avalia o processo inteiro — decisão, MO documentado e comunicação. Cada etapa é um critério independente.",
+    fbW:"O scorecard vai muito além da decisão. Ele avalia documentação, MO e comunicação — não volume, dificuldade ou histórico de contestações."
+  },
+  {
+    q:"Um analista recebeu um NOK e discorda. Qual é o PRIMEIRO passo correto antes de abrir contestação?",
+    opts:[
+      "A — Acionar o líder do distrito para intermediar a discussão com o Quality",
+      "B — Reunir a evidência técnica que mostra que o critério foi atendido no caso",
+      "C — Enviar mensagem no Slack diretamente para o analista de Quality responsável",
+      "D — Registrar a discordância em formulário interno antes de qualquer outra ação"
+    ],correct:1,
+    fb:"Primeiro reúna a evidência técnica, depois abra no Jira Quality Requests. Contestar com evidência é um direito que nunca prejudica a performance.",
+    fbW:"O caminho correto é evidência primeiro, Jira depois. Líder, Slack e formulário interno não são os canais adequados para contestação."
+  },
+  {
+    q:"O que uma contestação julgada PROCEDENTE revela sobre o Pack Quality?",
+    opts:[
+      "A — Que o analista questionou com razão, mas o NOK ainda permanece no histórico",
+      "B — Que o Quality cometeu um erro de avaliação — dado que alimenta calibração e melhoria",
+      "C — Que o caso precisa ser reavaliado por um IC4 do distrito antes da decisão final",
+      "D — Que o scorecard do analista é automaticamente revisado para o mês corrente"
+    ],correct:1,
+    fb:"Contestação procedente = Quality errou. Isso é valioso — o NOK é removido e o dado alimenta a calibração dos critérios.",
+    fbW:"Contestação procedente significa que o Quality errou e o NOK é removido. Não existe histórico permanente de NOK após contestação procedente."
+  },
+  {
+    q:"Qual é o canal OFICIAL para abrir uma contestação de monitoria no Pack Quality?",
+    opts:[
+      "A — Mensagem direta no Slack para o analista de Quality do distrito responsável",
+      "B — E-mail com o caso detalhado enviado ao líder do Pack Quality",
+      "C — Portal Quality Requests via Jira Service Management",
+      "D — Formulário no Google Forms encaminhado por e-mail ao Pack"
+    ],correct:2,
+    fb:"Jira Quality Requests é o canal oficial. Garante rastreabilidade, prazo de resposta e histórico estruturado para análises mensais.",
+    fbW:"Slack, e-mail e Google Forms são canais informais que perdem rastreabilidade e prazo. O canal oficial é o Jira Quality Requests."
+  },
+  {
+    q:"Por que analistas têm receio de contestar um feedback mesmo quando discordam?",
+    opts:[
+      "A — O processo exige pagamento de taxa administrativa para cada contestação aberta",
+      "B — Por medo de ser mal visto ou sofrer consequências — um receio real, mas completamente infundado",
+      "C — O Quality historicamente reverte menos de 5% das contestações, o que desestimula a abertura",
+      "D — Contestar exige aprovação prévia do gestor direto antes de ser protocolado"
+    ],correct:1,
+    fb:"O medo existe, mas é infundado. Contestar com evidência é um direito e jamais gera consequências negativas.",
+    fbW:"Não existe taxa, aprovação prévia ou baixa taxa de reversão que justifique não contestar. O receio de represálias é infundado."
+  },
+  {
+    q:"Uma contestação aberta sem evidência técnica tende a ser julgada como:",
+    opts:[
+      "A — Procedente, pois o analista sempre tem benefício da dúvida pelo princípio da boa-fé",
+      "B — Arquivada automaticamente após 5 dias úteis sem complementação de informações",
+      "C — Improcedente — sem evidência concreta não há como refutar o critério apontado",
+      "D — Direcionada ao M2 para decisão final, independente da evidência apresentada"
+    ],correct:2,
+    fb:"Sem evidência técnica, a contestação tende a ser improcedente. A evidência concreta é o que faz a diferença no resultado.",
+    fbW:"Não há benefício da dúvida automático nem arquivamento por prazo. Sem evidência técnica concreta, o resultado tende a ser improcedente."
+  },
+  {
+    q:"O Quality identificou padrão de erro idêntico em vários analistas do mesmo distrito. Qual é o próximo passo?",
+    opts:[
+      "A — Registrar o alerta e aumentar o peso do critério no scorecard do mês seguinte",
+      "B — Propor uma calibração para alinhar o critério com o distrito e evitar novos erros",
+      "C — Reportar o padrão exclusivamente aos líderes, sem envolver os analistas afetados",
+      "D — Aguardar ao menos 3 meses para confirmar se é tendência antes de tomar qualquer ação"
+    ],correct:1,
+    fb:"Padrão identificado = calibração proposta. O Pack usa os dados para alinhar o critério com o distrito. O objetivo é melhorar, não punir.",
+    fbW:"O Quality não aumenta pesos, exclui analistas do processo nem aguarda meses. Padrão identificado = calibração proposta imediatamente."
+  },
+  {
+    q:"O que é um Apontamento Externo no contexto do Pack Quality?",
+    opts:[
+      "A — Um erro identificado por auditoria externa contratada pelo compliance do Nubank",
+      "B — Uma contestação aberta por analista de outro distrito sobre seu próprio caso avaliado",
+      "C — Erro identificado por fontes como Reputational, Regulatory ou InvOps Intelligence",
+      "D — Uma monitoria realizada sem aviso prévio como parte do processo de calibração surpresa"
+    ],correct:2,
+    fb:"Apontamentos Externos vêm de Reputational, Regulatory, FLC ou InvOps Intelligence — fora da monitoria regular do Pack.",
+    fbW:"Não é auditoria externa, contestação de outro distrito nem monitoria surpresa. São erros de fontes internas específicas fora da monitoria regular."
+  },
+  {
+    q:"Qual é o prazo para contestar uma monitoria no Pack Quality?",
+    opts:[
+      "A — Até o último dia útil do mesmo mês em que a monitoria foi realizada",
+      "B — Até 7 dias úteis contados a partir da data de recebimento do feedback",
+      "C — Até o 3º dia útil do mês seguinte à data em que a monitoria foi realizada",
+      "D — Não há prazo definido — o analista pode contestar a qualquer momento"
+    ],correct:2,
+    fb:"O prazo é até o 3º dia útil do mês seguinte à data da monitoria. Fique atento ao calendário para não perder o prazo!",
+    fbW:"O prazo não é o último dia do mês, nem 7 dias úteis, nem ilimitado. É até o 3º dia útil do mês seguinte à data da monitoria."
+  },
+  {
+    q:"O que é um Apontamento no contexto do Pack Quality?",
+    opts:[
+      "A — Painel com as metas mensais de monitorias do pack por distrito",
+      "B — Sinalização formal de um erro identificado na monitoria de um caso",
+      "C — Fila semanal de tickets pendentes de avaliação no Jira do pack",
+      "D — Revisão periódica dos scorecards realizada ao final de cada mês"
+    ],correct:1,
+    fb:"Apontamento é a sinalização formal de um erro identificado na monitoria. É o dado que gera o NOK e pode ser contestado pelo analista.",
+    fbW:"Apontamento não é painel de metas, fila de tickets nem revisão mensal. É a sinalização formal de um erro identificado na monitoria."
+  },
+  {
+    q:"Qual é a diferença fundamental entre o Pack Quality ser PARCEIRO e ser AUDITOR?",
+    opts:[
+      "A — Parceiro e auditor exercem funções equivalentes com nomenclaturas distintas",
+      "B — O auditor detém autoridade formal para suspender ou reverter decisões dos analistas",
+      "C — Parceiro trabalha junto para melhorar continuamente; auditor apenas fiscaliza e sanciona",
+      "D — Parceiro é a denominação informal do cargo; auditor é o título oficial na estrutura"
+    ],correct:2,
+    fb:"Parceiro trabalha junto, calibra critérios e evolui com a operação. Auditor só fiscaliza. O Pack Quality é parceiro.",
+    fbW:"Não é questão de nomenclatura, autoridade ou título. Parceiro = evolui junto. Auditor = só fiscaliza. O Pack Quality é parceiro."
+  },
+  {
+    q:"Qual é a missão central do Pack Quality InvOps Brasil?",
+    opts:[
+      "A — Assegurar que a meta de NOKs mensais seja cumprida em todos os distritos",
+      "B — Substituir os líderes de distrito nas decisões de performance dos analistas",
+      "C — Executar monitorias mensais e entregar relatórios de erros para a liderança",
+      "D — Garantir qualidade das decisões investigativas sendo parceiro da operação na melhoria contínua"
+    ],correct:3,
+    fb:"O Pack Quality é parceiro estratégico — não auditor punitivo. Tudo converge para uma operação mais justa e eficiente.",
+    fbW:"Meta de NOKs, substituir líderes ou só fazer relatórios não definem o Pack Quality. A missão é ser parceiro na melhoria contínua."
+  },
+]];
 
 function shuffle(arr){ return [...arr].sort(()=>Math.random()-.5); }
 
@@ -548,13 +672,6 @@ function showScreen(id){
   el.classList.add('active');
   el.style.display = (id==='game-screen') ? 'block' : 'flex';
   window.scrollTo(0,0);
-}
-
-// ─── PISTA ───
-function handlePista(sim){
-  state.hasPista = sim;
-  if(sim) document.getElementById('bonus-badge').style.display='inline-block';
-  showScreen('name-screen');
 }
 
 // ─── VALIDAÇÃO ───
@@ -584,6 +701,7 @@ function tryStart(){
   }
   state.email = email;
   state.group = 'Geral';
+  state.hasPista = false;
   state.questions = shuffle(ALL_QUESTIONS);
   state.xp = state.hasPista ? 10 : 0;
   state.lives = 3; state.correct = 0; state.total = 0;
@@ -826,7 +944,7 @@ async function finishGame(){
     const cur = await fetch(BIN_URL+'/latest',{headers:{'X-Master-Key':MASTER_KEY}});
     const data = await cur.json();
     const list = data.record?.resultados || [];
-    list.push({email:state.email,group:state.group,xp:state.xp,correct:state.correct,total:state.total,pct,timeSeconds:elapsed,hasPista:state.hasPista,completedAt:new Date().toISOString()});
+    list.push({email:state.email,group:state.group,xp:state.xp,correct:state.correct,total:state.total,pct,timeSeconds:elapsed,completedAt:new Date().toISOString()});
     await fetch(BIN_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':MASTER_KEY},body:JSON.stringify({resultados:list})});
   } catch(e){ console.warn('Erro ao salvar:', e); }
   showFinalScreen(elapsed, pct);
